@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>CUE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=DM+Sans:wght@700;800&display=swap');
+
+/* Font aliases — swap old names so no other rules need changing */
+.mono { font-family: 'DM Sans', sans-serif; }
+
+/* ══════════════════════════════════════
+   TOKENS
+══════════════════════════════════════ */
+:root {
+  --bg:     #000;
+  --s1:     #0c0c0c;
+  --s2:     #141414;
+  --bdr:    #2a2a3a;
+  --acc:    #c8f53a;
+  --warn:   #f5a623;
+  --danger: #f53a3a;
+  --text:   #f0f0fa;
+  --muted:  #8888aa;   /* was #3a3a52 — much lighter */
+
+  --regie:  #c4affe;
+  --kraan:  #7dd8fc;
+  --licht:  #fcd34d;
+  --geluid: #6ee7b7;
+
+  --W: 466px;
+  --R: 228px;
+}
+
+* { box-sizing:border-box; margin:0; padding:0;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+
+html, body {
+  background: #0a0a0a;
+  display: flex; align-items:center; justify-content:center;
+  min-height: 100vh; overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════
+   WATCH SHELL — perfect circle
+══════════════════════════════════════ */
+.W {
+  width: var(--W); height: var(--W);
+  max-width: 100vw; max-height: 100vw;
+  border-radius: 50%;
+  background: var(--bg);
+  overflow: hidden;
+  position: relative;
+  /* subtle outer ring */
+  box-shadow: 0 0 0 2px #1a1a1a, 0 0 40px rgba(0,0,0,.8);
+}
+
+/* ══════════════════════════════════════
+   VIEWS — stack, only one shown
+══════════════════════════════════════ */
+.V {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .18s ease;
+}
+.V.on { opacity: 1; pointer-events: all; }
+
+/* ══════════════════════════════════════
+   PROGRESS RING — always on top
+══════════════════════════════════════ */
+#ring {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 10;
+}
+#ring circle {
+  fill: none; stroke-width: 4; stroke-linecap: round;
+  transform-origin: 50% 50%; transform: rotate(-90deg);
+}
+.rBg   { stroke: #111; }
+.rFill { stroke: var(--warn); transition: stroke-dashoffset .45s linear, stroke .3s; }
+
+/* ══════════════════════════════════════
+   ① MAIN VIEW
+══════════════════════════════════════ */
+#vMain { justify-content: flex-start; }
+
+/* Live/pause/stopped indicator — centered top */
+.liveRing {
+  position: absolute; top: 20px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted); transition: background .2s;
+}
+.liveRing.live   { background: var(--acc); box-shadow: 0 0 10px var(--acc); animation: blink 1s infinite; }
+.liveRing.paused { background: var(--warn); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+/* Clock — hero element */
+.clockWrap {
+  margin-top: 50px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.clockLbl {
+  font-size: 10px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif; font-weight: 800;
+}
+#clock {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 66px; letter-spacing: -1px; line-height: 1;
+  color: var(--acc); text-shadow: 0 0 28px rgba(200,245,58,.3);
+  transition: color .25s, text-shadow .25s;
+}
+#clock.run  { color: #fff; text-shadow: 0 0 36px rgba(200,245,58,.5); }
+#clock.pau  { color: var(--warn); text-shadow: 0 0 18px rgba(245,166,35,.3); }
+
+/* Active cue block */
+.activBlock {
+  margin-top: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 0 52px; width: 100%; text-align: center;
+}
+.activLbl { font-size: 9px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; font-weight: 800; }
+.activRow  { display: flex; align-items: center; gap: 6px; max-width: 240px; }
+.typeDot   { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.activName {
+  font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 20px; letter-spacing: .5px;
+  color: var(--acc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1;
+}
+.activNote {
+  font-size: 11px; font-weight: 700; color: var(--muted); max-width: 210px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Divider */
+.hairline {
+  width: 120px; height: 1px; background: var(--bdr); margin: 8px 0 6px;
+}
+
+/* Next cue block */
+.nextBlock {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 0 56px; width: 100%; text-align: center;
+}
+.nextLbl  { font-size: 9px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; font-weight: 800; }
+.nextName {
+  font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: .3px;
+  color: var(--warn); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 210px; line-height: 1;
+}
+#cd {
+  font-family: 'Oswald', sans-serif; font-weight: 700;
+  font-size: 28px; color: var(--warn); line-height: 1; margin-top: 2px;
+}
+#cd.hot { color: var(--danger); animation: pulse .5s infinite alternate; }
+@keyframes pulse { from{opacity:1} to{opacity:.2} }
+
+/* Transport row — 3 big buttons centered in bottom arc */
+.tRow {
+  position: absolute; bottom: 48px;
+  display: flex; gap: 14px; align-items: center; justify-content: center;
+}
+.tBtn {
+  width: 64px; height: 64px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px;
+  font-family: 'DM Sans', sans-serif; font-weight: 800;
+  font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  transition: transform .1s, filter .1s, opacity .15s;
+  -webkit-user-select: none;
+}
+.tBtn:active  { transform: scale(.88); filter: brightness(1.3); }
+.tBtn:disabled{ opacity: .18; pointer-events: none; }
+.tBtn .ic { font-size: 22px; line-height: 1; }
+.tStart { background: var(--acc);  color: #000; }
+.tPause { background: var(--warn); color: #000; }
+.tStop  { background: var(--s2);  color: var(--danger); border: 2px solid #2a1010; }
+
+/* Menu button — floating top-right, inside the circle safe zone */
+.menuBtn {
+  position: absolute; top: 30px; right: 66px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--s2); border: 1px solid var(--bdr);
+  color: var(--muted); font-size: 16px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.menuBtn:active { background: var(--s1); color: var(--text); }
+
+/* Skip button — top left, inside circle safe zone */
+.skipBtn {
+  position: absolute; top: 30px; left: 66px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--s2); border: 1px solid var(--bdr);
+  color: var(--muted); font-size: 14px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.skipBtn:active { color: var(--warn); background: var(--s1); }
+
+/* ══════════════════════════════════════
+   SHARED: INNER SCROLL VIEWS
+   (list, detail, add, midi, csv)
+══════════════════════════════════════ */
+.innerV {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+/* Round-aware top padding: circle clips corners */
+.roundPad { padding: 0 24px; } /* default */
+.roundTop { padding-top: 48px; }
+.roundBot { padding-bottom: 48px; }
+
+/* View header bar */
+.vBar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 44px 30px 10px; flex-shrink: 0;
+}
+.vTitle {
+  font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 16px;
+  letter-spacing: 3px; color: var(--acc); text-transform: uppercase;
+}
+.vBarBtns { display: flex; gap: 10px; align-items: center; }
+.iconBtn {
+  background: var(--s2); border: 1px solid var(--bdr); border-radius: 50%;
+  width: 32px; height: 32px;
+  color: var(--muted); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+}
+.iconBtn:active { color: var(--text); background: var(--s1); }
+.iconBtn.acc { color: var(--acc); border-color: rgba(200,245,58,.3); font-size: 18px; }
+
+/* Scrollable body */
+.scroll {
+  flex: 1; overflow-y: auto; width: 100%;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 50px;
+}
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════
+   ② CUE LIST VIEW — centered
+══════════════════════════════════════ */
+.cueRow {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 12px 40px;
+  border-bottom: 1px solid var(--bdr);
+  min-height: 60px; cursor: pointer;
+  transition: background .15s;
+  text-align: center; position: relative;
+}
+/* Coloured top-bar instead of left border */
+.cueRow::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 32px; height: 2px; border-radius: 0 0 2px 2px;
+  background: var(--bdr); transition: background .15s;
+}
+.cueRow.act   { background: #0c1400; }
+.cueRow.act::before  { background: var(--acc); width: 60px; }
+.cueRow.next  { background: rgba(245,166,35,.06); }
+.cueRow.next::before { background: var(--warn); width: 44px; }
+.cueRow.past  { opacity: .3; }
+.cueRow.past .cName { text-decoration: line-through; }
+
+.cTypeRow { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 3px; }
+.cTypeDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.cTypeLabel { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; font-weight: 800; }
+
+.cInfo    { width: 100%; }
+.cName    {
+  font-family: 'Oswald', sans-serif; font-weight: 600;
+  font-size: 16px; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.2;
+}
+.cName.act{ color: var(--acc); }
+.cMeta    {
+  font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cDel     {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--muted);
+  font-size: 13px; padding: 6px; cursor: pointer; opacity: .4;
+}
+.cDel:active { color: var(--danger); opacity: 1; }
+
+.empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 50px; color: var(--muted); text-align: center; gap: 6px;
+  font-size: 11px;
+}
+.emptyIco { font-size: 32px; margin-bottom: 4px; }
+
+/* ══════════════════════════════════════
+   ③ CUE DETAIL / EDIT VIEW
+══════════════════════════════════════ */
+.detailScroll {
+  flex: 1; overflow-y: auto; width: 100%;
+  padding: 0 28px 52px; -webkit-overflow-scrolling: touch;
+}
+.detailScroll::-webkit-scrollbar { display: none; }
+
+.fLabel {
+  font-size: 9px; letter-spacing: 2px; color: var(--muted);
+  text-transform: uppercase; margin-bottom: 4px; display: block; margin-top: 12px;
+  font-family: 'DM Sans', sans-serif; font-weight: 800;
+}
+.fInput {
+  width: 100%; background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 14px; outline: none;
+}
+.fInput:focus { border-color: var(--acc); }
+.fInput::placeholder { color: var(--muted); }
+
+.fTextarea {
+  width: 100%; background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 13px; outline: none;
+  resize: none; height: 64px; line-height: 1.6;
+}
+.fTextarea:focus { border-color: var(--acc); }
+
+.typePicker { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.typeChip {
+  padding: 6px 11px; border-radius: 12px; border: 1px solid var(--bdr);
+  background: var(--s1); font-size: 11px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-weight: 800; color: var(--muted);
+  transition: all .12s; opacity: .6;
+}
+.typeChip.sel { opacity: 1; border-color: currentColor; }
+.typeChip.regie  { color: var(--regie); }
+.typeChip.kraan  { color: var(--kraan); }
+.typeChip.licht  { color: var(--licht); }
+.typeChip.geluid { color: var(--geluid); }
+
+.savBtn {
+  width: 100%; margin-top: 14px; padding: 13px;
+  background: var(--acc); color: #000; border: none; border-radius: 10px;
+  font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 2px; cursor: pointer;
+}
+.savBtn:active { filter: brightness(1.15); }
+.delBtn {
+  width: 100%; margin-top: 8px; padding: 11px;
+  background: transparent; color: var(--danger); border: 1px solid #2a0a0a;
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 800; font-size: 12px; cursor: pointer;
+}
+.delBtn:active { background: rgba(245,58,58,.1); }
+
+/* ══════════════════════════════════════
+   ④ MIDI VIEW
+══════════════════════════════════════ */
+.midiScroll {
+  flex: 1; overflow-y: auto; width: 100%;
+  padding: 0 24px 52px; -webkit-overflow-scrolling: touch;
+}
+.midiScroll::-webkit-scrollbar { display: none; }
+
+.statusRow {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: 8px; margin-bottom: 8px;
+}
+.statusRow label { font-size: 11px; color: var(--text); }
+.badge {
+  font-size: 10px; padding: 3px 8px; border-radius: 8px; font-weight: 600;
+}
+.badge.ok  { background: rgba(200,245,58,.15); color: var(--acc); }
+.badge.err { background: rgba(245,58,58,.15);  color: var(--danger); }
+.badge.off { background: var(--s2); color: var(--muted); }
+
+.midiSelect {
+  width: 100%; background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: 8px; padding: 10px 12px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 12px; outline: none;
+  margin-bottom: 8px; appearance: none;
+}
+.midiNote {
+  font-size: 11px; font-weight: 700; color: var(--text); line-height: 1.7;
+  padding: 10px 12px; background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: 8px; margin-top: 4px;
+}
+.midiNote strong { color: var(--text); }
+
+.testBtn {
+  width: 100%; margin-top: 12px; padding: 12px;
+  background: var(--s2); color: var(--muted); border: 1px solid var(--bdr);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; font-weight: 800; font-size: 12px; cursor: pointer;
+}
+.testBtn:active { color: var(--acc); border-color: var(--acc); }
+
+/* MIDI sync indicator — centered below live dot */
+.syncLbl {
+  position: absolute; top: 36px;
+  font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase;
+  font-family: 'DM Sans', sans-serif; font-weight: 800;
+}
+.syncLbl.on { color: var(--regie); }
+
+/* ══════════════════════════════════════
+   ⑤ CSV / IMPORT-EXPORT VIEW
+══════════════════════════════════════ */
+.csvScroll {
+  flex: 1; overflow-y: auto; width: 100%;
+  padding: 0 24px 52px; -webkit-overflow-scrolling: touch;
+}
+.csvScroll::-webkit-scrollbar { display: none; }
+
+.csvInfo {
+  font-size: 10px; font-weight: 700; color: var(--muted); line-height: 1.7;
+  padding: 10px 12px; background: var(--s1); border: 1px solid var(--bdr);
+  border-radius: 8px; margin-bottom: 10px;
+}
+.csvInfo code { color: var(--acc); }
+
+.dropZone {
+  border: 1px dashed var(--bdr); border-radius: 10px;
+  padding: 18px; text-align: center; color: var(--muted);
+  font-size: 12px; font-weight: 700; cursor: pointer; margin-bottom: 10px;
+  transition: border-color .15s;
+}
+.dropZone:active,.dropZone.drag { border-color: var(--acc); color: var(--text); }
+.dropZone input { display: none; }
+
+.csvBtn {
+  width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--bdr);
+  background: var(--s2); color: var(--muted); font-family: 'DM Sans', sans-serif;
+  font-weight: 800; font-size: 12px; cursor: pointer; margin-bottom: 8px;
+}
+.csvBtn.prim { background: var(--acc); color: #000; border: none; font-size: 13px; }
+.csvBtn:active { filter: brightness(1.2); }
+
+/* ══════════════════════════════════════
+   START VANAF BUTTON in cue rows
+══════════════════════════════════════ */
+.cueStartFrom{
+  display:block; width:100%;
+  margin-top:6px; padding:7px 0;
+  background:rgba(200,245,58,.12); border:1px solid rgba(200,245,58,.25);
+  border-radius:8px; color:var(--acc);
+  font-family:'DM Sans',sans-serif; font-weight:800;
+  font-size:10px; letter-spacing:1px; text-transform:uppercase;
+  cursor:pointer; text-align:center;
+}
+.cueStartFrom:active{background:rgba(200,245,58,.25);}
+
+/* ══════════════════════════════════════
+   ⑦ START VANAF VIEW — time picker
+══════════════════════════════════════ */
+.sfScroll{
+  flex:1; overflow-y:auto; width:100%;
+  padding:0 22px 52px; -webkit-overflow-scrolling:touch;
+}
+.sfScroll::-webkit-scrollbar{display:none;}
+
+/* Drum-roller style number inputs */
+.sfPickerRow{
+  display:flex; align-items:flex-end; justify-content:center; gap:4px; margin-bottom:14px;
+}
+.sfSegWrap{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.sfSegLbl{font-size:7px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:800;}
+.sfSeg{
+  width:68px; text-align:center; padding:9px 2px;
+  background:var(--s1); border:1px solid var(--bdr); border-radius:10px;
+  color:var(--text); font-family:'Oswald',sans-serif; font-weight:700; font-size:28px;
+  outline:none; -moz-appearance:textfield; appearance:textfield;
+}
+.sfSeg::-webkit-inner-spin-button,.sfSeg::-webkit-outer-spin-button{-webkit-appearance:none;}
+.sfSeg:focus{border-color:var(--acc);}
+.sfColon{font-family:'Oswald',sans-serif;font-weight:700;font-size:28px;color:var(--muted);padding-bottom:8px;}
+
+.sfDivider{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:6px;font-family:'DM Sans',sans-serif;}
+
+/* Cue quick-pick in watch */
+.sfCueItem{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:10px; border:1px solid var(--bdr);
+  background:var(--s1); margin-bottom:6px; cursor:pointer;
+  transition:background .12s, border-color .12s;
+}
+.sfCueItem:active{background:var(--s2);}
+.sfCueItem.sfSel{border-color:var(--acc);background:rgba(200,245,58,.06);}
+.sfCueDot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sfCueName{flex:1;font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.sfCueTime{font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;color:var(--muted);}
+
+.sfGoBtn{
+  width:100%; padding:13px; border-radius:10px; border:none;
+  background:var(--acc); color:#000;
+  font-family:'Oswald',sans-serif; font-weight:700; font-size:18px; letter-spacing:2px;
+  cursor:pointer; margin-top:12px;
+}
+.sfGoBtn:active{filter:brightness(1.15);}
+#vMenu { justify-content: flex-start; }
+.menuGrid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; padding: 0 30px; width: 100%; margin-top: 8px;
+}
+.menuCard {
+  background: var(--s1); border: 1px solid var(--bdr); border-radius: 14px;
+  padding: 16px 12px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-align: center;
+  transition: background .15s, border-color .15s;
+  min-height: 80px;
+}
+.menuCard:active { background: var(--s2); border-color: var(--muted); }
+.menuCard .mIco { font-size: 22px; line-height: 1; }
+.menuCard .mLbl {
+  font-size: 10px; letter-spacing: 1px; color: var(--muted);
+  text-transform: uppercase; font-weight: 800;
+}
+.menuCard .mSub { font-size: 10px; font-weight: 700; color: var(--bdr); margin-top: 1px; }
+.menuCard.midi-on .mLbl { color: var(--regie); }
+
+/* ══════════════════════════════════════
+   SHARED BACK ROW
+══════════════════════════════════════ */
+.backRow {
+  position: absolute; bottom: 18px;
+  display: flex; gap: 10px;
+}
+.backBtn {
+  background: var(--s2); border: 1px solid var(--bdr); border-radius: 20px;
+  padding: 8px 20px; color: var(--muted); font-family: 'DM Sans', sans-serif;
+  font-weight: 800; font-size: 11px; cursor: pointer; letter-spacing: .5px;
+}
+.backBtn:active { color: var(--text); }
+.backBtn.prim { background: var(--acc); color: #000; border: none; }
+</style>
+</head>
+<body>
+
+<div class="W" id="watch">
+
+  <!-- ══ PROGRESS RING (always on top) ══ -->
+  <svg id="ring" viewBox="0 0 466 466">
+    <circle class="rBg"   cx="233" cy="233" r="228" stroke-dasharray="1433" stroke-dashoffset="0"/>
+    <circle class="rFill" id="rFill" cx="233" cy="233" r="228" stroke-dasharray="1433" stroke-dashoffset="1433"/>
+  </svg>
+
+  <!-- ══════════════════════════════════
+       ① MAIN VIEW
+  ══════════════════════════════════ -->
+  <div class="V on" id="vMain">
+    <div class="liveRing" id="liveDot"></div>
+    <div class="syncLbl" id="syncLbl">INTERN</div>
+    <button class="skipBtn" onclick="skipToNext()" title="Volgende cue">⏭</button>
+    <button class="menuBtn" onclick="nav('vMenu')" title="Menu">⋯</button>
+
+    <div class="clockWrap">
+      <div class="clockLbl">TIMECODE</div>
+      <div id="clock">00:00:00</div>
+    </div>
+
+    <div class="activBlock">
+      <div class="activLbl">NU ACTIEF</div>
+      <div class="activRow">
+        <div class="typeDot" id="activDot"></div>
+        <div class="activName" id="activName">—</div>
+      </div>
+      <div class="activNote" id="activNote"></div>
+      <div id="watchRegion" style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:2px;font-weight:800;"></div>
+    </div>
+
+    <div class="hairline"></div>
+
+    <div class="nextBlock">
+      <div class="nextLbl">VOLGENDE</div>
+      <div class="nextName" id="nextName">—</div>
+      <div id="cd">—</div>
+    </div>
+
+    <div class="tRow">
+      <button class="tBtn tStop"  id="btnStop"  onclick="stopTimer()"  disabled><span class="ic">⏹</span><span>Stop</span></button>
+      <button class="tBtn tStart" id="btnStart" onclick="startTimer()"><span class="ic">▶</span><span>Start</span></button>
+      <button class="tBtn tPause" id="btnPause" onclick="pauseTimer()" disabled><span class="ic">⏸</span><span>Pauze</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       ② CUE LIST VIEW
+  ══════════════════════════════════ -->
+  <div class="V" id="vList">
+    <div class="innerV">
+      <div class="vBar">
+        <div class="vTitle">CUE LIJST</div>
+        <div class="vBarBtns">
+          <button class="iconBtn acc" onclick="openDetail(-1)">＋</button>
+          <button class="iconBtn" onclick="nav('vMenu')">✕</button>
+        </div>
+      </div>
+      <div class="scroll" id="cueScroll">
+        <div id="cueItems"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       ③ CUE DETAIL / EDIT VIEW
+  ══════════════════════════════════ -->
+  <div class="V" id="vDetail">
+    <div class="innerV">
+      <div class="vBar">
+        <div class="vTitle" id="detailTitle">NIEUWE CUE</div>
+        <button class="iconBtn" onclick="nav('vList')">✕</button>
+      </div>
+      <div class="detailScroll">
+        <label class="fLabel">NAAM</label>
+        <input  class="fInput" id="dName" type="text" placeholder="Naam van de cue…">
+
+        <label class="fLabel">TIJD (HH:MM:SS)</label>
+        <input  class="fInput" id="dTime" type="text" placeholder="00:01:30">
+
+        <label class="fLabel">TYPE</label>
+        <div class="typePicker">
+          <button class="typeChip sel" data-t="none"   onclick="pickType(this)">— Geen</button>
+          <button class="typeChip regie"  data-t="regie"  onclick="pickType(this)">🎬 Regie</button>
+          <button class="typeChip kraan"  data-t="kraan"  onclick="pickType(this)">🏗 Kraan</button>
+          <button class="typeChip licht"  data-t="licht"  onclick="pickType(this)">💡 Licht</button>
+          <button class="typeChip geluid" data-t="geluid" onclick="pickType(this)">🔊 Geluid</button>
+        </div>
+
+        <label class="fLabel">NOTITIE</label>
+        <textarea class="fTextarea" id="dNote" placeholder="Optionele aantekeningen…"></textarea>
+
+        <button class="savBtn" onclick="saveDetail()">OPSLAAN</button>
+        <button class="delBtn" id="delCueBtn" onclick="deleteCurrentCue()" style="display:none">Verwijder cue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       ④ MIDI VIEW
+  ══════════════════════════════════ -->
+  <div class="V" id="vMidi">
+    <div class="innerV">
+      <div class="vBar">
+        <div class="vTitle">MIDI SYNC</div>
+        <button class="iconBtn" onclick="nav('vMenu')">✕</button>
+      </div>
+      <div class="midiScroll">
+
+        <div class="statusRow">
+          <label>WebMIDI</label>
+          <span class="badge off" id="midiBadge">—</span>
+        </div>
+
+        <label class="fLabel">INGANG (van Reaper)</label>
+        <select class="midiSelect" id="midiIn" onchange="selectMidiIn()">
+          <option value="">— kies poort —</option>
+        </select>
+
+        <label class="fLabel">UITGANG (naar Reaper)</label>
+        <select class="midiSelect" id="midiOutSel" onchange="selectMidiOut()">
+          <option value="">— kies poort —</option>
+        </select>
+
+        <label class="fLabel">SYNC MODUS</label>
+        <select class="midiSelect" id="midiMode" onchange="applyMidiMode()">
+          <option value="off">Uit (intern)</option>
+          <option value="auto" selected>Auto (aanbevolen)</option>
+          <option value="mtc">MTC alleen</option>
+          <option value="clock">MIDI Clock alleen</option>
+        </select>
+
+        <div id="offsetRow" style="display:none">
+          <label class="fLabel">OFFSET (seconden)</label>
+          <input class="fInput" id="mtcOff" type="number" value="0" step="0.1">
+        </div>
+
+        <!-- SEND TRANSPORT -->
+        <div id="watchSendSection" style="display:none">
+          <label class="fLabel">STUUR NAAR REAPER</label>
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button class="savBtn" style="flex:1;font-size:12px;padding:10px;" onclick="wSendStart()">▶ Start</button>
+            <button class="add-cancel" style="flex:1;font-size:12px;padding:10px;" onclick="wSendStop()">■ Stop</button>
+            <button class="add-cancel" style="flex:1;font-size:12px;padding:10px;" onclick="wSendContinue()">⏸ Cont</button>
+          </div>
+          <button class="testBtn" onclick="wSendCurrentPos()" style="margin-bottom:6px;">⟳ Stuur huidige positie</button>
+        </div>
+
+        <div class="midiNote">
+          <strong>Setup:</strong> 2 LoopMIDI poorten:<br>
+          Poort 1: Reaper→App (MTC ingang)<br>
+          Poort 2: App→Reaper (transport uitgang)
+        </div>
+
+        <button class="testBtn" onclick="testMidi()">Test verbinding</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       ⑤ CSV VIEW
+  ══════════════════════════════════ -->
+  <div class="V" id="vCsv">
+    <div class="innerV">
+      <div class="vBar">
+        <div class="vTitle">IMPORT / EXPORT</div>
+        <button class="iconBtn" onclick="nav('vMenu')">✕</button>
+      </div>
+      <div class="csvScroll">
+        <div class="csvInfo">
+          Reaper markers formaat:<br>
+          <code>#,Name,Start,End,Length,Color</code><br>
+          De <em>Start</em>-kolom (seconden) wordt het tijdstip.
+        </div>
+
+        <div class="dropZone" id="dropZone" onclick="document.getElementById('csvFile').click()">
+          <input type="file" id="csvFile" accept=".csv,.txt" onchange="importCSV(event)">
+          📂 Tik of sleep een CSV-bestand
+        </div>
+
+        <label class="fLabel">OF PLAK CSV-TEKST</label>
+        <textarea class="fTextarea" id="csvPaste" style="height:80px;font-size:10px;line-height:1.7;"
+          placeholder="#,Name,Start,End,Length,Color&#10;1,Lichten aan,60,60,0,0"></textarea>
+
+        <button class="csvBtn" onclick="importPaste()" style="margin-top:8px">Importeer tekst</button>
+        <button class="csvBtn prim" onclick="exportCSV()">⬇ Exporteer CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       ⑥ MENU VIEW
+  ══════════════════════════════════ -->
+  <div class="V" id="vMenu">
+    <div class="vBar">
+      <div class="vTitle">MENU</div>
+      <button class="iconBtn" onclick="nav('vMain')">✕</button>
+    </div>
+
+    <div class="menuGrid">
+      <div class="menuCard" onclick="nav('vList')">
+        <div class="mIco">☰</div>
+        <div class="mLbl">Cuelijst</div>
+        <div class="mSub" id="menuCueCount"></div>
+      </div>
+      <div class="menuCard" onclick="openDetail(-1)">
+        <div class="mIco">＋</div>
+        <div class="mLbl">Cue toevoegen</div>
+      </div>
+      <div class="menuCard" id="midiCard" onclick="nav('vMidi')">
+        <div class="mIco">🎹</div>
+        <div class="mLbl">MIDI Sync</div>
+        <div class="mSub" id="menuMidiSub">Uit</div>
+      </div>
+      <div class="menuCard" onclick="nav('vCsv')">
+        <div class="mIco">📊</div>
+        <div class="mLbl">CSV Import/Export</div>
+      </div>
+      <div class="menuCard" onclick="skipToNext()">
+        <div class="mIco">⏭</div>
+        <div class="mLbl">Volgende cue</div>
+      </div>
+      <div class="menuCard" onclick="openFromView()">
+        <div class="mIco">↩</div>
+        <div class="mLbl">Start vanaf…</div>
+      </div>
+      <div class="menuCard" onclick="stopTimer();nav('vMain')">
+        <div class="mIco">↺</div>
+        <div class="mLbl">Reset show</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       ⑦ START VANAF VIEW
+  ══════════════════════════════════ -->
+  <div class="V" id="vFrom">
+    <div class="innerV">
+      <div class="vBar">
+        <div class="vTitle">START VANAF</div>
+        <button class="iconBtn" onclick="nav('vMenu')">✕</button>
+      </div>
+      <div class="sfScroll">
+
+        <div class="sfPickerRow">
+          <div class="sfSegWrap">
+            <div class="sfSegLbl">UUR</div>
+            <input class="sfSeg" id="sfH" type="number" min="0" max="23" value="0" oninput="wSyncPicker()">
+          </div>
+          <div class="sfColon">:</div>
+          <div class="sfSegWrap">
+            <div class="sfSegLbl">MIN</div>
+            <input class="sfSeg" id="sfM" type="number" min="0" max="59" value="0" oninput="wSyncPicker()">
+          </div>
+          <div class="sfColon">:</div>
+          <div class="sfSegWrap">
+            <div class="sfSegLbl">SEC</div>
+            <input class="sfSeg" id="sfS" type="number" min="0" max="59" value="0" oninput="wSyncPicker()">
+          </div>
+        </div>
+
+        <div class="sfDivider">Of kies een cue</div>
+        <div id="sfCueItems"></div>
+
+        <button class="sfGoBtn" onclick="wConfirmFrom()">▶ START</button>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- .W -->
+
+<script>
+/* ════════════════════════════════════════
+   DATA
+════════════════════════════════════════ */
+const TC = { regie:'#a78bfa', kraan:'#38bdf8', licht:'#fbbf24', geluid:'#34d399', none:'#2a2a40' };
+
+let cues = [
+  {time:60,   name:'Lichten aan — scene 1', type:'licht',  note:'Dimmer op 80%, warm wit'},
+  {time:150,  name:'Muziek fade in',         type:'geluid', note:'Track 3, fade 4 sec'},
+  {time:300,  name:'Acteur A op podium',     type:'regie',  note:'Komt op vanuit links'},
+  {time:495,  name:'Blackout',               type:'licht',  note:''},
+  {time:600,  name:'Scene 2 — lichten op',   type:'licht',  note:'Blauw wash + spot C4'},
+  {time:780,  name:'Geluidseffect: regen',   type:'geluid', note:''},
+  {time:900,  name:'Muziek stopt',           type:'geluid', note:'Hard cut'},
+  {time:1020, name:'Acteur B monoloog',      type:'regie',  note:''},
+  {time:1200, name:'Einde act 1 — pauze',    type:'regie',  note:'Huis open na 30s'},
+];
+
+let elapsed=0, running=false, startAt=null, rafId=null, activeIdx=-1;
+let detailIdx=-1, curType='none';
+let regions=[], activeRegionId=null;
+
+/* ════════════════════════════════════════
+   NAV
+════════════════════════════════════════ */
+function nav(id){
+  document.querySelectorAll('.V').forEach(v=>v.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+  if(id==='vList')  renderList();
+  if(id==='vMidi')  initMidi();
+  if(id==='vMenu')  updateMenu();
+  if(id==='vFrom')  buildSfCueItems();
+}
+
+/* ════════════════════════════════════════
+   TRANSPORT
+════════════════════════════════════════ */
+function startTimer(){
+  if(running)return;
+  running=true; startAt=performance.now()-elapsed*1000;
+  rafId=requestAnimationFrame(tick);
+  setStatus('live'); syncBtns();
+}
+function pauseTimer(){
+  if(!running)return;
+  running=false; cancelAnimationFrame(rafId);
+  setStatus('pau'); syncBtns();
+}
+function stopTimer(){
+  pauseTimer(); elapsed=0; activeIdx=-1;
+  setStatus('off'); updateClock(); renderMain(); syncBtns();
+}
+function syncBtns(){
+  $('btnStart').disabled = running;
+  $('btnPause').disabled = !running;
+  $('btnStop').disabled  = !running && elapsed===0;
+}
+function setStatus(s){
+  const dot=$('liveDot'), clk=$('clock');
+  dot.className='liveRing'; clk.className='';
+  if(s==='live'){dot.classList.add('live'); clk.classList.add('run');}
+  if(s==='pau') {dot.classList.add('paused'); clk.classList.add('pau');}
+}
+
+/* ════════════════════════════════════════
+   TICK
+════════════════════════════════════════ */
+function tick(){
+  elapsed=(performance.now()-startAt)/1000;
+  updateClock(); checkCues(); renderMain();
+  broadcastState();
+  rafId=requestAnimationFrame(tick);
+}
+
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
+const parseT=str=>{
+  let m=str.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if(m) return +m[1]*3600+ +m[2]*60+ +m[3];
+  m=str.match(/^(\d{1,2}):(\d{2})$/);
+  if(m) return +m[1]*60+ +m[2];
+  return null;
+};
+const $=id=>document.getElementById(id);
+
+function updateClock(){ $('clock').textContent=fmt(elapsed); }
+
+/* ════════════════════════════════════════
+   CUE LOGIC
+════════════════════════════════════════ */
+function checkCues(){
+  let na=-1;
+  for(let i=cues.length-1;i>=0;i--){ if(elapsed>=cues[i].time){na=i;break;} }
+  if(na!==activeIdx){ activeIdx=na; }
+  // track active region
+  const ar=regions.find(r=>elapsed>=r.start&&elapsed<r.end)||null;
+  const newRid=ar?ar.id:null;
+  if(newRid!==activeRegionId){ activeRegionId=newRid; renderRegionOnMain(); }
+}
+
+function renderRegionOnMain(){
+  const el=$('watchRegion');
+  if(!el) return;
+  if(!activeRegionId||!regions.length){ el.textContent=''; return; }
+  const r=regions.find(x=>x.id===activeRegionId);
+  if(r) el.textContent=r.name;
+}
+function nextIdx(){
+  for(let i=0;i<cues.length;i++){ if(elapsed<cues[i].time)return i; }
+  return -1;
+}
+function skipToNext(){
+  const ni=nextIdx(); if(ni<0)return;
+  elapsed=cues[ni].time+0.05;
+  if(running) startAt=performance.now()-elapsed*1000;
+  checkCues(); renderMain(); updateClock();
+  // flash ring briefly
+  $('rFill').style.transition='none';
+  $('rFill').setAttribute('stroke-dashoffset','1433');
+  setTimeout(()=>{ $('rFill').style.transition=''; },50);
+}
+
+/* ════════════════════════════════════════
+   RENDER MAIN
+════════════════════════════════════════ */
+const CIRC = 2*Math.PI*228;
+
+function renderMain(){
+  const ni=nextIdx();
+
+  // Active cue
+  if(activeIdx>=0){
+    const c=cues[activeIdx];
+    $('activName').textContent=c.name;
+    $('activDot').style.background=TC[c.type||'none'];
+    $('activNote').textContent=c.note||'';
+  } else {
+    $('activName').textContent='—';
+    $('activDot').style.background=TC.none;
+    $('activNote').textContent='';
+  }
+
+  // Next cue + countdown
+  const rf=$('rFill');
+  if(ni===-1){
+    $('nextName').textContent='Einde show';
+    $('cd').textContent='—'; $('cd').className='';
+    rf.setAttribute('stroke-dashoffset','0');
+    rf.style.stroke='var(--muted)'; return;
+  }
+  const next=cues[ni];
+  $('nextName').textContent=next.name;
+  const diff=next.time-elapsed;
+  const mm=Math.floor(diff/60), ss=Math.floor(diff%60);
+  $('cd').textContent = mm>0 ? `${mm}:${pad(ss)}` : `${Math.ceil(diff)}s`;
+  $('cd').className = diff<=5 ? 'hot' : '';
+
+  // Progress ring
+  const prev=ni>0?cues[ni-1].time:0;
+  const pct=Math.min(1,Math.max(0,(elapsed-prev)/(next.time-prev)));
+  rf.setAttribute('stroke-dashoffset',(CIRC*(1-pct)).toFixed(1));
+  rf.style.stroke = diff<=10 ? 'var(--danger)' : 'var(--warn)';
+}
+
+/* ════════════════════════════════════════
+   RENDER CUE LIST
+════════════════════════════════════════ */
+function renderList(){
+  const ni=nextIdx();
+  const el=$('cueItems');
+  if(!cues.length){
+    el.innerHTML=`<div class="empty"><div class="emptyIco">🎭</div>
+      <div>Geen cues geladen</div>
+      <div style="font-size:9px;margin-top:4px">Tik ＋ om te beginnen</div></div>`;
+    return;
+  }
+  el.innerHTML=cues.map((c,i)=>{
+    let cls='';
+    if(i===activeIdx) cls='act';
+    else if(i===ni) cls='next';
+    else if(i<activeIdx||(activeIdx===-1&&elapsed>c.time)) cls='past';
+    return `<div class="cueRow ${cls}" onclick="openDetail(${i})">
+      <div class="cTypeRow">
+        <div class="cTypeDot" style="background:${TC[c.type||'none']}"></div>
+        <div class="cTypeLabel">${c.type&&c.type!=='none'?c.type:'—'}</div>
+      </div>
+      <div class="cInfo">
+        <div class="cName ${i===activeIdx?'act':''}">${c.name}</div>
+        <div class="cMeta">${fmt(c.time)}${c.note?' · '+c.note:''}</div>
+      </div>
+      <button class="cueStartFrom" onclick="event.stopPropagation();wStartFromCue(${i})">▶ Vanaf hier</button>
+      <button class="cDel" onclick="event.stopPropagation();deleteCueAt(${i})">✕</button>
+    </div>`;
+  }).join('');
+  if(activeIdx>=0){
+    setTimeout(()=>{
+      const rows=el.querySelectorAll('.cueRow');
+      if(rows[activeIdx]) rows[activeIdx].scrollIntoView({block:'center'});
+    },40);
+  }
+}
+
+function deleteCueAt(i){
+  cues.splice(i,1);
+  if(activeIdx>=cues.length) activeIdx=cues.length-1;
+  renderList();
+}
+
+/* ════════════════════════════════════════
+   CUE DETAIL
+════════════════════════════════════════ */
+function pickType(btn){
+  document.querySelectorAll('.typeChip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  curType=btn.dataset.t;
+}
+
+function openDetail(i){
+  detailIdx=i;
+  const isNew=(i===-1);
+  $('detailTitle').textContent=isNew?'NIEUWE CUE':`Q${i+1} BEWERKEN`;
+  $('delCueBtn').style.display=isNew?'none':'block';
+  if(isNew){
+    $('dName').value=''; $('dTime').value='00:00:00'; $('dNote').value='';
+    curType='none';
+  } else {
+    const c=cues[i];
+    $('dName').value=c.name; $('dTime').value=fmt(c.time); $('dNote').value=c.note||'';
+    curType=c.type||'none';
+  }
+  document.querySelectorAll('.typeChip').forEach(b=>b.classList.toggle('sel',b.dataset.t===curType));
+  nav('vDetail');
+  setTimeout(()=>$('dName').focus(),120);
+}
+
+function saveDetail(){
+  const name=$('dName').value.trim();
+  const time=parseT($('dTime').value.trim());
+  if(!name){$('dName').style.borderColor='var(--danger)';return;}
+  if(time===null){$('dTime').style.borderColor='var(--danger)';return;}
+  $('dName').style.borderColor='';$('dTime').style.borderColor='';
+  let regionId=null;
+  if(regions.length){const r=regions.find(r=>time>=r.start&&time<r.end);regionId=r?r.id:null;}
+  const entry={time,name,type:curType,note:$('dNote').value.trim(),regionId};
+  if(detailIdx===-1) cues.push(entry);
+  else cues[detailIdx]=entry;
+  cues.sort((a,b)=>a.time-b.time);
+  detailIdx=cues.findIndex(c=>c.time===time&&c.name===name);
+  activeIdx=-1; checkCues();
+  nav('vList');
+}
+
+function deleteCurrentCue(){
+  if(detailIdx<0)return;
+  cues.splice(detailIdx,1);
+  if(activeIdx>=cues.length) activeIdx=cues.length-1;
+  nav('vList');
+}
+
+/* ════════════════════════════════════════
+   MENU
+════════════════════════════════════════ */
+function updateMenu(){
+  $('menuCueCount').textContent=`${cues.length} cues`;
+  $('menuMidiSub').textContent=midiMode==='off'?'Uit':midiMode.toUpperCase();
+  $('midiCard').classList.toggle('midi-on', midiMode!=='off' && !!midiInputRef);
+}
+
+/* ════════════════════════════════════════
+   MIDI ENGINE — auto-detect Reaper/LoopMIDI
+════════════════════════════════════════ */
+let midiAccess=null, midiInputRef=null, midiOutput=null, midiMode='auto';
+let mtcNibs=[0,0,0,0,0,0,0,0], mtcReceived=0;
+let mtcLastElapsed=-1, mtcStopTimeout=null;
+
+async function initMidi(){
+  const badge=$('midiBadge');
+  if(!navigator.requestMIDIAccess){
+    badge.textContent='Niet ondersteund'; badge.className='badge err'; return;
+  }
+  try{
+    midiAccess=await navigator.requestMIDIAccess({sysex:true});
+    badge.textContent='Verbonden'; badge.className='badge ok';
+    fillMidiPorts();
+    midiAccess.onstatechange=fillMidiPorts;
+  }catch(e){
+    badge.textContent='Geblokkeerd'; badge.className='badge err';
+  }
+}
+
+function fillMidiPorts(){
+  const inSel=$('midiIn'), prevIn=inSel.value;
+  const outSel=$('midiOutSel'), prevOut=outSel.value;
+  inSel.innerHTML='<option value="">— kies poort —</option>';
+  outSel.innerHTML='<option value="">— kies poort —</option>';
+  if(!midiAccess)return;
+  for(const [id,p] of midiAccess.inputs){
+    const o=document.createElement('option');
+    o.value=id; o.textContent=p.name+(p.state==='connected'?' ✓':'');
+    if(id===prevIn)o.selected=true;
+    inSel.appendChild(o);
+  }
+  for(const [id,p] of midiAccess.outputs){
+    const o=document.createElement('option');
+    o.value=id; o.textContent=p.name+(p.state==='connected'?' ✓':'');
+    if(id===prevOut)o.selected=true;
+    outSel.appendChild(o);
+  }
+}
+
+function selectMidiOut(){
+  const id=$('midiOutSel').value;
+  midiOutput=midiAccess?.outputs.get(id)||null;
+  $('watchSendSection').style.display=midiOutput?'block':'none';
+}
+
+/* MIDI SEND */
+function wMidiSend(bytes){
+  if(!midiOutput)return false;
+  try{midiOutput.send(bytes);return true;}catch(e){return false;}
+}
+function wSendStart(){ wMidiSend([0xFA]); }
+function wSendStop(){ wMidiSend([0xFC]); }
+function wSendContinue(){ wMidiSend([0xFB]); }
+function wSendCurrentPos(){
+  const fps=30,h=Math.floor(elapsed/3600),m=Math.floor((elapsed%3600)/60),s=Math.floor(elapsed%60),f=Math.floor((elapsed%1)*fps);
+  wMidiSend([0xF0,0x7F,0x7F,0x01,0x01,(3<<5)|h,m,s,f,0xF7]);
+  setTimeout(()=>wMidiSend([0xFB]),50);
+}
+
+function selectMidiIn(){
+  if(midiInputRef) midiInputRef.onmidimessage=null;
+  const id=$('midiIn').value;
+  midiInputRef=midiAccess?.inputs.get(id)||null;
+  if(midiInputRef){
+    midiInputRef.onmidimessage=onMidi;
+    mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;mtcLastElapsed=-1;
+  }
+  applyMidiMode();
+}
+
+function applyMidiMode(){
+  midiMode=$('midiMode').value;
+  $('offsetRow').style.display=(midiMode==='mtc'||midiMode==='auto')?'block':'none';
+  const lbl=$('syncLbl');
+  const on=midiMode!=='off'&&midiInputRef;
+  if(midiMode==='auto'&&on){lbl.textContent='AUTO'; lbl.classList.add('on');}
+  else if(midiMode==='mtc'&&on){lbl.textContent='MTC'; lbl.classList.add('on');}
+  else if(midiMode==='clock'&&on){lbl.textContent='CLK'; lbl.classList.add('on');}
+  else{lbl.textContent='INTERN'; lbl.classList.remove('on');}
+  mtcNibs=[0,0,0,0,0,0,0,0]; mtcReceived=0;
+  if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+}
+
+function onMidi(msg){
+  const data=msg.data, st=data[0], d1=data.length>1?data[1]:0;
+  if(st===0xF8||st===0xFE) return; // ignore clock ticks + active sensing
+
+  const wantMTC  = midiMode==='mtc'   || midiMode==='auto';
+  const wantClock= midiMode==='clock' || midiMode==='auto';
+
+  // MTC Quarter Frame
+  if(st===0xF1 && wantMTC){
+    const nt=(d1>>4)&0x07, nv=d1&0x0F;
+    mtcNibs[nt]=nv; mtcReceived|=(1<<nt);
+    if(mtcReceived===0xFF){
+      const frames = mtcNibs[0]|((mtcNibs[1]&0x01)<<4);
+      const secs   = mtcNibs[2]|((mtcNibs[3]&0x03)<<4);
+      const mins   = mtcNibs[4]|((mtcNibs[5]&0x03)<<4);
+      const hours  = mtcNibs[6]|((mtcNibs[7]&0x01)<<4);
+      const fps    = [24,25,29.97,30][(mtcNibs[7]>>1)&0x03];
+      const off    = parseFloat($('mtcOff')?.value||'0')||0;
+      elapsed      = hours*3600+mins*60+secs+(frames/fps)+off;
+      if(!running) startTimer();
+      else startAt=performance.now()-elapsed*1000;
+      mtcReceived=0;
+      if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
+      mtcStopTimeout=setTimeout(()=>{ if(running&&(midiMode==='mtc'||midiMode==='auto')){ pauseTimer(); } },500);
+    }
+  }
+
+  // MTC Full Frame SysEx
+  if(st===0xF0 && wantMTC && data.length>=9 && data[1]===0x7F && data[3]===0x01 && data[4]===0x01){
+    const hh=data[5]&0x1F, fps=[24,25,29.97,30][(data[5]>>5)&0x03];
+    const off=parseFloat($('mtcOff')?.value||'0')||0;
+    elapsed=hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
+    if(!running) startTimer(); else startAt=performance.now()-elapsed*1000;
+  }
+
+  // MIDI Clock transport
+  if(wantClock){
+    if(st===0xFA){ elapsed=0; if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;} startTimer(); }
+    if(st===0xFB){ if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;} startTimer(); }
+    if(st===0xFC){ pauseTimer(); }
+  }
+}
+
+function testMidi(){
+  if(!midiInputRef){alert('Geen MIDI-poort geselecteerd.');return;}
+  alert(`✓ Poort: ${midiInputRef.name}\nModus: ${midiMode==='auto'?'AUTO (MTC + Clock)':midiMode.toUpperCase()}\n\nDruk Play in Reaper en check de klok.`);
+}
+
+/* ════════════════════════════════════════
+   CSV
+════════════════════════════════════════ */
+const dz=$('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag');
+  const f=e.dataTransfer.files[0];if(f)readFile(f);
+});
+function importCSV(e){readFile(e.target.files[0]);}
+function readFile(f){const r=new FileReader();r.onload=ev=>parseImport(ev.target.result);r.readAsText(f);}
+function importPaste(){parseImport($('csvPaste').value);}
+
+function parseReaperTime(s){
+  if(!s) return null;
+  s=s.trim();
+  let m;
+  m=s.match(/^(\d+):(\d{2}):(\d{2})\.(\d+)$/);
+  if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +('0.'+m[4]);
+  m=s.match(/^(\d+):(\d{2}):(\d{2})$/);
+  if(m) return +m[1]*3600 + +m[2]*60 + +m[3];
+  m=s.match(/^(\d+):(\d{2})\.(\d+)$/);
+  if(m) return +m[1]*60 + +m[2] + +('0.'+m[3]);
+  m=s.match(/^(\d+):(\d{2})$/);
+  if(m) return +m[1]*60 + +m[2];
+  const f=parseFloat(s);
+  if(!isNaN(f)) return f;
+  return null;
+}
+
+function parseCSVLine(line){
+  const result=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"') inQ=!inQ;
+    else if(c===','&&!inQ){result.push(cur);cur='';}
+    else cur+=c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function parseImport(txt){
+  txt=txt.replace(/^\uFEFF/,'');
+  const lines=txt.split('\n').map(l=>l.trim()).filter(l=>l);
+  const isReaper=lines[0]&&lines[0].startsWith('#,Name,Start');
+  if(isReaper){
+    const newRegions=[], newCues=[];
+    for(const line of lines){
+      if(!line||line.startsWith('#,Name')) continue;
+      const cols=parseCSVLine(line);
+      if(cols.length<2) continue;
+      const id=cols[0].trim(), name=(cols[1]||'').trim();
+      const startSec=parseReaperTime(cols[2]||'');
+      if(startSec===null) continue;
+      if(id.startsWith('R')){
+        const endSec=parseReaperTime(cols[3]||'');
+        newRegions.push({id,name,start:startSec,end:endSec||startSec,color:cols[5]?'#'+cols[5]:null});
+      } else if(id.startsWith('M')){
+        newCues.push({time:startSec,name,type:guessType(name),note:'',regionId:null});
+      }
+    }
+    newRegions.sort((a,b)=>a.start-b.start);
+    newCues.sort((a,b)=>a.time-b.time);
+    for(const c of newCues){
+      const r=newRegions.find(r=>c.time>=r.start&&c.time<r.end);
+      if(r) c.regionId=r.id;
+    }
+    regions=newRegions; cues=newCues; activeIdx=-1;
+    renderList(); renderMain();
+    alert(`✓ ${newCues.length} cues, ${newRegions.length} regions`);
+    return;
+  }
+  const out=[];
+  for(const line of lines){
+    const cols=line.split(/\t/);
+    if(cols.length>=2){const t=parseReaperTime(cols[0]);if(t!==null){out.push({time:t,name:cols[1].trim(),type:'none',note:'',regionId:null});continue;}}
+    const m=line.match(/^(\S+)\s+(.+)$/);
+    if(m){const t=parseReaperTime(m[1]);if(t!==null)out.push({time:t,name:m[2].trim(),type:'none',note:'',regionId:null});}
+  }
+  if(!out.length){alert('Geen cues gevonden.');return;}
+  out.sort((a,b)=>a.time-b.time);
+  cues=out; activeIdx=-1;
+  renderList(); renderMain();
+  alert(`✓ ${out.length} cues`);
+}
+
+function guessType(n){
+  const u=n.toUpperCase();
+  if(/\bKRAAN\b/.test(u)) return 'kraan';
+  if(/\bSPOT\b|\bLICHT\b|\bDIM\b|\bWASH\b/.test(u)) return 'licht';
+  if(/\bGELUID\b|\bAUDIO\b|\bMUSIC\b/.test(u)) return 'geluid';
+  if(/\bENGEL\b|\bDAME\b|\bBRUID\b|\bREGIE\b|\bKABOEM\b|\bVUURWERK\b/.test(u)) return 'regie';
+  const l=n.toLowerCase();
+  if(/kraan|fly|rigg|aerial/.test(l)) return 'kraan';
+  if(/licht|light|dim|spot|wash/.test(l)) return 'licht';
+  if(/geluid|sound|audio|music/.test(l)) return 'geluid';
+  if(/regie|actor|scene|engel|dame|bruid/.test(l)) return 'regie';
+  return 'none';
+}
+
+function fmtReaper(s){
+  const m=Math.floor(s/60);
+  const sec=(s%60).toFixed(3);
+  return `${m}:${sec.padStart(6,'0')}`;
+}
+
+function exportCSV(){
+  const h='#,Name,Start,End,Length,Color';
+  const rRows=regions.map((r,i)=>`R${i+1},"${r.name}",${fmtReaper(r.start)},${fmtReaper(r.end)},${fmtReaper(r.end-r.start)},`);
+  const mRows=cues.map((c,i)=>`M${i+1},"${c.name}",${fmtReaper(c.time)},,,`);
+  const blob=new Blob([[h,...rRows,...mRows].join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='cues.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ════════════════════════════════════════
+   START VANAF (watch)
+════════════════════════════════════════ */
+let wSfTime = 0;
+
+function wStartFromCue(i){
+  // Instant: jump + start from this cue's time
+  wJumpTo(cues[i].time);
+  startTimer();
+  nav('vMain');
+}
+
+function openFromView(){
+  // Pre-fill picker with current elapsed
+  wSfTime = elapsed;
+  wSetPicker(wSfTime);
+  nav('vFrom');
+}
+
+function wJumpTo(t){
+  pauseTimer();
+  elapsed = Math.max(0, t);
+  activeIdx = -1; checkCues(); updateClock(); renderMain(); syncBtns();
+}
+
+function wSetPicker(t){
+  $('sfH').value = Math.floor(t/3600);
+  $('sfM').value = Math.floor((t%3600)/60);
+  $('sfS').value = Math.floor(t%60);
+  wSfTime = t;
+  wHighlightSfCue();
+}
+
+function wSyncPicker(){
+  const h=parseInt($('sfH').value)||0;
+  const m=parseInt($('sfM').value)||0;
+  const s=parseInt($('sfS').value)||0;
+  wSfTime = Math.max(0, h*3600+m*60+s);
+  wHighlightSfCue();
+}
+
+function buildSfCueItems(){
+  wSetPicker(wSfTime); // keep current selection
+  const el=$('sfCueItems');
+  el.innerHTML=cues.map((c,i)=>`
+    <div class="sfCueItem" id="sfci-${i}" onclick="wSelectSfCue(${i})">
+      <div class="sfCueDot" style="background:${TC[c.type||'none']}"></div>
+      <div class="sfCueName">Q${i+1} ${c.name}</div>
+      <div class="sfCueTime">${fmt(c.time)}</div>
+    </div>`).join('');
+  wHighlightSfCue();
+}
+
+function wSelectSfCue(i){
+  wSetPicker(cues[i].time);
+}
+
+function wHighlightSfCue(){
+  document.querySelectorAll('.sfCueItem').forEach(el=>el.classList.remove('sfSel'));
+  cues.forEach((c,i)=>{
+    if(Math.floor(c.time)===Math.floor(wSfTime)){
+      const el=$(`sfci-${i}`);
+      if(el){el.classList.add('sfSel'); el.scrollIntoView({block:'nearest'});}
+    }
+  });
+}
+
+function wConfirmFrom(){
+  wJumpTo(wSfTime);
+  nav('vMain');
+  startTimer();
+}
+
+/* ════════════════════════════════════════
+   BROADCAST
+════════════════════════════════════════ */
+let ws=null, wsUrl='', wsBroadcast=false;
+function wsConnect(url){
+  if(ws)ws.close(); wsUrl=url;
+  try{
+    ws=new WebSocket(url);
+    ws.onopen=()=>{wsBroadcast=true;};
+    ws.onclose=()=>{wsBroadcast=false;setTimeout(()=>{if(wsUrl)wsConnect(wsUrl);},3000);};
+    ws.onerror=()=>{wsBroadcast=false;};
+  }catch(e){wsBroadcast=false;}
+}
+function broadcastState(){
+  if(!wsBroadcast||!ws||ws.readyState!==1)return;
+  const ni=nextIdx();
+  try{ws.send(JSON.stringify({
+    t:Math.round(elapsed*1000)/1000, running,
+    activeCue:activeIdx>=0?{name:cues[activeIdx].name,type:cues[activeIdx].type||'none'}:null,
+    nextCue:ni>=0?{name:cues[ni].name,time:cues[ni].time,type:cues[ni].type||'none'}:null,
+    region:activeRegionId?(regions.find(r=>r.id===activeRegionId)||null):null,
+    cues:cues.map(c=>({time:c.time,name:c.name,type:c.type||'none',regionId:c.regionId||null})),
+    regions:regions.map(r=>({id:r.id,name:r.name,start:r.start,end:r.end,color:r.color||null})),
+  }));}catch(e){}
+}
+
+/* ════════════════════════════════════════
+   KEYBOARD
+════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  if(e.code==='Space'){e.preventDefault();running?pauseTimer():startTimer();}
+  if(e.code==='ArrowRight'||e.code==='KeyN') skipToNext();
+  if(e.code==='Escape'){running?pauseTimer():stopTimer();}
+});
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+syncBtns(); renderMain(); updateClock();
+</script>
+</body>
+</html>

@@ -252,9 +252,10 @@ const TYPE_COL={regie:'#c4affe',kraan:'#7dd8fc',licht:'#fcd34d',geluid:'#6ee7b7'
 const pad=n=>String(n).padStart(2,'0');
 const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
 
-let ws=null, state=null, clockRAF=null, clockOffset=0, lastServerT=0, lastReceivedAt=0;
+let ws=null, state=null, lastServerT=0, lastReceivedAt=0;
+let pingInterval=null;
 
-// ── Auto-read server URL from query param: ?server=ws://...
+// ── Auto-read server URL from query param: ?server=wss://...
 (function(){
   const u=new URLSearchParams(location.search).get('server');
   if(u){ document.getElementById('serverUrl').value=u; connect(); }
@@ -264,15 +265,53 @@ function connect(){
   const url=document.getElementById('serverUrl').value.trim();
   if(!url)return;
   $('overlayUrl').textContent=url;
-  if(ws){ws.close();}
-  ws=new WebSocket(url);
-  ws.onopen=()=>{ setConn(true); $('overlay').classList.add('hidden'); };
-  ws.onclose=()=>{ setConn(false); $('overlay').classList.remove('hidden'); setTimeout(connect,3000); };
+  if(ws){ try{ws.close();}catch(e){} }
+  if(pingInterval){ clearInterval(pingInterval); pingInterval=null; }
+
+  try {
+    ws=new WebSocket(url);
+  } catch(e) {
+    setConn(false);
+    setTimeout(connect, 5000);
+    return;
+  }
+
+  ws.onopen=()=>{
+    setConn(true);
+    $('overlay').classList.add('hidden');
+    // Keepalive: send __ping__ every 20s so Render doesn't drop the connection
+    pingInterval=setInterval(()=>{
+      if(ws&&ws.readyState===WebSocket.OPEN){
+        try{ ws.send('__ping__'); }catch(e){}
+      }
+    }, 20000);
+  };
+
+  ws.onclose=()=>{
+    setConn(false);
+    $('overlay').classList.remove('hidden');
+    if(pingInterval){ clearInterval(pingInterval); pingInterval=null; }
+    setTimeout(connect, 3000);
+  };
+
   ws.onerror=()=>{ setConn(false); };
+
   ws.onmessage=e=>{
+    // Ignore pong responses and non-JSON
+    if(e.data==='__pong__') return;
     try{
-      state=JSON.parse(e.data);
-      lastServerT=state.t;
+      const parsed=JSON.parse(e.data);
+      // Handle broadcaster disconnect notification
+      if(parsed.disconnected){
+        setConn(true); // still connected to server
+        // Show broadcaster offline state
+        const sb=$('statusBadge');
+        sb.textContent='BROADCASTER WEG';
+        sb.className='status-badge';
+        return;
+      }
+      state=parsed;
+      lastServerT=state.t||0;
       lastReceivedAt=performance.now();
       render(state);
     }catch(err){}

@@ -1,12 +1,7 @@
 /**
- * CUE RUNNER — Live Broadcast Server
+ * CUE RUNNER — Live Broadcast Server v2
  * ─────────────────────────────────────
- * Relay server: one broadcaster (the Cue Runner app) sends state,
- * all viewers receive it in real-time. Read-only for viewers.
- *
- * Install:  npm install ws
- * Run:      node server.js
- * Optional: PORT=3001 node server.js
+ * Relay server met keepalive ping/pong voor Render.com free tier.
  */
 
 const WebSocket = require('ws');
@@ -15,75 +10,103 @@ const fs        = require('fs');
 const path      = require('path');
 
 const PORT = process.env.PORT || 3001;
+const PING_INTERVAL = 25000; // ping every 25s (Render drops idle after ~55s)
 
-// ── HTTP server (serves viewer.html if present) ──
+const log = (...args) => console.log(new Date().toISOString().slice(11,19), ...args);
+
+// ── HTTP server ──
 const httpServer = http.createServer((req, res) => {
-  // CORS headers for browser clients
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
-  const url = req.url.split('?')[0]; // strip query params
+  const url = req.url.split('?')[0];
 
-  let filePath = null;
   if (url === '/' || url === '/viewer' || url === '/viewer.html') {
-    filePath = path.join(__dirname, 'cue-runner-viewer.html');
+    const filePath = path.join(__dirname, 'cue-runner-viewer.html');
+    if (fs.existsSync(filePath)) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      fs.createReadStream(filePath).pipe(res);
+      return;
+    }
   }
 
-  if (filePath && fs.existsSync(filePath)) {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    fs.createReadStream(filePath).pipe(res);
-  } else if (url === '/health') {
+  if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       ok: true,
-      viewers: wss ? wss.clients.size : 0,
+      clients: wss.clients.size,
       broadcaster: !!broadcaster,
       uptime: Math.round(process.uptime())
     }));
-  } else {
-    res.writeHead(302, { 'Location': '/viewer' });
-    res.end();
+    return;
   }
+
+  // Redirect everything else to viewer
+  res.writeHead(302, { 'Location': '/viewer' });
+  res.end();
 });
 
 // ── WebSocket server ──
 const wss = new WebSocket.Server({ server: httpServer });
 
-let broadcaster = null;   // The one Cue Runner instance broadcasting
-let viewers      = new Set(); // Read-only viewer connections
-let lastState    = null;  // Cache last state for late-joining viewers
+let broadcaster = null;
+let lastState   = null;
 
-const log = (...args) => console.log(new Date().toISOString().slice(11,19), ...args);
+// ── Keepalive: ping all clients every 25s ──
+// This prevents Render's load balancer from dropping idle connections
+setInterval(() => {
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.ping(); // WebSocket protocol ping — browser auto-responds with pong
+    }
+  });
+}, PING_INTERVAL);
 
 wss.on('connection', (ws, req) => {
   const ip = req.socket.remoteAddress;
-  log(`Client verbonden: ${ip} (totaal: ${wss.clients.size})`);
+  log(`+ Verbonden: ${ip} (totaal: ${wss.clients.size})`);
 
-  // Send last known state immediately (so viewers aren't blank on connect)
+  // Mark connection as alive for ping tracking
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
+
+  // Send last known state immediately so viewer isn't blank
   if (lastState) {
-    ws.send(lastState);
+    try { ws.send(lastState); } catch(e) {}
   }
 
   ws.on('message', (data) => {
-    // Any client that sends data is the broadcaster
+    const raw = data.toString();
+
+    // Skip ping messages from client
+    if (raw === '__ping__') {
+      try { ws.send('__pong__'); } catch(e) {}
+      return;
+    }
+
+    // Validate it's JSON state from the broadcaster
+    try { JSON.parse(raw); } catch(e) {
+      log('Ongeldige data ontvangen, genegeerd');
+      return;
+    }
+
+    // Register as broadcaster if not already
     if (ws !== broadcaster) {
       if (broadcaster && broadcaster.readyState === WebSocket.OPEN) {
-        log(`Nieuwe broadcaster van ${ip}, oude afgesloten.`);
+        log('Nieuwe broadcaster — oude verbroken');
         broadcaster.close();
       }
       broadcaster = ws;
-      log(`Broadcaster geregistreerd: ${ip}`);
+      log(`Broadcaster: ${ip}`);
     }
 
-    // Cache the state
-    lastState = data.toString();
+    lastState = raw;
 
-    // Relay to all viewers (everyone except broadcaster)
-    let count = 0;
+    // Relay to all viewers
+    let relayed = 0;
     wss.clients.forEach(client => {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(lastState);
-        count++;
+        try { client.send(lastState); relayed++; } catch(e) {}
       }
     });
   });
@@ -91,28 +114,24 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     if (ws === broadcaster) {
       broadcaster = null;
-      log('Broadcaster losgekoppeld.');
+      lastState = null;
+      log('Broadcaster losgekoppeld');
       // Notify viewers
-      const msg = JSON.stringify({ disconnected: true });
-      wss.clients.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(msg); });
-    } else {
-      viewers.delete(ws);
+      wss.clients.forEach(c => {
+        if (c.readyState === WebSocket.OPEN) {
+          try { c.send(JSON.stringify({ disconnected: true })); } catch(e) {}
+        }
+      });
     }
-    log(`Client weg. Nog verbonden: ${wss.clients.size}`);
+    log(`- Weg: ${ip} (nog: ${wss.clients.size})`);
   });
 
   ws.on('error', err => log('WS fout:', err.message));
-
-  viewers.add(ws);
 });
 
 httpServer.listen(PORT, '0.0.0.0', () => {
-  log(`═══════════════════════════════════════`);
-  log(`CUE RUNNER Broadcast Server draait`);
-  log(`WebSocket:  ws://0.0.0.0:${PORT}`);
-  log(`Viewer URL: http://localhost:${PORT}/viewer`);
-  log(`═══════════════════════════════════════`);
-  log(`Stuur vanuit Cue Runner app naar: ws://JOUW-IP:${PORT}`);
-  log(`Viewers gaan naar: http://JOUW-IP:${PORT}/viewer`);
-  log(`of http://JOUW-IP:${PORT}/viewer?server=ws://JOUW-IP:${PORT}`);
+  log('════════════════════════════════');
+  log(`CUE RUNNER server draait op :${PORT}`);
+  log(`Viewer: http://localhost:${PORT}/viewer`);
+  log('════════════════════════════════');
 });

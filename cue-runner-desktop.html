@@ -1863,10 +1863,11 @@ function setupDrag(handleId, side){
 /* ════════════════════════════════════════════
    LIVE BROADCAST — WebSocket naar viewer-server
 ════════════════════════════════════════════ */
-let ws=null, wsUrl='', wsBroadcast=false;
+let ws=null, wsUrl='', wsBroadcast=false, wsPingInterval=null;
 
 function wsConnect(url){
-  if(ws){ws.close();}
+  if(ws){try{ws.close();}catch(e){}}
+  if(wsPingInterval){clearInterval(wsPingInterval);wsPingInterval=null;}
   wsUrl=url;
   try{
     ws=new WebSocket(url);
@@ -1875,10 +1876,23 @@ function wsConnect(url){
       midiLog('ok','Broadcast verbonden: '+url);
       updateWsStatus('ok');
       broadcastState(); // send current state immediately on connect
+      // Keepalive: Render drops idle WS after ~55s — ping every 20s
+      wsPingInterval=setInterval(()=>{
+        if(ws&&ws.readyState===1) try{ws.send('__ping__');}catch(e){}
+      },20000);
     };
-    ws.onclose=()=>{ wsBroadcast=false; updateWsStatus('off'); setTimeout(()=>{ if(wsUrl)wsConnect(wsUrl); },3000); };
+    ws.onclose=()=>{
+      wsBroadcast=false;
+      if(wsPingInterval){clearInterval(wsPingInterval);wsPingInterval=null;}
+      updateWsStatus('off');
+      setTimeout(()=>{ if(wsUrl)wsConnect(wsUrl); },3000);
+    };
     ws.onerror=()=>{ wsBroadcast=false; updateWsStatus('err'); };
-  }catch(e){ wsBroadcast=false; }
+    ws.onmessage=e=>{
+      // Ignore pong responses
+      if(e.data==='__pong__') return;
+    };
+  }catch(e){ wsBroadcast=false; updateWsStatus('err'); }
 }
 
 function updateWsStatus(s){
