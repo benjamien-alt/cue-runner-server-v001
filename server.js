@@ -18,21 +18,31 @@ const PORT = process.env.PORT || 3001;
 
 // ── HTTP server (serves viewer.html if present) ──
 const httpServer = http.createServer((req, res) => {
-  // Serve viewer.html at /viewer or /
+  // CORS headers for browser clients
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+  const url = req.url.split('?')[0]; // strip query params
+
   let filePath = null;
-  if (req.url === '/' || req.url === '/viewer' || req.url === '/viewer.html') {
+  if (url === '/' || url === '/viewer' || url === '/viewer.html') {
     filePath = path.join(__dirname, 'cue-runner-viewer.html');
   }
 
   if (filePath && fs.existsSync(filePath)) {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     fs.createReadStream(filePath).pipe(res);
-  } else if (req.url === '/health') {
+  } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ ok: true, viewers: viewers.size, broadcaster: !!broadcaster }));
+    res.end(JSON.stringify({
+      ok: true,
+      viewers: wss ? wss.clients.size : 0,
+      broadcaster: !!broadcaster,
+      uptime: Math.round(process.uptime())
+    }));
   } else {
-    res.writeHead(404);
-    res.end('Not found. Place cue-runner-viewer.html next to server.js');
+    res.writeHead(302, { 'Location': '/viewer' });
+    res.end();
   }
 });
 

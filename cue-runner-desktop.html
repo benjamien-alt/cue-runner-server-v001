@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CUE RUNNER — Desktop</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg:      #07070a;
+  --s1:      #0d0d12;
+  --s2:      #121218;
+  --s3:      #18181f;
+  --bdr:     #25252f;
+  --acc:     #c8f53a;
+  --warn:    #f5a623;
+  --danger:  #f53a3a;
+  --text:    #f0f0fa;
+  --muted:   #9090b0;
+  --dim:     #5a5a78;
+  --active:  #141a05;
+
+  --regie:   #c4affe;
+  --kraan:   #7dd8fc;
+  --licht:   #fcd34d;
+  --geluid:  #6ee7b7;
+  --none:    #5a5a78;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{
+  height:100%;background:var(--bg);color:var(--text);
+  font-family:'DM Sans',sans-serif;overflow:hidden;
+}
+
+/* ═══════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════ */
+.topbar{
+  height:52px;display:flex;align-items:center;gap:16px;
+  padding:0 20px;background:var(--s1);border-bottom:1px solid var(--bdr);
+  flex-shrink:0;
+}
+.logo{
+  font-family:'Bebas Neue',sans-serif;font-size:22px;
+  letter-spacing:5px;color:var(--acc);flex-shrink:0;
+}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:background .2s;}
+.dot.live  {background:var(--acc);box-shadow:0 0 10px var(--acc);animation:blink 1s infinite;}
+.dot.paused{background:var(--warn);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.topbar-right{display:flex;gap:8px;align-items:center;margin-left:auto;}
+.tb-btn{
+  background:transparent;border:1px solid var(--bdr);border-radius:6px;
+  color:var(--text);font-size:12px;padding:6px 13px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap;
+  transition:background .12s,border-color .12s;
+}
+.tb-btn:hover{background:var(--s2);}
+.tb-btn.acc{border-color:var(--acc);color:var(--acc);}
+.tb-btn.acc:hover{background:rgba(200,245,58,.08);}
+.midi-badge{
+  font-size:11px;letter-spacing:1px;padding:5px 11px;border-radius:5px;
+  border:1px solid var(--bdr);color:var(--muted);background:transparent;cursor:pointer;
+  transition:all .2s;
+}
+.midi-badge.connected{border-color:var(--regie);color:var(--regie);box-shadow:0 0 8px rgba(196,175,254,.25);}
+
+/* ═══════════════════════════════════════════
+   LAYOUT — resizable 3 columns
+═══════════════════════════════════════════ */
+.layout{
+  display:grid;
+  grid-template-columns: 260px 4px 1fr 4px 340px;
+  grid-template-rows:1fr;
+  height:calc(100vh - 52px);
+  overflow:hidden;
+}
+
+/* Side panels clip their content when grid-track = 0 */
+.regions-panel, .right-panel {
+  overflow:hidden;
+  min-width:0;        /* allow grid to shrink below intrinsic size */
+}
+
+/* Drag handles */
+.drag-handle{
+  background:var(--bdr);cursor:col-resize;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;position:relative;z-index:20;
+  min-width:0;overflow:hidden;
+}
+.drag-handle:hover,.drag-handle.dragging{background:var(--acc);}
+.drag-handle::after{
+  content:'';display:block;width:2px;height:32px;
+  background:currentColor;border-radius:1px;opacity:.4;
+}
+
+/* Collapse toggle buttons — sit on topbar */
+.panel-toggle{
+  background:transparent;border:1px solid var(--bdr);border-radius:5px;
+  color:var(--muted);font-size:12px;padding:4px 9px;cursor:pointer;
+  transition:all .15s;line-height:1;
+}
+.panel-toggle:hover{border-color:var(--acc);color:var(--acc);}
+.panel-toggle.collapsed{color:var(--acc);border-color:var(--acc);background:rgba(200,245,58,.08);}
+
+/* ═══════════════════════════════════════════
+   LEFT: REGIONS PANEL
+═══════════════════════════════════════════ */
+.regions-panel{
+  background:var(--s1);border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel-header{
+  padding:14px 16px 10px;border-bottom:1px solid var(--bdr);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.panel-title{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+
+.regions-list{flex:1;overflow-y:auto;}
+.regions-list::-webkit-scrollbar{width:3px;}
+.regions-list::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
+
+.region-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 16px;border-bottom:1px solid var(--bdr);
+  border-left:3px solid transparent;cursor:pointer;
+  transition:background .15s;
+}
+.region-item:hover{background:var(--s2);}
+.region-item.active{background:rgba(200,245,58,.05);border-left-color:var(--acc);}
+.region-item.active .ri-name{color:var(--acc);}
+.region-item.past{opacity:.4;}
+.region-item.past .ri-name{text-decoration:line-through;}
+.ri-bar{width:4px;border-radius:2px;min-height:28px;flex-shrink:0;margin-top:2px;}
+.ri-body{flex:1;min-width:0;}
+.ri-id{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;font-weight:700;}
+.ri-name{
+  font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;
+  color:var(--text);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ri-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px;}
+.ri-progress{
+  height:2px;background:var(--bdr);border-radius:1px;margin-top:5px;overflow:hidden;
+}
+.ri-progress-fill{height:100%;background:var(--acc);width:0%;transition:width .5s linear;}
+
+/* ═══════════════════════════════════════════
+   CENTER: CLOCK + CUE LIST
+═══════════════════════════════════════════ */
+.center-panel{
+  display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);
+}
+
+/* Clock hero */
+.clock-hero{
+  padding:20px 24px 16px;background:var(--s1);border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;gap:24px;flex-shrink:0;
+}
+.clock-main{display:flex;flex-direction:column;gap:2px;}
+.clock-lbl{font-size:10px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+#clock{
+  font-family:'Share Tech Mono',monospace;font-size:clamp(48px,5vw,72px);
+  color:var(--acc);letter-spacing:3px;line-height:1;
+  text-shadow:0 0 32px rgba(200,245,58,.3);transition:color .25s;
+}
+#clock.run {color:#fff;text-shadow:0 0 40px rgba(200,245,58,.5);}
+#clock.pau {color:var(--warn);text-shadow:0 0 20px rgba(245,166,35,.3);}
+.sync-lbl{font-size:10px;letter-spacing:2px;color:var(--dim);margin-top:2px;}
+.sync-lbl.on{color:var(--regie);}
+
+/* Region name in clock area */
+.active-region-name{
+  flex:1;
+  display:flex;flex-direction:column;justify-content:center;
+  padding-left:16px;border-left:1px solid var(--bdr);
+}
+.arn-label{font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;font-weight:800;margin-bottom:3px;}
+.arn-name{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;
+  color:var(--text);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.arn-next{font-size:11px;color:var(--muted);margin-top:3px;}
+
+/* Transport */
+.transport{
+  display:flex;gap:8px;padding:10px 16px;background:var(--s1);
+  border-bottom:1px solid var(--bdr);flex-shrink:0;
+}
+.btn-t{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;
+  transition:transform .1s,filter .1s,opacity .15s;
+}
+.btn-t:active{transform:scale(.95);filter:brightness(1.2);}
+.btn-t:disabled{opacity:.2;pointer-events:none;}
+.btn-t .ic{font-size:22px;line-height:1;}
+.btn-start{background:var(--acc);color:#07070a;}
+.btn-pause{background:var(--warn);color:#07070a;}
+.btn-stop {background:var(--s2);color:var(--danger);border:1px solid var(--bdr);}
+.btn-skip {background:var(--s2);color:var(--text);border:1px solid var(--bdr);}
+.btn-from {background:var(--s2);color:var(--text);border:1px solid var(--bdr);}
+
+/* Next cue strip */
+.progress-strip{height:2px;background:var(--bdr);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--warn);transition:width .4s linear;}
+.next-strip{
+  display:flex;align-items:center;gap:12px;padding:9px 16px;
+  background:var(--s2);border-bottom:1px solid var(--bdr);flex-shrink:0;
+}
+.ns-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;}
+.ns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ns-info{flex:1;overflow:hidden;}
+.ns-name{
+  font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;
+  color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ns-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-top:1px;}
+.ns-countdown{
+  font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--warn);
+  flex-shrink:0;min-width:80px;text-align:right;
+}
+.ns-countdown.hot{color:var(--danger);animation:pulse .5s infinite alternate;}
+@keyframes pulse{from{opacity:1}to{opacity:.2}}
+
+/* Cue list */
+.cue-list-wrap{flex:1;overflow-y:auto;}
+.cue-list-wrap::-webkit-scrollbar{width:4px;}
+.cue-list-wrap::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
+
+.list-header{
+  display:grid;grid-template-columns:10px 42px 1fr 100px 44px;
+  padding:7px 16px;border-bottom:1px solid var(--bdr);
+  background:var(--bg);position:sticky;top:0;z-index:5;gap:10px;align-items:center;
+}
+.list-header span{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+.list-header span:nth-child(4){text-align:right;}
+
+.region-row{
+  display:flex;align-items:center;gap:10px;
+  padding:5px 16px;background:var(--s1);border-bottom:1px solid var(--bdr);
+  border-left:4px solid var(--muted);position:sticky;top:33px;z-index:4;
+}
+.rr-id{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:1px;flex-shrink:0;}
+.rr-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--text);flex:1;}
+.rr-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);flex-shrink:0;}
+
+.cue-row{
+  display:grid;grid-template-columns:10px 42px 1fr 100px 44px;
+  align-items:center;padding:0 16px;height:52px;gap:10px;
+  border-bottom:1px solid var(--bdr);border-left:3px solid transparent;
+  cursor:pointer;transition:background .15s;position:relative;
+}
+.cue-row:hover{background:rgba(255,255,255,.02);}
+.cue-row:hover .cue-sf{opacity:1;}
+.cue-row.active  {background:var(--active);border-left-color:var(--acc);}
+.cue-row.active .cue-name{color:var(--acc);font-weight:700;}
+.cue-row.upcoming{background:rgba(245,166,35,.04);border-left-color:var(--warn);}
+.cue-row.past .cue-num,.cue-row.past .cue-name,.cue-row.past .cue-time{
+  color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(90,90,120,.5);
+}
+.cue-type-bar{border-radius:1px;}
+.cue-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+.cue-name-wrap{overflow:hidden;}
+.cue-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cue-note{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.cue-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+.cue-del{
+  display:flex;align-items:center;justify-content:center;
+  width:30px;height:30px;border:none;background:transparent;
+  color:var(--dim);font-size:14px;cursor:pointer;border-radius:5px;
+}
+.cue-del:hover{color:var(--danger);}
+.cue-sf{
+  position:absolute;right:50px;
+  background:var(--acc);color:#07070a;border:none;border-radius:5px;
+  padding:3px 9px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:800;
+  cursor:pointer;opacity:0;transition:opacity .12s;white-space:nowrap;
+}
+.cue-sf:hover{filter:brightness(1.1);}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:60px 24px;color:var(--muted);gap:10px;text-align:center;
+}
+.empty-state .big{font-size:48px;margin-bottom:6px;}
+
+/* Add cue bar */
+.add-bar{
+  display:flex;align-items:center;gap:8px;padding:8px 16px;
+  background:var(--s1);border-top:1px solid var(--bdr);flex-shrink:0;
+}
+.add-bar input,.add-bar select{
+  background:var(--bg);border:1px solid var(--bdr);border-radius:7px;
+  padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;
+  outline:none;
+}
+.add-bar input:focus,.add-bar select:focus{border-color:var(--acc);}
+.add-bar input::placeholder{color:var(--muted);}
+.add-bar input[type=text]{flex:1;}
+.add-bar input[type=time]{width:105px;font-family:'Share Tech Mono',monospace;font-size:12px;}
+.btn-add{
+  background:var(--acc);color:#07070a;border:none;border-radius:7px;
+  padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:800;cursor:pointer;
+}
+.btn-add:hover{filter:brightness(1.1);}
+
+/* ═══════════════════════════════════════════
+   RIGHT: DETAIL / MIDI / CSV PANEL
+═══════════════════════════════════════════ */
+.right-panel{
+  background:var(--s1);border-left:1px solid var(--bdr);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.right-tabs{
+  display:flex;border-bottom:1px solid var(--bdr);flex-shrink:0;
+}
+.rtab{
+  flex:1;padding:12px 8px;text-align:center;cursor:pointer;
+  font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:800;
+  border-bottom:2px solid transparent;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;
+}
+.rtab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.rtab:hover:not(.active){color:var(--text);}
+
+.rpane{display:none;flex:1;overflow-y:auto;padding:16px;}
+.rpane.active{display:block;}
+.rpane::-webkit-scrollbar{width:3px;}
+.rpane::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
+
+/* ── DETAIL PANE ── */
+.detail-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--muted);text-align:center;gap:8px;font-size:13px;
+}
+.flabel{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:5px;display:block;margin-top:14px;}
+.flabel:first-child{margin-top:0;}
+.finput{
+  width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;
+}
+.finput:focus{border-color:var(--acc);}
+.finput::placeholder{color:var(--muted);}
+.ftextarea{
+  width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;
+  outline:none;resize:none;height:80px;line-height:1.6;
+}
+.ftextarea:focus{border-color:var(--acc);}
+.type-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
+.tchip{
+  padding:7px 14px;border-radius:16px;border:2px solid transparent;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;
+  opacity:.55;font-family:'DM Sans',sans-serif;
+}
+.tchip.sel{opacity:1;border-color:currentColor;}
+.tchip.regie {color:var(--regie);}
+.tchip.kraan {color:var(--kraan);}
+.tchip.licht {color:var(--licht);}
+.tchip.geluid{color:var(--geluid);}
+.tchip.none  {color:var(--dim);}
+.btn-detail-save{
+  width:100%;margin-top:16px;padding:12px;border-radius:8px;
+  background:var(--acc);color:#07070a;border:none;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;cursor:pointer;
+}
+.btn-detail-save:hover{filter:brightness(1.08);}
+.btn-detail-del{
+  width:100%;margin-top:8px;padding:10px;border-radius:8px;
+  background:transparent;color:var(--danger);border:1px solid rgba(245,58,58,.3);
+  font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;
+}
+.btn-detail-del:hover{background:rgba(245,58,58,.08);}
+
+/* ── MIDI PANE ── */
+.midi-field{margin-bottom:10px;}
+.midi-field label{font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;font-weight:800;display:block;margin-bottom:5px;}
+.midi-select,.midi-input{
+  width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;appearance:none;
+}
+.midi-select:focus,.midi-input:focus{border-color:var(--acc);}
+.midi-status-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;margin-bottom:12px;
+}
+.midi-status-row label{font-size:12px;color:var(--text);}
+.badge{font-size:10px;padding:3px 9px;border-radius:8px;font-weight:700;}
+.badge.ok {background:rgba(200,245,58,.15);color:var(--acc);}
+.badge.err{background:rgba(245,58,58,.15);color:var(--danger);}
+.badge.off{background:var(--s2);color:var(--muted);}
+.midi-note{font-size:11px;color:var(--text);line-height:1.7;padding:10px 12px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;margin:10px 0;}
+.midi-log-wrap{margin-top:12px;}
+.midi-log-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:5px;}
+.midi-log{
+  font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);
+  background:var(--bg);border:1px solid var(--bdr);border-radius:6px;
+  padding:8px 10px;height:100px;overflow-y:auto;line-height:1.8;
+}
+.midi-log .ok{color:var(--acc);}
+.midi-log .warn{color:var(--warn);}
+.midi-log .err{color:var(--danger);}
+.btn-test{
+  width:100%;padding:10px;border-radius:8px;border:1px solid var(--bdr);
+  background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px;
+}
+.btn-test:hover{border-color:var(--acc);color:var(--acc);}
+
+/* Send transport buttons */
+.btn-send{
+  padding:8px 14px;border-radius:7px;border:1px solid var(--bdr);
+  background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;
+}
+.btn-send:hover{border-color:var(--warn);color:var(--warn);}
+.btn-send:active{filter:brightness(1.2);}
+.btn-send-goto{background:rgba(245,166,35,.15);color:var(--warn);border-color:var(--warn);}
+.btn-send-goto:hover{background:rgba(245,166,35,.25);}
+.btn-send-sync{background:var(--s2);color:var(--muted);border-color:var(--bdr);}
+.btn-send-sync:hover{border-color:var(--acc);color:var(--acc);}
+
+/* ── CSV PANE ── */
+.csv-info{font-size:11px;color:var(--text);line-height:1.7;padding:10px 12px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;margin-bottom:12px;}
+.csv-info code{color:var(--acc);font-family:'Share Tech Mono',monospace;}
+.drop-zone{
+  border:2px dashed var(--bdr);border-radius:10px;padding:24px;
+  text-align:center;color:var(--text);font-size:13px;cursor:pointer;margin-bottom:12px;
+  transition:border-color .15s;
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--acc);}
+.drop-zone input{display:none;}
+.csv-textarea{
+  width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  padding:10px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;
+  outline:none;resize:none;height:100px;line-height:1.8;margin-bottom:8px;
+}
+.csv-textarea:focus{border-color:var(--acc);}
+.btn-csv{
+  width:100%;padding:10px;border-radius:8px;border:1px solid var(--bdr);
+  background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px;
+}
+.btn-csv:hover{border-color:var(--muted);}
+.btn-csv.prim{background:var(--acc);color:#07070a;border:none;}
+.btn-csv.prim:hover{filter:brightness(1.08);}
+
+/* ── TIME PICKER PANE ── */
+.tp-grid{display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:16px;}
+.tp-seg-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.tp-seg-lbl{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+.tp-seg{
+  width:76px;text-align:center;padding:10px 4px;
+  background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:28px;outline:none;
+  -moz-appearance:textfield;appearance:textfield;
+}
+.tp-seg::-webkit-inner-spin-button,.tp-seg::-webkit-outer-spin-button{-webkit-appearance:none;}
+.tp-seg:focus{border-color:var(--acc);}
+.tp-colon{font-family:'Share Tech Mono',monospace;font-size:28px;color:var(--muted);padding-bottom:10px;}
+.tp-cue-list{max-height:240px;overflow-y:auto;margin-bottom:12px;}
+.tp-cue-list::-webkit-scrollbar{width:3px;}
+.tp-cue-list::-webkit-scrollbar-thumb{background:var(--bdr);}
+.tp-cue-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--bg);border:1px solid var(--bdr);border-radius:8px;
+  cursor:pointer;margin-bottom:5px;transition:background .12s;
+}
+.tp-cue-item:hover{background:var(--s2);}
+.tp-cue-item.sel{border-color:var(--acc);background:rgba(200,245,58,.05);}
+.tpci-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tpci-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tpci-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);}
+.btn-go{
+  width:100%;padding:12px;border-radius:8px;border:none;
+  background:var(--acc);color:#07070a;font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:800;cursor:pointer;
+}
+.btn-go:hover{filter:brightness(1.08);}
+
+/* ── REGION EDIT PANE ── */
+.region-edit-header{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;
+  color:var(--warn);margin-bottom:12px;
+}
+.color-swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.swatch{
+  width:28px;height:28px;border-radius:6px;cursor:pointer;
+  border:2px solid transparent;transition:transform .1s,border-color .1s;flex-shrink:0;
+}
+.swatch:hover{transform:scale(1.15);}
+.swatch.sel{border-color:#fff;transform:scale(1.1);}
+.color-custom{
+  display:flex;align-items:center;gap:8px;margin-top:8px;
+}
+.color-custom input[type=color]{
+  width:40px;height:32px;border:none;background:none;cursor:pointer;padding:0;
+  border-radius:6px;
+}
+.color-custom label{font-size:11px;color:var(--muted);}
+.btn-region-save{
+  width:100%;margin-top:16px;padding:12px;border-radius:8px;
+  background:var(--warn);color:#07070a;border:none;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;cursor:pointer;
+}
+.btn-region-save:hover{filter:brightness(1.08);}
+.btn-region-del{
+  width:100%;margin-top:8px;padding:10px;border-radius:8px;
+  background:transparent;color:var(--danger);border:1px solid rgba(245,58,58,.3);
+  font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;
+}
+.btn-region-del:hover{background:rgba(245,58,58,.08);}
+.region-item-edit-btn{
+  flex-shrink:0;background:none;border:none;color:var(--dim);
+  font-size:13px;padding:4px 6px;cursor:pointer;border-radius:4px;
+}
+.region-item-edit-btn:hover{color:var(--warn);}
+
+/* ── MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);
+  z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--s1);border:1px solid var(--bdr);border-radius:12px;
+  padding:24px;width:440px;max-width:90vw;max-height:80vh;overflow-y:auto;
+}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--acc);margin-bottom:12px;}
+.modal-actions{display:flex;gap:10px;margin-top:16px;}
+.btn-modal-save{flex:1;padding:12px;background:var(--acc);color:#07070a;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
+.btn-modal-cancel{padding:12px 18px;background:var(--s2);color:var(--text);border:1px solid var(--bdr);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">CUE RUNNER</div>
+  <div class="status-pill">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">GESTOPT</span>
+  </div>
+  <div class="topbar-right">
+    <span id="wsStatus" style="font-size:11px;color:var(--muted);letter-spacing:1px;cursor:pointer;" onclick="openBroadcast()" title="Live broadcast naar viewers">● Uit</span>
+    <button class="panel-toggle" id="toggleLeft"  onclick="togglePanel('left')"  title="Verberg/toon Delen paneel">◀ Delen</button>
+    <button class="panel-toggle" id="toggleRight" onclick="togglePanel('right')" title="Verberg/toon rechter paneel">Detail ▶</button>
+    <span class="midi-badge" id="midiBadge" onclick="switchTab('midi')">MIDI</span>
+    <button class="tb-btn" onclick="switchTab('csv')">CSV Import/Export</button>
+    <button class="tb-btn acc" onclick="newCuePanel()">+ Cue</button>
+  </div>
+</div>
+
+<!-- BROADCAST MODAL -->
+<div class="modal-overlay" id="broadcastModal" onclick="if(event.target===this)closeBroadcast()">
+  <div class="modal">
+    <h2 style="color:var(--acc)">Live Broadcast</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Verbind met de viewer-server zodat andere apparaten live kunnen meekijken. Op internet gebruik je <strong style="color:var(--acc)">wss://</strong> (met s). Lokaal gebruik je <strong>ws://</strong>.</p>
+    <label style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;display:block;margin-bottom:5px;">WebSocket URL</label>
+    <input id="wsUrlInput" class="finput" type="text" placeholder="wss://jouw-naam.onrender.com" value="wss://" style="margin-bottom:6px;">
+    <p style="font-size:11px;color:var(--dim);margin-bottom:10px;">Lokaal netwerk: <code style="color:var(--muted)">ws://192.168.1.x:3001</code></p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeBroadcast()">Sluiten</button>
+      <button class="btn-modal-save" onclick="startBroadcast()">Verbinden</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout" id="layout">
+
+  <!-- LEFT: REGIONS -->
+  <div class="regions-panel" id="leftPanel">
+    <div class="panel-header">
+      <div class="panel-title">Delen (Regions)</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div id="regionCount" style="font-size:10px;color:var(--muted)"></div>
+        <button class="tb-btn" style="font-size:11px;padding:4px 9px;" onclick="openRegionEdit(null)">＋</button>
+      </div>
+    </div>
+    <div class="regions-list" id="regionsList">
+      <div class="empty-state" style="padding:40px 20px;font-size:12px;">
+        <div class="big">🎼</div>
+        <div>Importeer een Reaper CSV<br>om regions te zien</div>
+      </div>
+    </div>
+  </div><!-- .regions-panel -->
+
+  <!-- LEFT DRAG HANDLE -->
+  <div class="drag-handle" id="dragLeft" title="Sleep om te resizen"></div>
+
+  <!-- CENTER: CLOCK + CUES -->
+  <div class="center-panel">
+
+    <!-- Clock hero -->
+    <div class="clock-hero">
+      <div class="clock-main">
+        <div class="clock-lbl">TIMECODE</div>
+        <div id="clock">00:00:00</div>
+        <div class="sync-lbl" id="syncLbl">INTERN</div>
+      </div>
+      <div class="active-region-name">
+        <div class="arn-label">Huidig deel</div>
+        <div class="arn-name" id="arnName">—</div>
+        <div class="arn-next" id="arnNext"></div>
+      </div>
+    </div>
+
+    <!-- Transport -->
+    <div class="transport">
+      <button class="btn-t btn-start" id="btnStart" onclick="startTimer()">
+        <span class="ic">▶</span><span>Start</span>
+      </button>
+      <button class="btn-t btn-pause" id="btnPause" onclick="pauseTimer()" disabled>
+        <span class="ic">⏸</span><span>Pauze</span>
+      </button>
+      <button class="btn-t btn-stop" id="btnStop" onclick="stopTimer()" disabled>
+        <span class="ic">⏹</span><span>Stop</span>
+      </button>
+      <button class="btn-t btn-skip" onclick="skipToNext()">
+        <span class="ic">⏭</span><span>Volgende</span>
+      </button>
+      <button class="btn-t btn-from" onclick="switchTab('from')">
+        <span class="ic">↩</span><span>Vanaf</span>
+      </button>
+    </div>
+
+    <!-- Progress + next strip -->
+    <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="next-strip">
+      <div class="ns-label">Volgend</div>
+      <div class="ns-dot" id="nsDot"></div>
+      <div class="ns-info">
+        <div class="ns-name" id="nsName">—</div>
+        <div class="ns-time" id="nsTime">—</div>
+      </div>
+      <div class="ns-countdown" id="nsCountdown">—</div>
+    </div>
+
+    <!-- Cue list -->
+    <div class="cue-list-wrap">
+      <div class="list-header">
+        <span></span><span>#</span><span>Cue</span><span>Tijd</span><span></span>
+      </div>
+      <div id="cueList"></div>
+    </div>
+
+    <!-- Add cue bar -->
+    <div class="add-bar">
+      <input type="time" id="addTime" step="1" value="00:00:00">
+      <select id="addType">
+        <option value="none">— type</option>
+        <option value="regie">🎬 Regie</option>
+        <option value="kraan">🏗 Kraan</option>
+        <option value="licht">💡 Licht</option>
+        <option value="geluid">🔊 Geluid</option>
+      </select>
+      <input type="text" id="addName" placeholder="Naam cue…">
+      <button class="btn-add" onclick="quickAdd()">＋ Toevoegen</button>
+    </div>
+
+  </div><!-- .center-panel -->
+
+  <!-- RIGHT DRAG HANDLE -->
+  <div class="drag-handle" id="dragRight" title="Sleep om te resizen"></div>
+
+  <!-- RIGHT: DETAIL / MIDI / CSV / FROM -->
+  <div class="right-panel" id="rightPanel">
+    <div class="right-tabs">
+      <button class="rtab" id="tab-detail" onclick="switchTab('detail')">Cue</button>
+      <button class="rtab" id="tab-region" onclick="switchTab('region')">Deel</button>
+      <button class="rtab" id="tab-from"   onclick="switchTab('from')">Vanaf</button>
+      <button class="rtab" id="tab-midi"   onclick="switchTab('midi')">MIDI</button>
+      <button class="rtab" id="tab-csv"    onclick="switchTab('csv')">CSV</button>
+    </div>
+
+    <!-- DETAIL PANE -->
+    <div class="rpane active" id="pane-detail">
+      <div class="detail-empty" id="detailEmpty">
+        <div>🎯</div>
+        <div>Klik op een cue<br>om hem te bewerken</div>
+      </div>
+      <div id="detailForm" style="display:none">
+        <div id="detailHeading" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc);margin-bottom:12px;"></div>
+        <label class="flabel">Naam</label>
+        <input class="finput" id="dName" type="text" placeholder="Naam van de cue">
+        <label class="flabel">Tijd (HH:MM:SS)</label>
+        <input class="finput" id="dTime" type="text" placeholder="00:01:30">
+        <label class="flabel">Type</label>
+        <div class="type-chips">
+          <button class="tchip none sel" data-t="none"   onclick="pickType(this)">— Geen</button>
+          <button class="tchip regie"    data-t="regie"  onclick="pickType(this)">🎬 Regie</button>
+          <button class="tchip kraan"    data-t="kraan"  onclick="pickType(this)">🏗 Kraan</button>
+          <button class="tchip licht"    data-t="licht"  onclick="pickType(this)">💡 Licht</button>
+          <button class="tchip geluid"   data-t="geluid" onclick="pickType(this)">🔊 Geluid</button>
+        </div>
+        <label class="flabel">Notitie</label>
+        <textarea class="ftextarea" id="dNote" placeholder="Aantekeningen…"></textarea>
+        <button class="btn-detail-save" onclick="saveDetail()">Opslaan</button>
+        <button class="btn-detail-del" id="btnDelCue" style="display:none" onclick="deleteCurrent()">Verwijder cue</button>
+      </div>
+    </div><!-- /pane-detail -->
+
+    <!-- REGION EDIT PANE -->
+    <div class="rpane" id="pane-region">
+      <div class="detail-empty" id="regionEmpty">
+        <div>🗂</div>
+        <div>Klik op ✏ bij een deel<br>om het te bewerken</div>
+      </div>
+      <div id="regionForm" style="display:none">
+        <div class="region-edit-header" id="regionHeading">Deel bewerken</div>
+
+        <label class="flabel">Naam</label>
+        <input class="finput" id="rName" type="text" placeholder="Naam van het deel">
+
+        <label class="flabel">Start (HH:MM:SS)</label>
+        <input class="finput" id="rStart" type="text" placeholder="00:00:00">
+
+        <label class="flabel">Einde (HH:MM:SS)</label>
+        <input class="finput" id="rEnd" type="text" placeholder="00:05:00">
+
+        <label class="flabel">Kleur</label>
+        <div class="color-swatches" id="colorSwatches">
+          <!-- filled by JS -->
+        </div>
+        <div class="color-custom">
+          <input type="color" id="rColorPicker" value="#808080" oninput="pickRegionColorRaw(this.value)">
+          <label>Aangepaste kleur</label>
+          <span id="rColorHex" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">#808080</span>
+        </div>
+
+        <button class="btn-region-save" onclick="saveRegion()">Opslaan</button>
+        <button class="btn-region-del" id="btnDelRegion" style="display:none" onclick="deleteCurrentRegion()">Verwijder deel</button>
+      </div>
+    </div>
+
+    <!-- FROM PANE -->
+    <div class="rpane" id="pane-from">
+      <div class="tp-grid">
+        <div class="tp-seg-wrap"><div class="tp-seg-lbl">UUR</div>
+          <input class="tp-seg" id="sfH" type="number" min="0" max="23" value="0" oninput="syncFromPicker()">
+        </div>
+        <div class="tp-colon">:</div>
+        <div class="tp-seg-wrap"><div class="tp-seg-lbl">MIN</div>
+          <input class="tp-seg" id="sfM" type="number" min="0" max="59" value="0" oninput="syncFromPicker()">
+        </div>
+        <div class="tp-colon">:</div>
+        <div class="tp-seg-wrap"><div class="tp-seg-lbl">SEC</div>
+          <input class="tp-seg" id="sfS" type="number" min="0" max="59" value="0" oninput="syncFromPicker()">
+        </div>
+      </div>
+      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:8px;">Of kies een cue</div>
+      <div class="tp-cue-list" id="tpCueList"></div>
+      <button class="btn-go" onclick="confirmFrom()">▶ Start</button>
+    </div>
+
+    <!-- MIDI PANE -->
+    <div class="rpane" id="pane-midi">
+      <div class="midi-status-row">
+        <label>WebMIDI status</label>
+        <span class="badge off" id="midiBadgePane">—</span>
+      </div>
+      <div class="midi-field">
+        <label>MIDI Ingang (van Reaper)</label>
+        <select class="midi-select" id="midiIn" onchange="selectMidiIn()">
+          <option value="">— kies poort —</option>
+        </select>
+      </div>
+
+      <div class="midi-field">
+        <label>MIDI Uitgang (naar Reaper)</label>
+        <select class="midi-select" id="midiOut" onchange="selectMidiOut()">
+          <option value="">— kies poort —</option>
+        </select>
+      </div>
+
+      <div class="midi-field">
+        <label>Sync modus (ontvangen)</label>
+        <select class="midi-select" id="midiMode" onchange="applyMidiMode()">
+          <option value="off">Uit (intern)</option>
+          <option value="auto" selected>Auto (aanbevolen — detecteert MTC + Clock)</option>
+          <option value="mtc">MTC alleen — MIDI Time Code</option>
+          <option value="clock">MIDI Clock alleen (start/stop)</option>
+        </select>
+      </div>
+      <div class="midi-field" id="offsetRow" style="display:none">
+        <label>Offset (seconden)</label>
+        <input class="midi-input" id="mtcOff" type="number" value="0" step="0.1">
+      </div>
+
+      <!-- SEND TRANSPORT CONTROLS -->
+      <div id="sendControls" style="display:none">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin:12px 0 8px;">Stuur naar Reaper</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-send" onclick="sendMidiStart()">▶ Start</button>
+          <button class="btn-send" onclick="sendMidiStop()">■ Stop</button>
+          <button class="btn-send" onclick="sendMidiContinue()">⏸ Continue</button>
+        </div>
+        <div style="margin-top:8px;">
+          <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:6px;">Speel vanaf tijdstip</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input class="midi-input" id="sendH" type="number" min="0" max="23" value="0" style="width:56px;text-align:center;font-size:16px;">
+            <span style="color:var(--muted);font-size:18px;">:</span>
+            <input class="midi-input" id="sendM" type="number" min="0" max="59" value="0" style="width:56px;text-align:center;font-size:16px;">
+            <span style="color:var(--muted);font-size:18px;">:</span>
+            <input class="midi-input" id="sendS" type="number" min="0" max="59" value="0" style="width:56px;text-align:center;font-size:16px;">
+          </div>
+          <button class="btn-send btn-send-goto" onclick="sendMidiGoto()" style="margin-top:6px;width:100%;">↩ Ga naar tijdstip &amp; speel</button>
+        </div>
+
+        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin:10px 0 6px;">Sync huidige klok naar Reaper</div>
+        <button class="btn-send btn-send-sync" onclick="sendCurrentPosition()" style="width:100%;">⟳ Stuur huidige positie</button>
+
+        <div class="midi-note" style="margin-top:10px;font-size:10px;">
+          <strong>Setup:</strong> Maak 2 LoopMIDI poorten:<br>
+          <span style="color:var(--acc)">Poort 1</span> → Reaper uitgang → App ingang (MTC)<br>
+          <span style="color:var(--warn)">Poort 2</span> → App uitgang → Reaper ingang (transport)<br><br>
+          In Reaper: Preferences → MIDI Devices → selecteer Poort 2 als ingang.
+        </div>
+      </div>
+
+      <div class="midi-note" id="midiNote">
+        <strong>Auto</strong> — aanbevolen voor Reaper via LoopMIDI. Detecteert MTC én MIDI Clock automatisch.<br>
+        <strong>MTC</strong> — MIDI Time Code, stuurt absolute tijdpositie. Reaper: Preferences → MIDI → Send MTC.<br>
+        <strong>MIDI Clock</strong> — start/stop/continue berichten. Reaper: Preferences → MIDI → Send clock.<br>
+        <strong>Let op:</strong> Selecteer eerst de poort, daarna pas Play in Reaper drukken.
+      </div>
+      <button class="btn-test" onclick="testMidi()">Test verbinding</button>
+      <div class="midi-log-wrap">
+        <div class="midi-log-label">MIDI Log</div>
+        <div class="midi-log" id="midiLog">Wacht op MIDI data…</div>
+      </div>
+    </div>
+
+    <!-- CSV PANE -->
+    <div class="rpane" id="pane-csv">
+      <div class="csv-info">
+        Reaper export formaat:<br>
+        <code>#,Name,Start,End,Length,Color</code><br>
+        Tijden in <code>M:SS.mmm</code>. Regions (R*) en markers (M*) worden beide geladen.
+      </div>
+      <div class="drop-zone" id="dropZone" onclick="$('csvFile').click()">
+        <input type="file" id="csvFile" accept=".csv,.txt" onchange="importCSV(event)">
+        📂 Klik of sleep een CSV-bestand
+      </div>
+      <textarea class="csv-textarea" id="csvPaste" placeholder="#,Name,Start,End,Length,Color&#10;R1,Intro,0:00.000,5:00.000,5:00.000,&#10;M1,Lichten aan,0:00.000,,,"></textarea>
+      <button class="btn-csv" onclick="importPaste()">Importeer tekst</button>
+      <button class="btn-csv prim" onclick="exportCSV()">⬇ Exporteer CSV</button>
+    </div>
+
+  </div><!-- .right-panel -->
+
+</div><!-- .layout -->
+
+<script>
+/* ════════════════════════════════════════════
+   SHARED HELPERS
+════════════════════════════════════════════ */
+const TYPE_COLORS={regie:'#c4affe',kraan:'#7dd8fc',licht:'#fcd34d',geluid:'#6ee7b7',none:'#5a5a78'};
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
+const $=id=>document.getElementById(id);
+
+function parseReaperTime(s){
+  if(!s) return null; s=s.trim();
+  let m;
+  m=s.match(/^(\d+):(\d{2}):(\d{2})\.(\d+)$/); if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +('0.'+m[4]);
+  m=s.match(/^(\d+):(\d{2}):(\d{2})$/);         if(m) return +m[1]*3600 + +m[2]*60 + +m[3];
+  m=s.match(/^(\d+):(\d{2})\.(\d+)$/);           if(m) return +m[1]*60  + +m[2]    + +('0.'+m[3]);
+  m=s.match(/^(\d+):(\d{2})$/);                  if(m) return +m[1]*60  + +m[2];
+  const f=parseFloat(s); return isNaN(f)?null:f;
+}
+
+function parseCSVLine(line){
+  const r=[]; let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"')inQ=!inQ;
+    else if(c===','&&!inQ){r.push(cur);cur='';}
+    else cur+=c;
+  }
+  r.push(cur); return r;
+}
+
+const parseTime=s=>{
+  let m;
+  m=s.match(/^(\d{1,2}):(\d{2}):(\d{2})$/); if(m) return +m[1]*3600+ +m[2]*60+ +m[3];
+  m=s.match(/^(\d{1,2}):(\d{2})$/);          if(m) return +m[1]*60 + +m[2];
+  return null;
+};
+
+function guessType(n){
+  const u=n.toUpperCase();
+  // Explicit uppercase keywords first (Reaper naming convention)
+  if(/\bKRAAN\b/.test(u)) return 'kraan';
+  if(/\bSPOT\b|\bLICHT\b|\bDIM\b|\bWASH\b/.test(u)) return 'licht';
+  if(/\bGELUID\b|\bAUDIO\b|\bMUSIC\b/.test(u)) return 'geluid';
+  if(/\bENGEL\b|\bDAME\b|\bBRUID\b|\bREGIE\b|\bACTEUR\b/.test(u)) return 'regie';
+  if(/\bKABOEM\b|\bVUURWERK\b/.test(u)) return 'regie';
+  // Lowercase fallback
+  const l=n.toLowerCase();
+  if(/kraan|fly|rigg|aerial/.test(l)) return 'kraan';
+  if(/licht|light|dim|spot|wash/.test(l)) return 'licht';
+  if(/geluid|sound|audio|music/.test(l)) return 'geluid';
+  if(/regie|actor|scene|engel|dame|bruid/.test(l)) return 'regie';
+  return 'none';
+}
+
+function fmtReaper(s){
+  const m=Math.floor(s/60),sec=(s%60).toFixed(3);
+  return `${m}:${sec.padStart(6,'0')}`;
+}
+
+/* ════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════ */
+let cues=[
+  {time:60,   name:'Lichten aan — scene 1',type:'licht', note:'Dimmer 80%',regionId:null},
+  {time:150,  name:'Muziek fade in',        type:'geluid',note:'Track 3',   regionId:null},
+  {time:300,  name:'Acteur A op podium',    type:'regie', note:'Vanuit links',regionId:null},
+];
+let regions=[];
+let elapsed=0,running=false,startedAt=null,rafId=null,activeCueIndex=-1,activeRegionId=null;
+let detailIdx=-1,detailType='none';
+let sfTime=0;
+
+/* ════════════════════════════════════════════
+   TRANSPORT
+════════════════════════════════════════════ */
+function startTimer(){
+  if(running)return;
+  running=true;startedAt=performance.now()-elapsed*1000;
+  rafId=requestAnimationFrame(tick);
+  setStatus('live');syncBtns();broadcastState();
+}
+function pauseTimer(){
+  if(!running)return;
+  running=false;cancelAnimationFrame(rafId);
+  setStatus('pau');syncBtns();broadcastState();
+}
+function stopTimer(){
+  pauseTimer();elapsed=0;activeCueIndex=-1;activeRegionId=null;
+  setStatus('off');updateClock();renderCues();renderRegions();updateStrip();updateRegionDisplay();syncBtns();broadcastState();
+}
+function syncBtns(){
+  $('btnStart').disabled=running;
+  $('btnPause').disabled=!running;
+  $('btnStop').disabled=!running&&elapsed===0;
+}
+function setStatus(s){
+  const dot=$('statusDot'),txt=$('statusText'),clk=$('clock');
+  dot.className='dot';clk.className='';
+  if(s==='live'){dot.classList.add('live');clk.classList.add('run');txt.textContent='LIVE';}
+  if(s==='pau'){dot.classList.add('paused');clk.classList.add('pau');txt.textContent='GEPAUZEERD';}
+  if(s==='off'){txt.textContent='GESTOPT';}
+}
+
+function tick(){
+  elapsed=(performance.now()-startedAt)/1000;
+  updateClock();checkCues();updateStrip();renderRegions();updateRegionDisplay();
+  broadcastState();
+  rafId=requestAnimationFrame(tick);
+}
+function updateClock(){$('clock').textContent=fmt(elapsed);}
+
+/* ════════════════════════════════════════════
+   CUE LOGIC
+════════════════════════════════════════════ */
+function checkCues(){
+  let na=-1;
+  for(let i=cues.length-1;i>=0;i--){if(elapsed>=cues[i].time){na=i;break;}}
+  if(na!==activeCueIndex){activeCueIndex=na;renderCues();autoScroll();}
+  const ar=regions.find(r=>elapsed>=r.start&&elapsed<r.end)||null;
+  const nid=ar?ar.id:null;
+  if(nid!==activeRegionId){activeRegionId=nid;updateRegionDisplay();}
+}
+function nextIdx(){
+  for(let i=0;i<cues.length;i++){if(elapsed<cues[i].time)return i;}
+  return -1;
+}
+function skipToNext(){
+  const ni=nextIdx();if(ni<0)return;
+  elapsed=cues[ni].time+0.05;
+  if(running)startedAt=performance.now()-elapsed*1000;
+  checkCues();updateStrip();updateClock();
+}
+function autoScroll(){
+  if(activeCueIndex<0)return;
+  const el=$(`cue-${activeCueIndex}`);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ════════════════════════════════════════════
+   REGION DISPLAY
+════════════════════════════════════════════ */
+function updateRegionDisplay(){
+  const r=activeRegionId?regions.find(x=>x.id===activeRegionId):null;
+  if(!r){$('arnName').textContent='—';$('arnNext').textContent='';return;}
+  $('arnName').textContent=r.name;
+  const idx=regions.indexOf(r);
+  const next=regions[idx+1];
+  if(next){
+    const diff=next.start-elapsed;
+    const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
+    $('arnNext').textContent=`→ ${next.name}  ${mm}:${pad(ss)}`;
+  } else $('arnNext').textContent='Laatste deel';
+}
+
+/* ════════════════════════════════════════════
+   NEXT STRIP
+════════════════════════════════════════════ */
+const CIRC=999;
+function updateStrip(){
+  const ni=nextIdx();
+  const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),dE=$('nsDot');
+  if(ni===-1){
+    nE.textContent='Einde show';tE.textContent='—';cE.textContent='—';cE.className='ns-countdown';
+    fE.style.width='100%';fE.style.background='var(--muted)';dE.style.background='var(--muted)';return;
+  }
+  const next=cues[ni];
+  nE.textContent=next.name;tE.textContent=fmt(next.time);
+  dE.style.background=TYPE_COLORS[next.type||'none'];
+  const diff=next.time-elapsed;
+  const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
+  cE.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
+  cE.className=diff<=5?'ns-countdown hot':'ns-countdown';
+  const prev=ni>0?cues[ni-1].time:0;
+  const pct=Math.min(100,Math.max(0,(elapsed-prev)/(next.time-prev)*100));
+  fE.style.width=pct+'%';
+  fE.style.background=diff<=10?'var(--danger)':'var(--warn)';
+}
+
+/* ════════════════════════════════════════════
+   RENDER REGIONS
+════════════════════════════════════════════ */
+function renderRegions(){
+  const list=$('regionsList');
+  if(!regions.length){
+    list.innerHTML=`<div class="empty-state" style="padding:40px 20px;font-size:12px;">
+      <div class="big">🎼</div><div>Importeer een Reaper CSV<br>om regions te zien</div></div>`;
+    $('regionCount').textContent='';
+    return;
+  }
+  $('regionCount').textContent=`${regions.length} delen`;
+  list.innerHTML=regions.map(r=>{
+    const isPast=elapsed>=r.end;
+    const isActive=r.id===activeRegionId;
+    const bc=r.color||'var(--muted)';
+    // progress within this region
+    let pct=0;
+    if(isActive){pct=Math.min(100,Math.max(0,(elapsed-r.start)/(r.end-r.start)*100));}
+    else if(isPast) pct=100;
+    return `<div class="region-item ${isActive?'active':''} ${isPast&&!isActive?'past':''}" >
+      <div class="ri-bar" style="background:${bc};min-height:28px;"></div>
+      <div class="ri-body" onclick="startFromTime(${r.start})" style="cursor:pointer">
+        <div class="ri-id">${r.id}</div>
+        <div class="ri-name">${r.name}</div>
+        <div class="ri-time">${fmt(r.start)} – ${fmt(r.end)}</div>
+        <div class="ri-progress"><div class="ri-progress-fill" style="width:${pct}%"></div></div>
+      </div>
+      <button class="region-item-edit-btn" onclick="openRegionEdit('${r.id}')" title="Bewerken">✏</button>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════════
+   RENDER CUES
+════════════════════════════════════════════ */
+function renderCues(){
+  const ni=nextIdx();
+  const list=$('cueList');
+  if(!cues.length){
+    list.innerHTML=`<div class="empty-state"><div class="big">🎭</div><div>Geen cues geladen</div></div>`;
+    return;
+  }
+  let html='',lastRid='__';
+  for(let i=0;i<cues.length;i++){
+    const c=cues[i];
+    if(c.regionId!==lastRid){
+      lastRid=c.regionId;
+      const r=regions.find(x=>x.id===c.regionId);
+      if(r){
+        const bc=r.color||'var(--muted)';
+        html+=`<div class="region-row" style="border-left-color:${bc}">
+          <span class="rr-id">${r.id}</span>
+          <span class="rr-name">${r.name}</span>
+          <span class="rr-time">${fmt(r.start)} – ${fmt(r.end)}</span>
+        </div>`;
+      }
+    }
+    let cls='';
+    if(i===activeCueIndex) cls='active';
+    else if(i===ni) cls='upcoming';
+    else if(i<activeCueIndex||(activeCueIndex===-1&&elapsed>c.time)) cls='past';
+    const col=TYPE_COLORS[c.type||'none'];
+    html+=`<div class="cue-row ${cls}" id="cue-${i}" onclick="openDetail(${i})">
+      <div class="cue-type-bar" style="background:${col};width:4px;height:36px;border-radius:2px;"></div>
+      <span class="cue-num">Q${i+1}</span>
+      <div class="cue-name-wrap">
+        <div class="cue-name">${c.name}</div>
+        ${c.note?`<div class="cue-note">📝 ${c.note}</div>`:''}
+      </div>
+      <span class="cue-time">${fmt(c.time)}</span>
+      <button class="cue-sf" onclick="event.stopPropagation();startFromCue(${i})">▶ Vanaf hier</button>
+      <button class="cue-del" onclick="event.stopPropagation();deleteCue(${i})">✕</button>
+    </div>`;
+  }
+  list.innerHTML=html;
+}
+
+function deleteCue(i){
+  cues.splice(i,1);
+  if(activeCueIndex>=cues.length)activeCueIndex=cues.length-1;
+  renderCues();updateStrip();
+  if(detailIdx===i){detailIdx=-1;showDetailEmpty();}
+}
+
+/* ════════════════════════════════════════════
+   REGION EDITING
+════════════════════════════════════════════ */
+const REGION_COLORS=[
+  '#8080FF','#008000','#CC0000','#008040','#0000FF',
+  '#FF8040','#FF80C0','#FF8000','#40C0FF','#804000',
+  '#C4AFFE','#7DD8FC','#FCD34D','#6EE7B7','#F53A3A',
+];
+
+let regionEditId=null; // null = new
+let regionColor='#808080';
+
+function buildSwatches(){
+  const el=$('colorSwatches');
+  el.innerHTML=REGION_COLORS.map(c=>`
+    <div class="swatch ${c===regionColor?'sel':''}"
+      style="background:${c}"
+      onclick="pickRegionColor('${c}')"></div>`).join('');
+}
+
+function pickRegionColor(c){
+  regionColor=c;
+  $('rColorPicker').value=c;
+  $('rColorHex').textContent=c;
+  buildSwatches();
+}
+
+function pickRegionColorRaw(c){
+  regionColor=c;
+  $('rColorHex').textContent=c;
+  buildSwatches();
+}
+
+function openRegionEdit(rid){
+  regionEditId=rid;
+  switchTab('region');
+  $('regionEmpty').style.display='none';
+  $('regionForm').style.display='block';
+  if(rid===null){
+    // New region
+    $('regionHeading').textContent='Nieuw deel';
+    $('rName').value='';
+    $('rStart').value='00:00:00';
+    $('rEnd').value='00:05:00';
+    regionColor='#8080FF';
+    $('btnDelRegion').style.display='none';
+  } else {
+    const r=regions.find(x=>x.id===rid);
+    if(!r) return;
+    $('regionHeading').textContent=`${r.id} bewerken`;
+    $('rName').value=r.name;
+    $('rStart').value=fmt(r.start);
+    $('rEnd').value=fmt(r.end);
+    regionColor=r.color||'#808080';
+    $('btnDelRegion').style.display='block';
+  }
+  $('rColorPicker').value=regionColor;
+  $('rColorHex').textContent=regionColor;
+  buildSwatches();
+}
+
+function saveRegion(){
+  const name=$('rName').value.trim();
+  const start=parseTime($('rStart').value.trim());
+  const end=parseTime($('rEnd').value.trim());
+  if(!name){$('rName').style.borderColor='var(--danger)';$('rName').focus();return;}
+  if(start===null){$('rStart').style.borderColor='var(--danger)';return;}
+  if(end===null||end<=start){$('rEnd').style.borderColor='var(--danger)';return;}
+  $('rName').style.borderColor='';$('rStart').style.borderColor='';$('rEnd').style.borderColor='';
+
+  if(regionEditId===null){
+    // New region
+    const newId='R'+(regions.length+1);
+    regions.push({id:newId,name,start,end,color:regionColor});
+  } else {
+    const idx=regions.findIndex(r=>r.id===regionEditId);
+    if(idx>=0) regions[idx]={...regions[idx],name,start,end,color:regionColor};
+  }
+  regions.sort((a,b)=>a.start-b.start);
+
+  // Recompute regionId for all cues
+  for(const c of cues){
+    const r=regions.find(r=>c.time>=r.start&&c.time<r.end);
+    c.regionId=r?r.id:null;
+  }
+
+  renderRegions();renderCues();
+
+  // Flash confirmation
+  const h=$('regionHeading');
+  h.textContent='✓ Opgeslagen';
+  setTimeout(()=>{h.textContent=regionEditId?`${regionEditId} bewerken`:'Nieuw deel';},1200);
+}
+
+function deleteCurrentRegion(){
+  if(!regionEditId)return;
+  const idx=regions.findIndex(r=>r.id===regionEditId);
+  if(idx>=0) regions.splice(idx,1);
+  // Remove regionId from cues that belonged to this region
+  for(const c of cues){if(c.regionId===regionEditId)c.regionId=null;}
+  regionEditId=null;
+  $('regionEmpty').style.display='flex';
+  $('regionForm').style.display='none';
+  renderRegions();renderCues();
+}
+
+/* ════════════════════════════════════════════
+   DETAIL PANE
+════════════════════════════════════════════ */
+function showDetailEmpty(){
+  $('detailEmpty').style.display='flex';
+  $('detailForm').style.display='none';
+}
+
+function openDetail(i){
+  detailIdx=i;
+  switchTab('detail');
+  const c=cues[i];
+  $('detailHeading').textContent=`Q${i+1} bewerken`;
+  $('dName').value=c.name;$('dTime').value=fmt(c.time);$('dNote').value=c.note||'';
+  detailType=c.type||'none';
+  document.querySelectorAll('.tchip').forEach(b=>b.classList.toggle('sel',b.dataset.t===detailType));
+  $('btnDelCue').style.display='block';
+  $('detailEmpty').style.display='none';
+  $('detailForm').style.display='block';
+}
+
+function newCuePanel(){
+  detailIdx=-1;detailType='none';
+  switchTab('detail');
+  $('detailHeading').textContent='Nieuwe cue';
+  $('dName').value='';$('dTime').value='00:00:00';$('dNote').value='';
+  document.querySelectorAll('.tchip').forEach(b=>b.classList.toggle('sel',b.dataset.t==='none'));
+  $('btnDelCue').style.display='none';
+  $('detailEmpty').style.display='none';
+  $('detailForm').style.display='block';
+  setTimeout(()=>$('dName').focus(),50);
+}
+
+function pickType(btn){
+  document.querySelectorAll('.tchip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');detailType=btn.dataset.t;
+}
+
+function saveDetail(){
+  const name=$('dName').value.trim();
+  const time=parseTime($('dTime').value.trim());
+  if(!name){$('dName').style.borderColor='var(--danger)';$('dName').focus();return;}
+  if(time===null){$('dTime').style.borderColor='var(--danger)';$('dTime').focus();return;}
+  $('dName').style.borderColor='';$('dTime').style.borderColor='';
+
+  // Preserve regionId if editing existing cue; recalculate based on time
+  let regionId=null;
+  if(regions.length){
+    const r=regions.find(r=>time>=r.start&&time<r.end);
+    regionId=r?r.id:null;
+  }
+
+  const entry={time,name,type:detailType,note:$('dNote').value.trim(),regionId};
+
+  if(detailIdx===-1){
+    cues.push(entry);
+  } else {
+    cues[detailIdx]=entry;
+  }
+
+  cues.sort((a,b)=>a.time-b.time);
+
+  // After sort, find the new index of the just-saved cue by matching time+name
+  detailIdx=cues.findIndex(c=>c.time===time&&c.name===name&&c.regionId===regionId);
+
+  activeCueIndex=-1;checkCues();renderCues();updateStrip();
+
+  // Flash save confirmation in the heading
+  const h=$('detailHeading');
+  const prev=h.textContent;
+  h.textContent='✓ Opgeslagen';h.style.color='var(--acc)';
+  setTimeout(()=>{h.textContent=detailIdx>=0?`Q${detailIdx+1} bewerken`:prev;h.style.color='';},1200);
+}
+
+function deleteCurrent(){
+  if(detailIdx<0)return;
+  deleteCue(detailIdx);
+}
+
+/* ════════════════════════════════════════════
+   QUICK ADD
+════════════════════════════════════════════ */
+function quickAdd(){
+  const tRaw=$('addTime').value||'00:00:00';
+  const parts=tRaw.split(':').map(Number);
+  const sec=parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:parts[0]*60+(parts[1]||0);
+  const name=$('addName').value.trim();
+  const type=$('addType').value;
+  if(!name){$('addName').focus();return;}
+  cues.push({time:sec,name,type,note:'',regionId:null});
+  cues.sort((a,b)=>a.time-b.time);
+  $('addName').value='';
+  renderCues();updateStrip();
+}
+$('addName').addEventListener('keydown',e=>{if(e.key==='Enter')quickAdd();});
+
+/* ════════════════════════════════════════════
+   START FROM
+════════════════════════════════════════════ */
+function startFromCue(i){jumpTo(cues[i].time);startTimer();}
+function startFromTime(t){jumpTo(t);startTimer();}
+function jumpTo(t){
+  pauseTimer();elapsed=Math.max(0,t);activeCueIndex=-1;
+  checkCues();updateClock();renderCues();updateStrip();updateRegionDisplay();syncBtns();
+}
+
+function syncFromPicker(){
+  const h=parseInt($('sfH').value)||0;
+  const m=parseInt($('sfM').value)||0;
+  const s=parseInt($('sfS').value)||0;
+  sfTime=Math.max(0,h*3600+m*60+s);
+  highlightTpCue();
+}
+
+function buildTpCueList(){
+  const el=$('tpCueList');
+  el.innerHTML=cues.map((c,i)=>`
+    <div class="tp-cue-item ${Math.floor(c.time)===Math.floor(sfTime)?'sel':''}" id="tpci-${i}" onclick="selectTpCue(${i})">
+      <div class="tpci-dot" style="background:${TYPE_COLORS[c.type||'none']}"></div>
+      <div class="tpci-name">Q${i+1} — ${c.name}</div>
+      <div class="tpci-time">${fmt(c.time)}</div>
+    </div>`).join('');
+}
+function selectTpCue(i){
+  const c=cues[i];
+  sfTime=c.time;
+  $('sfH').value=Math.floor(sfTime/3600);
+  $('sfM').value=Math.floor((sfTime%3600)/60);
+  $('sfS').value=Math.floor(sfTime%60);
+  highlightTpCue();
+}
+function highlightTpCue(){
+  document.querySelectorAll('.tp-cue-item').forEach(el=>el.classList.remove('sel'));
+  cues.forEach((c,i)=>{
+    if(Math.floor(c.time)===Math.floor(sfTime)){
+      const el=$(`tpci-${i}`);
+      if(el){el.classList.add('sel');el.scrollIntoView({block:'nearest'});}
+    }
+  });
+}
+function confirmFrom(){jumpTo(sfTime);startTimer();}
+
+/* ════════════════════════════════════════════
+   TABS
+════════════════════════════════════════════ */
+function switchTab(id){
+  const panel=document.querySelector('.right-panel');
+  panel.querySelectorAll('.rtab').forEach(t=>t.classList.remove('active'));
+  panel.querySelectorAll('.rpane').forEach(p=>p.classList.remove('active'));
+  const tab=$(`tab-${id}`),pane=$(`pane-${id}`);
+  if(tab)tab.classList.add('active');
+  if(pane)pane.classList.add('active');
+  if(id==='from'){
+    sfTime=elapsed;
+    $('sfH').value=Math.floor(sfTime/3600);
+    $('sfM').value=Math.floor((sfTime%3600)/60);
+    $('sfS').value=Math.floor(sfTime%60);
+    buildTpCueList();
+  }
+  if(id==='midi'){
+    initMidi();
+    // pre-fill send time with current position
+    $('sendH').value=Math.floor(elapsed/3600);
+    $('sendM').value=Math.floor((elapsed%3600)/60);
+    $('sendS').value=Math.floor(elapsed%60);
+  }
+}
+
+/* ════════════════════════════════════════════
+   CSV
+════════════════════════════════════════════ */
+const dropZone=$('dropZone');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag'));
+dropZone.addEventListener('drop',e=>{
+  e.preventDefault();dropZone.classList.remove('drag');
+  const f=e.dataTransfer.files[0];if(f)readCSV(f);
+});
+function importCSV(e){readCSV(e.target.files[0]);}
+function readCSV(f){const r=new FileReader();r.onload=ev=>parseAndImport(ev.target.result);r.readAsText(f);}
+function importPaste(){parseAndImport($('csvPaste').value);}
+
+function parseAndImport(txt){
+  txt=txt.replace(/^\uFEFF/,'');
+  const lines=txt.split('\n').map(l=>l.trim()).filter(l=>l);
+  const isReaper=lines[0]&&lines[0].startsWith('#,Name,Start');
+  if(isReaper){
+    const newR=[],newC=[];
+    for(const line of lines){
+      if(!line||line.startsWith('#,Name'))continue;
+      const cols=parseCSVLine(line);
+      if(cols.length<2)continue;
+      const id=cols[0].trim(),name=(cols[1]||'').trim();
+      const st=parseReaperTime(cols[2]||'');
+      if(st===null)continue;
+      if(id.startsWith('R')){
+        const en=parseReaperTime(cols[3]||'');
+        newR.push({id,name,start:st,end:en||st,color:cols[5]?'#'+cols[5]:null});
+      } else if(id.startsWith('M')){
+        newC.push({time:st,name,type:guessType(name),note:'',regionId:null});
+      }
+    }
+    newR.sort((a,b)=>a.start-b.start);
+    newC.sort((a,b)=>a.time-b.time);
+    for(const c of newC){const r=newR.find(r=>c.time>=r.start&&c.time<r.end);if(r)c.regionId=r.id;}
+    regions=newR;cues=newC;activeCueIndex=-1;activeRegionId=null;
+    renderCues();renderRegions();updateStrip();updateRegionDisplay();showDetailEmpty();
+    alert(`✓ ${newC.length} cues en ${newR.length} regions geïmporteerd.`);
+    return;
+  }
+  // fallback
+  const out=[];
+  for(const line of lines){
+    const cols=line.split(/\t/);
+    if(cols.length>=2){const t=parseReaperTime(cols[0]);if(t!==null){out.push({time:t,name:cols[1].trim(),type:'none',note:'',regionId:null});continue;}}
+    const m=line.match(/^(\S+)\s+(.+)$/);
+    if(m){const t=parseReaperTime(m[1]);if(t!==null)out.push({time:t,name:m[2].trim(),type:'none',note:'',regionId:null});}
+  }
+  if(!out.length){alert('Geen cues gevonden.');return;}
+  out.sort((a,b)=>a.time-b.time);
+  cues=out;activeCueIndex=-1;renderCues();updateStrip();
+  alert(`✓ ${out.length} cues geïmporteerd.`);
+}
+
+function exportCSV(){
+  const h='#,Name,Start,End,Length,Color';
+  const rRows=regions.map((r,i)=>`R${i+1},"${r.name}",${fmtReaper(r.start)},${fmtReaper(r.end)},${fmtReaper(r.end-r.start)},`);
+  const mRows=cues.map((c,i)=>`M${i+1},"${c.name}",${fmtReaper(c.time)},,,`);
+  const blob=new Blob([[h,...rRows,...mRows].join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='cues.csv';a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ════════════════════════════════════════════
+   MIDI ENGINE — robust Reaper/LoopMIDI support
+════════════════════════════════════════════ */
+let midiAccess=null, midiInput=null, midiOutput=null, midiMode='auto';
+// MTC state
+let mtcNibs=[0,0,0,0,0,0,0,0], mtcReceived=0;
+let mtcLastElapsed=-1, mtcStopTimeout=null;
+// Auto-detect
+let seenMTC=false, seenClock=false;
+let midiLogLines=[];
+
+function midiLog(cls,msg){
+  const ts=fmt(elapsed);
+  midiLogLines.unshift(`<span class="${cls}">[${ts}] ${msg}</span>`);
+  if(midiLogLines.length>40)midiLogLines.length=40;
+  const el=$('midiLog');
+  if(el)el.innerHTML=midiLogLines.join('<br>');
+}
+
+async function initMidi(){
+  const badge=$('midiBadgePane');
+  if(!navigator.requestMIDIAccess){
+    badge.textContent='Niet ondersteund';badge.className='badge err';
+    midiLog('err','WebMIDI niet beschikbaar — gebruik Chrome/Edge');return;
+  }
+  try{
+    midiAccess=await navigator.requestMIDIAccess({sysex:true});
+    badge.textContent='Verbonden';badge.className='badge ok';
+    midiLog('ok','WebMIDI verbonden — kies poort en selecteer');
+    fillPorts();
+    midiAccess.onstatechange=e=>{
+      fillPorts();
+      midiLog('warn',`Poort ${e.port.name}: ${e.port.state}`);
+    };
+  }catch(e){
+    badge.textContent='Geblokkeerd';badge.className='badge err';
+    midiLog('err','Toegang geweigerd: '+e.message);
+  }
+}
+
+function fillPorts(){
+  // Inputs
+  const inSel=$('midiIn'), prevIn=inSel.value;
+  inSel.innerHTML='<option value="">— kies poort —</option>';
+  // Outputs
+  const outSel=$('midiOut'), prevOut=outSel.value;
+  outSel.innerHTML='<option value="">— kies poort —</option>';
+  if(!midiAccess)return;
+  for(const [id,p] of midiAccess.inputs){
+    const o=document.createElement('option');
+    o.value=id;o.textContent=p.name+(p.state==='connected'?' ✓':'');
+    if(id===prevIn)o.selected=true;
+    inSel.appendChild(o);
+  }
+  for(const [id,p] of midiAccess.outputs){
+    const o=document.createElement('option');
+    o.value=id;o.textContent=p.name+(p.state==='connected'?' ✓':'');
+    if(id===prevOut)o.selected=true;
+    outSel.appendChild(o);
+  }
+  // Re-apply output selection so midiOutput stays valid after port list refresh
+  if(prevOut){
+    midiOutput=midiAccess.outputs.get(prevOut)||null;
+    $('sendControls').style.display=midiOutput?'block':'none';
+  }
+}
+
+function selectMidiOut(){
+  const id=$('midiOut').value;
+  midiOutput=midiAccess?.outputs.get(id)||null;
+  $('sendControls').style.display=midiOutput?'block':'none';
+  if(midiOutput) midiLog('ok','✓ Output: '+midiOutput.name);
+  else midiLog('warn','Output poort gewist');
+}
+
+// Send raw bytes — always use Uint8Array for cross-browser compatibility
+function midiSend(bytes){
+  if(!midiOutput){midiLog('err','Geen output poort geselecteerd — kies een MIDI Uitgang');return false;}
+  if(midiOutput.state==='disconnected'){midiLog('err','Output poort losgekoppeld');return false;}
+  try{
+    midiOutput.send(new Uint8Array(bytes));
+    return true;
+  }catch(e){
+    midiLog('err','Send fout: '+e.message);
+    return false;
+  }
+}
+
+// MIDI Clock Start (0xFA) — Reaper jumps to pos 0 and plays
+function sendMidiStart(){
+  if(midiSend([0xFA])){ midiLog('ok','→ MIDI Start gestuurd (Reaper → pos 0)'); }
+}
+
+// MIDI Clock Stop (0xFC)
+function sendMidiStop(){
+  if(midiSend([0xFC])){ midiLog('warn','→ MIDI Stop gestuurd'); }
+}
+
+// MIDI Clock Continue (0xFB) — resume from current position
+function sendMidiContinue(){
+  if(midiSend([0xFB])){ midiLog('ok','→ MIDI Continue gestuurd (pos: '+fmt(elapsed)+')'); }
+}
+
+// Send MTC Full Frame SysEx — tells Reaper to jump to exact timecode position
+// Format: F0 7F 7F 01 01 hh mm ss ff F7
+function sendMTCFullFrame(seconds, fps30){
+  const fps=30; // Reaper defaults to 30fps for full frame
+  const h=Math.floor(seconds/3600);
+  const m=Math.floor((seconds%3600)/60);
+  const s=Math.floor(seconds%60);
+  const f=Math.floor((seconds%1)*fps);
+  // Rate bits: 0=24, 1=25, 2=29.97, 3=30 → use 3 for 30fps
+  const hByte=(3<<5)|h; // rate=3, hours
+  const sysex=[0xF0,0x7F,0x7F,0x01,0x01,hByte,m,s,f,0xF7];
+  return midiSend(sysex);
+}
+
+// Song Position Pointer — coarse position for MIDI Clock mode
+// SPP value = MIDI beats from start (1 beat = 1 sixteenth note at current tempo)
+// Approximate: assume 120 BPM → 1 sixteenth = 0.125s → beats = seconds / 0.125
+function sendSPP(seconds){
+  const beats=Math.round(seconds/0.125);
+  const lsb=beats&0x7F, msb=(beats>>7)&0x7F;
+  return midiSend([0xF2,lsb,msb]);
+}
+
+// Go to specific time and play — sends MTC full frame + Continue
+function sendMidiGoto(){
+  const h=parseInt($('sendH').value)||0;
+  const m=parseInt($('sendM').value)||0;
+  const s=parseInt($('sendS').value)||0;
+  const totalSec=h*3600+m*60+s;
+
+  // Send MTC Full Frame (position jump)
+  const ok=sendMTCFullFrame(totalSec);
+  if(!ok)return;
+
+  // Small delay then send Continue so Reaper starts playing from that position
+  setTimeout(()=>{
+    midiSend([0xFB]); // Continue
+    midiLog('ok',`→ Ga naar ${pad(h)}:${pad(m)}:${pad(s)} + Continue`);
+  },50);
+}
+
+// Send current app clock position to Reaper
+function sendCurrentPosition(){
+  const ok=sendMTCFullFrame(elapsed);
+  if(ok) midiLog('ok',`→ Huidige positie gestuurd: ${fmt(elapsed)}`);
+}
+
+function selectMidiIn(){
+  if(midiInput){midiInput.onmidimessage=null;midiLog('warn','Poort ontkoppeld');}
+  const id=$('midiIn').value;
+  midiInput=midiAccess?.inputs.get(id)||null;
+  if(midiInput){
+    midiInput.onmidimessage=onMidi;
+    midiLog('ok','▶ Luistert op: '+midiInput.name+' — druk nu Play in Reaper');
+    // Reset detect state for fresh port
+    seenMTC=false;seenClock=false;
+    mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;
+  }
+  applyMidiMode();
+}
+
+function applyMidiMode(){
+  midiMode=$('midiMode').value;
+  $('offsetRow').style.display=(midiMode==='mtc'||midiMode==='auto')?'block':'none';
+  const lbl=$('syncLbl');
+  const connected=midiMode!=='off'&&midiInput;
+  if(midiMode==='auto' &&connected){lbl.textContent='AUTO';lbl.classList.add('on');}
+  else if(midiMode==='mtc'&&connected){lbl.textContent='MTC';lbl.classList.add('on');}
+  else if(midiMode==='clock'&&connected){lbl.textContent='CLK';lbl.classList.add('on');}
+  else{lbl.textContent='INTERN';lbl.classList.remove('on');}
+  $('midiBadge').className='midi-badge'+(connected?' connected':'');
+  // Reset
+  mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;seenMTC=false;seenClock=false;
+  if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+  midiLog('warn','Modus: '+(midiMode==='auto'?'AUTO (detecteer)':midiMode.toUpperCase()));
+}
+
+function onMidi(msg){
+  const data=msg.data, st=data[0], d1=data.length>1?data[1]:0;
+
+  // ── 0xF8: Clock tick — ignore silently (24 per beat, floods log)
+  if(st===0xF8) return;
+  // ── 0xFE: Active Sensing — ignore
+  if(st===0xFE) return;
+
+  const wantMTC  = midiMode==='mtc'  || midiMode==='auto';
+  const wantClock= midiMode==='clock' || midiMode==='auto';
+
+  // ══════════════════════════════════════
+  // MTC QUARTER FRAME (0xF1)
+  // ══════════════════════════════════════
+  if(st===0xF1 && wantMTC){
+    seenMTC=true;
+    const nt=(d1>>4)&0x07, nv=d1&0x0F;
+    mtcNibs[nt]=nv;
+    mtcReceived|=(1<<nt);
+
+    // Reconstruct as soon as we have all 8 nibble types
+    if(mtcReceived===0xFF){
+      const frames = mtcNibs[0] | ((mtcNibs[1]&0x01)<<4);
+      const secs   = mtcNibs[2] | ((mtcNibs[3]&0x03)<<4);
+      const mins   = mtcNibs[4] | ((mtcNibs[5]&0x03)<<4);
+      const hours  = mtcNibs[6] | ((mtcNibs[7]&0x01)<<4);
+      const rIdx   = (mtcNibs[7]>>1)&0x03;
+      const fps    = [24,25,29.97,30][rIdx];
+      const off    = parseFloat($('mtcOff')?.value||'0')||0;
+      const newPos = hours*3600+mins*60+secs+(frames/fps)+off;
+
+      // Only log when position changes noticeably (avoid flooding)
+      if(Math.abs(newPos-mtcLastElapsed)>0.5){
+        midiLog('ok',`MTC ${pad(hours)}:${pad(mins)}:${pad(secs)}:${pad(frames)} @${fps}fps`);
+        mtcLastElapsed=newPos;
+      }
+
+      elapsed=newPos;
+      if(!running) startTimer();
+      else startedAt=performance.now()-elapsed*1000;
+
+      mtcReceived=0; // reset bitmask, keep nibble values for continuity
+
+      // Auto-stop: if MTC stops arriving for >500ms, pause
+      if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
+      mtcStopTimeout=setTimeout(()=>{
+        if(running && (midiMode==='mtc'||midiMode==='auto')){
+          pauseTimer();
+          midiLog('warn','MTC gestopt — klok gepauzeerd');
+        }
+      },500);
+    }
+  }
+
+  // ══════════════════════════════════════
+  // MTC FULL FRAME SYSEX (0xF0 7F 7F 01 01 hh mm ss ff F7)
+  // ══════════════════════════════════════
+  if(st===0xF0 && wantMTC && data.length>=9 && data[1]===0x7F && data[3]===0x01 && data[4]===0x01){
+    seenMTC=true;
+    const hh=data[5]&0x1F, ri=(data[5]>>5)&0x03;
+    const fps=[24,25,29.97,30][ri];
+    const off=parseFloat($('mtcOff')?.value||'0')||0;
+    const newPos=hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
+    elapsed=newPos;
+    midiLog('ok',`Full-frame ${pad(hh)}:${pad(data[6])}:${pad(data[7])}:${pad(data[8])} @${fps}fps`);
+    if(!running) startTimer();
+    else startedAt=performance.now()-elapsed*1000;
+  }
+
+  // ══════════════════════════════════════
+  // MIDI CLOCK TRANSPORT
+  // 0xFA = Start, 0xFB = Continue, 0xFC = Stop
+  // ══════════════════════════════════════
+  if(wantClock){
+    if(st===0xFA){
+      // Start: reset position to 0 and begin
+      seenClock=true;
+      elapsed=0;
+      if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+      startTimer();
+      midiLog('ok','▶ MIDI Start (pos → 0:00:00)');
+    }
+    if(st===0xFB){
+      // Continue: resume from current position
+      seenClock=true;
+      if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+      startTimer();
+      midiLog('ok','▶ MIDI Continue (pos: '+fmt(elapsed)+')');
+    }
+    if(st===0xFC){
+      // Stop
+      seenClock=true;
+      pauseTimer();
+      if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+      midiLog('warn','■ MIDI Stop (pos: '+fmt(elapsed)+')');
+    }
+  }
+
+  // ══════════════════════════════════════
+  // SONG POSITION POINTER (0xF2) — used by Reaper MIDI Clock
+  // Two bytes = 14-bit value of MIDI beats (1 beat = 6 clock ticks)
+  // ══════════════════════════════════════
+  if(st===0xF2 && wantClock && data.length>=3){
+    const lsb=data[1], msb=data[2];
+    const beats=(msb<<7)|lsb;
+    // 1 MIDI beat = 1/16th note. Assume 120BPM if no other info → 1 beat = 0.125s
+    // Better: just store it and apply on next Start/Continue
+    // At 120BPM: beat duration = 60/120 * (1/4) * 6 = 0.125s... actually:
+    // Song Position = number of MIDI beats from start
+    // 1 MIDI beat = 6 MIDI clock ticks = 1 sixteenth note
+    // At 120 BPM: quarter = 0.5s, sixteenth = 0.125s
+    // We don't know the tempo, so store the beat position and convert on Continue
+    window._sppBeats=beats;
+    midiLog('warn',`SPP: beat ${beats} (tempo-afhankelijk)`);
+  }
+
+  // Auto-detect feedback in log
+  if(midiMode==='auto' && (seenMTC||seenClock) && !window._autoLoggedDetect){
+    window._autoLoggedDetect=true;
+    setTimeout(()=>{
+      midiLog('ok',`Auto-detect: ${seenMTC?'MTC ':''}${seenClock?'MIDI Clock':''}actief`);
+      window._autoLoggedDetect=false;
+    },1000);
+  }
+}
+
+function testMidi(){
+  if(!midiInput){midiLog('err','Geen poort geselecteerd');alert('Selecteer eerst een MIDI-poort.');return;}
+  const modeStr=midiMode==='auto'?'AUTO (MTC + Clock)':midiMode.toUpperCase();
+  midiLog('ok',`Test OK — poort: ${midiInput.name} | modus: ${modeStr}`);
+  alert(`✓ Poort: ${midiInput.name}\nModus: ${modeStr}\n\nDruk nu Play in Reaper.\nCheck het MIDI Log hieronder voor inkomende data.`);
+}
+
+/* ════════════════════════════════════════════
+   PANEL RESIZE & TOGGLE
+════════════════════════════════════════════ */
+let leftCollapsed=false, rightCollapsed=false;
+const MIN_W=160, MAX_LEFT=500, MAX_RIGHT=600;
+let leftW=260, rightW=340;
+
+function applyGrid(){
+  const lw = leftCollapsed  ? 0 : leftW;
+  const rw = rightCollapsed ? 0 : rightW;
+  const ld = leftCollapsed  ? 0 : 4;
+  const rd = rightCollapsed ? 0 : 4;
+  $('layout').style.gridTemplateColumns = `${lw}px ${ld}px 1fr ${rd}px ${rw}px`;
+}
+
+function togglePanel(side){
+  if(side==='left'){
+    if(!leftCollapsed){
+      const w=$('leftPanel').offsetWidth;
+      if(w>10) leftW=w;
+    }
+    leftCollapsed=!leftCollapsed;
+    $('toggleLeft').classList.toggle('collapsed', leftCollapsed);
+    $('toggleLeft').textContent = leftCollapsed ? '▶ Delen' : '◀ Delen';
+  } else {
+    if(!rightCollapsed){
+      const w=$('rightPanel').offsetWidth;
+      if(w>10) rightW=w;
+    }
+    rightCollapsed=!rightCollapsed;
+    $('toggleRight').classList.toggle('collapsed', rightCollapsed);
+    $('toggleRight').textContent = rightCollapsed ? '◀ Detail' : 'Detail ▶';
+  }
+  applyGrid();
+}
+
+function initResize(){
+  setupDrag('dragLeft','left');
+  setupDrag('dragRight','right');
+}
+
+function setupDrag(handleId, side){
+  const handle=$(handleId);
+  if(!handle)return;
+  let startX, startW;
+
+  handle.addEventListener('mousedown', e=>{
+    e.preventDefault();
+    startX=e.clientX;
+    startW = side==='left' ? leftW : rightW;
+    handle.classList.add('dragging');
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+
+    const onMove=e=>{
+      const dx=e.clientX-startX;
+      if(side==='left'){
+        leftW=Math.max(MIN_W, Math.min(MAX_LEFT, startW+dx));
+        if(leftCollapsed && leftW>MIN_W){
+          leftCollapsed=false;
+          $('toggleLeft').classList.remove('collapsed');
+          $('toggleLeft').textContent='◀ Delen';
+        }
+      } else {
+        rightW=Math.max(MIN_W, Math.min(MAX_RIGHT, startW-dx));
+        if(rightCollapsed && rightW>MIN_W){
+          rightCollapsed=false;
+          $('toggleRight').classList.remove('collapsed');
+          $('toggleRight').textContent='Detail ▶';
+        }
+      }
+      applyGrid();
+    };
+
+    const onUp=()=>{
+      handle.classList.remove('dragging');
+      document.body.style.cursor='';
+      document.body.style.userSelect='';
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+    };
+
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+}
+
+/* ════════════════════════════════════════════
+   LIVE BROADCAST — WebSocket naar viewer-server
+════════════════════════════════════════════ */
+let ws=null, wsUrl='', wsBroadcast=false;
+
+function wsConnect(url){
+  if(ws){ws.close();}
+  wsUrl=url;
+  try{
+    ws=new WebSocket(url);
+    ws.onopen=()=>{
+      wsBroadcast=true;
+      midiLog('ok','Broadcast verbonden: '+url);
+      updateWsStatus('ok');
+      broadcastState(); // send current state immediately on connect
+    };
+    ws.onclose=()=>{ wsBroadcast=false; updateWsStatus('off'); setTimeout(()=>{ if(wsUrl)wsConnect(wsUrl); },3000); };
+    ws.onerror=()=>{ wsBroadcast=false; updateWsStatus('err'); };
+  }catch(e){ wsBroadcast=false; }
+}
+
+function updateWsStatus(s){
+  const el=$('wsStatus'); if(!el)return;
+  el.textContent=s==='ok'?'● LIVE':s==='err'?'● FOUT':'● Uit';
+  el.style.color=s==='ok'?'var(--acc)':s==='err'?'var(--danger)':'var(--muted)';
+}
+
+function broadcastState(){
+  if(!ws||ws.readyState!==1)return;
+  const ni=nextIdx();
+  const prevTime=ni>0?cues[ni-1].time:0;
+  const payload={
+    t: Math.round(elapsed*1000)/1000,
+    running,
+    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, type:cues[activeCueIndex].type||'none'} : null,
+    nextCue: ni>=0 ? {name:cues[ni].name, time:cues[ni].time, type:cues[ni].type||'none'} : null,
+    prevCueTime: prevTime,
+    region: activeRegionId ? (regions.find(r=>r.id===activeRegionId)||null) : null,
+    cues: cues.map(c=>({time:c.time,name:c.name,type:c.type||'none',regionId:c.regionId||null})),
+    regions: regions.map(r=>({id:r.id,name:r.name,start:r.start,end:r.end,color:r.color||null})),
+  };
+  try{ ws.send(JSON.stringify(payload)); }catch(e){}
+}
+function openBroadcast(){ $('broadcastModal').classList.add('open'); }
+function closeBroadcast(){ $('broadcastModal').classList.remove('open'); }
+function startBroadcast(){
+  const url=$('wsUrlInput').value.trim();
+  if(!url){alert('Voer een WebSocket URL in.');return;}
+  wsConnect(url); closeBroadcast();
+}
+
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  if(e.code==='Space'){e.preventDefault();running?pauseTimer():startTimer();}
+  if(e.code==='ArrowRight'||e.code==='KeyN')skipToNext();
+  if(e.code==='Escape'){running?pauseTimer():stopTimer();}
+});
+
+/* ════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════ */
+syncBtns();renderCues();renderRegions();updateStrip();updateClock();
+showDetailEmpty();initResize();
+</script>
+</body>
+</html>
