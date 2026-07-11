@@ -1089,6 +1089,7 @@ function updateMenu(){
 let midiAccess=null, midiInputRef=null, midiOutput=null, midiMode='auto';
 let mtcNibs=[0,0,0,0,0,0,0,0], mtcReceived=0;
 let mtcLastElapsed=-1, mtcStopTimeout=null;
+let seenMTC=false, seenClock=false;
 
 async function initMidi(){
   const badge=$('midiBadge');
@@ -1171,44 +1172,45 @@ function applyMidiMode(){
 
 function onMidi(msg){
   const data=msg.data, st=data[0], d1=data.length>1?data[1]:0;
-  if(st===0xF8||st===0xFE) return; // ignore clock ticks + active sensing
+  if(st===0xF8||st===0xFE) return;
+  const wantMTC  = midiMode==='mtc'  || midiMode==='auto';
+  const wantClock= midiMode==='clock'|| midiMode==='auto';
 
-  const wantMTC  = midiMode==='mtc'   || midiMode==='auto';
-  const wantClock= midiMode==='clock' || midiMode==='auto';
-
-  // MTC Quarter Frame
   if(st===0xF1 && wantMTC){
-    const nt=(d1>>4)&0x07, nv=d1&0x0F;
-    mtcNibs[nt]=nv; mtcReceived|=(1<<nt);
-    if(mtcReceived===0xFF){
-      const frames = mtcNibs[0]|((mtcNibs[1]&0x01)<<4);
-      const secs   = mtcNibs[2]|((mtcNibs[3]&0x03)<<4);
-      const mins   = mtcNibs[4]|((mtcNibs[5]&0x03)<<4);
-      const hours  = mtcNibs[6]|((mtcNibs[7]&0x01)<<4);
-      const fps    = [24,25,29.97,30][(mtcNibs[7]>>1)&0x03];
-      const off    = parseFloat($('mtcOff')?.value||'0')||0;
-      elapsed      = hours*3600+mins*60+secs+(frames/fps)+off;
-      if(!running) startTimer();
-      else startAt=performance.now()-elapsed*1000;
-      mtcReceived=0;
-      if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
-      mtcStopTimeout=setTimeout(()=>{ if(running&&(midiMode==='mtc'||midiMode==='auto')){ pauseTimer(); } },500);
+    seenMTC=true;
+    const nt=(d1>>4)&0x07;
+    mtcNibs[nt]=d1&0x0F;
+    if(nt===7){
+      const frames=(mtcNibs[0]&0x0F)|((mtcNibs[1]&0x01)<<4);
+      const secs  =(mtcNibs[2]&0x0F)|((mtcNibs[3]&0x03)<<4);
+      const mins  =(mtcNibs[4]&0x0F)|((mtcNibs[5]&0x03)<<4);
+      const hours =(mtcNibs[6]&0x0F)|((mtcNibs[7]&0x01)<<4);
+      const fps   =[24,25,29.97,30][(mtcNibs[7]>>1)&0x03];
+      const off   =parseFloat($('mtcOff')?.value||'0')||0;
+      const newPos=hours*3600+mins*60+secs+(frames/fps)+off;
+      mtcLastElapsed=newPos;
+      if(running){ startAt=performance.now()-newPos*1000; elapsed=newPos; }
+      else{ elapsed=newPos; updateClock(); }
     }
+    if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
+    mtcStopTimeout=setTimeout(()=>{
+      if(running&&seenMTC){ pauseTimer(); seenMTC=false; }
+    },2000);
   }
 
-  // MTC Full Frame SysEx
-  if(st===0xF0 && wantMTC && data.length>=9 && data[1]===0x7F && data[3]===0x01 && data[4]===0x01){
+  if(st===0xF0&&wantMTC&&data.length>=9&&data[1]===0x7F&&data[3]===0x01&&data[4]===0x01){
+    seenMTC=true;
     const hh=data[5]&0x1F, fps=[24,25,29.97,30][(data[5]>>5)&0x03];
     const off=parseFloat($('mtcOff')?.value||'0')||0;
-    elapsed=hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
-    if(!running) startTimer(); else startAt=performance.now()-elapsed*1000;
+    const newPos=hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
+    elapsed=newPos; mtcLastElapsed=newPos; mtcNibs=[0,0,0,0,0,0,0,0];
+    if(running) startAt=performance.now()-newPos*1000; else updateClock();
   }
 
-  // MIDI Clock transport
   if(wantClock){
-    if(st===0xFA){ elapsed=0; if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;} startTimer(); }
-    if(st===0xFB){ if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;} startTimer(); }
-    if(st===0xFC){ pauseTimer(); }
+    if(st===0xFA){seenClock=true;if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}if(!seenMTC)elapsed=0;startTimer();}
+    if(st===0xFB){seenClock=true;if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}startTimer();}
+    if(st===0xFC){seenClock=true;if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}pauseTimer();seenMTC=false;}
   }
 }
 

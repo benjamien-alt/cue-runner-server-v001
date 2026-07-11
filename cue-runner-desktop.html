@@ -535,6 +535,125 @@ html,body{
 .modal-actions{display:flex;gap:10px;margin-top:16px;}
 .btn-modal-save{flex:1;padding:12px;background:var(--acc);color:#07070a;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:800;cursor:pointer;}
 .btn-modal-cancel{padding:12px 18px;background:var(--s2);color:var(--text);border:1px solid var(--bdr);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+
+/* ── REGIONS-ONLY VIEW ── */
+#regionView{
+  display:none;
+  position:fixed;inset:0;z-index:500;
+  background:var(--bg);
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:0;
+  font-family:'DM Sans',sans-serif;
+}
+#regionView.active{ display:flex; }
+
+/* colour bar top */
+.rv-stripe{
+  position:absolute;top:0;left:0;right:0;height:5px;
+  display:flex;
+}
+.rv-stripe span{ flex:1; }
+
+/* close button */
+.rv-close{
+  position:absolute;top:16px;right:20px;
+  background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+  color:var(--muted);font-size:12px;font-weight:700;letter-spacing:1px;
+  padding:8px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .15s;
+}
+.rv-close:hover{color:var(--text);border-color:var(--muted);}
+
+/* Keyboard hint */
+.rv-hint{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:var(--muted);letter-spacing:1px;
+}
+
+/* Clock */
+.rv-clock-lbl{
+  font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;
+  font-weight:800;margin-bottom:6px;
+}
+.rv-clock{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(64px,10vw,120px);
+  color:var(--acc);letter-spacing:4px;line-height:1;
+  text-shadow:0 0 40px rgba(200,245,58,.3);
+  transition:color .25s;
+  margin-bottom:32px;
+}
+.rv-clock.run{color:#fff;text-shadow:0 0 50px rgba(200,245,58,.5);}
+.rv-clock.pau{color:var(--warn);}
+
+/* Divider */
+.rv-divider{
+  width:60px;height:2px;background:var(--bdr);border-radius:1px;
+  margin:0 auto 32px;
+}
+
+/* Current region block */
+.rv-region-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  margin-bottom:40px;
+}
+.rv-region-lbl{
+  font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;
+}
+.rv-region-bar{
+  width:50px;height:4px;border-radius:2px;background:var(--muted);margin-bottom:4px;
+  transition:background .3s;
+}
+.rv-region-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(36px,6vw,72px);
+  letter-spacing:3px;color:var(--text);
+  line-height:1;text-align:center;
+  max-width:80vw;
+}
+.rv-region-times{
+  font-family:'Share Tech Mono',monospace;
+  font-size:16px;color:var(--muted);letter-spacing:2px;
+}
+.rv-region-elapsed{
+  font-family:'Share Tech Mono',monospace;
+  font-size:13px;color:var(--dim);letter-spacing:1px;margin-top:4px;
+}
+
+/* Progress bar */
+.rv-progress-wrap{
+  width:min(480px,60vw);height:4px;background:var(--bdr);
+  border-radius:2px;margin-bottom:40px;overflow:hidden;
+}
+.rv-progress-fill{
+  height:100%;background:var(--acc);border-radius:2px;
+  transition:width .5s linear;
+}
+
+/* Next region */
+.rv-next-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.rv-next-lbl{
+  font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;
+}
+.rv-next-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(22px,3.5vw,40px);
+  letter-spacing:2px;color:var(--warn);line-height:1;text-align:center;
+  max-width:70vw;
+}
+.rv-countdown{
+  font-family:'Share Tech Mono',monospace;
+  font-size:clamp(36px,5vw,64px);
+  color:var(--warn);letter-spacing:2px;line-height:1;margin-top:4px;
+}
+.rv-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
+@keyframes rvPulse{from{opacity:1}to{opacity:.25}}
+.rv-no-next{
+  font-size:16px;font-weight:700;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+}
 </style>
 </head>
 <body>
@@ -548,10 +667,12 @@ html,body{
   </div>
   <div class="topbar-right">
     <span id="wsStatus" style="font-size:11px;color:var(--muted);letter-spacing:1px;cursor:pointer;" onclick="openBroadcast()" title="Live broadcast naar viewers">● Uit</span>
+    <span id="fmtBadge" onclick="switchTab('csv')" title="CSV tijdformaat — klik om te wijzigen" style="font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 9px;border-radius:4px;background:var(--s2);border:1px solid var(--bdr);color:var(--muted);cursor:pointer;text-transform:uppercase;">AUTO</span>
     <button class="panel-toggle" id="toggleLeft"  onclick="togglePanel('left')"  title="Verberg/toon Delen paneel">◀ Delen</button>
     <button class="panel-toggle" id="toggleRight" onclick="togglePanel('right')" title="Verberg/toon rechter paneel">Detail ▶</button>
+    <button class="panel-toggle" id="toggleRegionView" onclick="toggleRegionView()" title="Regions-only weergave">⬛ Delen-view</button>
     <span class="midi-badge" id="midiBadge" onclick="switchTab('midi')">MIDI</span>
-    <button class="tb-btn" onclick="switchTab('csv')">CSV Import/Export</button>
+    <button class="tb-btn" onclick="switchTab('csv')">CSV</button>
     <button class="tb-btn acc" onclick="newCuePanel()">+ Cue</button>
   </div>
 </div>
@@ -568,6 +689,49 @@ html,body{
       <button class="btn-modal-cancel" onclick="closeBroadcast()">Sluiten</button>
       <button class="btn-modal-save" onclick="startBroadcast()">Verbinden</button>
     </div>
+  </div>
+</div>
+
+<!-- REGIONS-ONLY VIEW OVERLAY -->
+<div id="regionView">
+  <!-- colour stripe top -->
+  <div class="rv-stripe">
+    <span style="background:#a78bfa"></span>
+    <span style="background:#38bdf8"></span>
+    <span style="background:#fbbf24"></span>
+    <span style="background:#34d399"></span>
+    <span style="background:#c8f53a"></span>
+  </div>
+
+  <button class="rv-close" onclick="toggleRegionView()">✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span></button>
+  <div class="rv-hint">Druk ESC om terug te keren · R om te wisselen</div>
+
+  <!-- CLOCK -->
+  <div class="rv-clock-lbl">TIMECODE</div>
+  <div class="rv-clock" id="rvClock">00:00:00</div>
+
+  <div class="rv-divider"></div>
+
+  <!-- CURRENT REGION -->
+  <div class="rv-region-wrap">
+    <div class="rv-region-lbl">Huidig deel</div>
+    <div class="rv-region-bar" id="rvRegionBar"></div>
+    <div class="rv-region-name" id="rvRegionName">—</div>
+    <div class="rv-region-times" id="rvRegionTimes"></div>
+    <div class="rv-region-elapsed" id="rvRegionElapsed"></div>
+  </div>
+
+  <!-- PROGRESS within region -->
+  <div class="rv-progress-wrap">
+    <div class="rv-progress-fill" id="rvProgressFill"></div>
+  </div>
+
+  <!-- NEXT REGION -->
+  <div class="rv-next-wrap">
+    <div class="rv-next-lbl">Volgend deel</div>
+    <div class="rv-next-name" id="rvNextName">—</div>
+    <div class="rv-countdown" id="rvCountdown">—</div>
+    <div class="rv-no-next" id="rvNoNext" style="display:none">Laatste deel</div>
   </div>
 </div>
 
@@ -788,9 +952,22 @@ html,body{
           <option value="clock">MIDI Clock alleen (start/stop)</option>
         </select>
       </div>
-      <div class="midi-field" id="offsetRow" style="display:none">
-        <label>Offset (seconden)</label>
-        <input class="midi-input" id="mtcOff" type="number" value="0" step="0.1">
+      <div class="midi-field" id="offsetRow">
+        <label>MTC Tijdzone-offset (seconden)</label>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;">
+          <input class="midi-input" id="mtcOff" type="number" value="0" step="1" style="width:100px;" oninput="updateOffsetDisplay()">
+          <span id="offsetDisplay" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);"></span>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(0)" title="Geen offset — Reaper tijdlijn start bij 0">0s</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(-3600)" title="Reaper project start op 01:00:00:00 (broadcast standaard)">−1u</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(-7200)" title="Reaper project start op 02:00:00:00">−2u</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="autoDetectOffset()" title="Bereken offset automatisch op basis van de eerste ontvangen MTC waarde en de start van het eerste region">⚡ Auto</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6;">
+          Gebruik <strong style="color:var(--text)">−1u (−3600s)</strong> als Reaper's timecode begint bij <code style="color:var(--acc)">01:00:00:00</code>.<br>
+          Klik <strong style="color:var(--text)">⚡ Auto</strong> na de eerste MTC data om de offset automatisch te berekenen.
+        </div>
       </div>
 
       <!-- SEND TRANSPORT CONTROLS -->
@@ -839,16 +1016,70 @@ html,body{
 
     <!-- CSV PANE -->
     <div class="rpane" id="pane-csv">
+
+      <!-- TIME FORMAT SELECTOR -->
+      <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:12px;">
+        <div class="flabel" style="margin-top:0;">Tijdformaat CSV</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelAuto">
+            <input type="radio" name="csvFmt" value="auto" id="fmtAuto" onchange="setCsvFormat('auto')" checked style="margin-top:2px;accent-color:var(--acc);">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">Auto-detectie <span style="font-size:10px;color:var(--acc);font-weight:800;letter-spacing:1px;">AANBEVOLEN</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Herkent automatisch <code style="color:var(--acc)">M:SS.mmm</code> én <code style="color:var(--warn)">SS.B.TT</code></div>
+            </div>
+          </label>
+
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelMmss">
+            <input type="radio" name="csvFmt" value="mmss" id="fmtMmss" onchange="setCsvFormat('mmss')" style="margin-top:2px;accent-color:var(--acc);">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">M:SS.mmm <span style="font-size:10px;color:var(--muted);">— min:sec.ms</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Reaper → Project tijdsweergave op <strong style="color:var(--text)">Minuten:Seconden</strong></div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc);margin-top:2px;">11:59.966 → 719.97s</div>
+            </div>
+          </label>
+
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelBars">
+            <input type="radio" name="csvFmt" value="bars" id="fmtBars" onchange="setCsvFormat('bars')" style="margin-top:2px;accent-color:var(--warn);">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">SS.B.TT <span style="font-size:10px;color:var(--muted);">— sec.beat.ticks</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Reaper → Project tijdsweergave op <strong style="color:var(--text)">Maten+Beats</strong></div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--warn);margin-top:2px;">248.3.35 → 248.84s</div>
+            </div>
+          </label>
+
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelHmsf">
+            <input type="radio" name="csvFmt" value="hmsf" id="fmtHmsf" onchange="setCsvFormat('hmsf')" style="margin-top:2px;accent-color:#38bdf8;">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">HH:MM:SS:FF <span style="font-size:10px;color:var(--muted);">— uur:min:sec:frames</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Reaper → Transport: Time unit: <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong></div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#38bdf8;margin-top:2px;">1:05:23:12 → 3923.4s &nbsp;(bij 30fps)</div>
+            </div>
+          </label>
+
+        </div>
+        <div id="fmtHmsfFps" style="display:none;margin-top:6px;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Frames per seconde (FPS)</span>
+        <select id="hmsfFps" style="background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;" onchange="setCsvFormat('hmsf')">
+          <option value="24">24 fps</option>
+          <option value="25" selected>25 fps (PAL / Europa)</option>
+          <option value="29.97">29.97 fps (NTSC drop)</option>
+          <option value="30">30 fps</option>
+        </select>
+        <span style="font-size:10px;color:var(--muted);">Staat ook in Reaper naast de tijdweergave</span>
+      </div>
+      <div id="fmtPreview" style="margin-top:8px;font-size:10px;color:var(--muted);padding:6px 8px;background:var(--bg);border-radius:5px;border:1px solid var(--bdr);display:none;"></div>
+      </div>
+
       <div class="csv-info">
-        Reaper export formaat:<br>
-        <code>#,Name,Start,End,Length,Color</code><br>
-        Tijden in <code>M:SS.mmm</code>. Regions (R*) en markers (M*) worden beide geladen.
+        Reaper: File → Export → Region/Marker Manager → Export CSV<br>
+        Regions (<code>R*</code>) worden geladen als <strong>delen</strong>, markers (<code>M*</code>) als <strong>cues</strong>.
       </div>
       <div class="drop-zone" id="dropZone" onclick="$('csvFile').click()">
         <input type="file" id="csvFile" accept=".csv,.txt" onchange="importCSV(event)">
         📂 Klik of sleep een CSV-bestand
       </div>
-      <textarea class="csv-textarea" id="csvPaste" placeholder="#,Name,Start,End,Length,Color&#10;R1,Intro,0:00.000,5:00.000,5:00.000,&#10;M1,Lichten aan,0:00.000,,,"></textarea>
+      <textarea class="csv-textarea" id="csvPaste" placeholder="#,Name,Start,End,Length&#10;R1,Intro,0:00.000,5:00.000,5:00.000&#10;M1,Lichten aan,0:00.000,,,"></textarea>
       <button class="btn-csv" onclick="importPaste()">Importeer tekst</button>
       <button class="btn-csv prim" onclick="exportCSV()">⬇ Exporteer CSV</button>
     </div>
@@ -866,14 +1097,96 @@ const pad=n=>String(n).padStart(2,'0');
 const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
 const $=id=>document.getElementById(id);
 
-function parseReaperTime(s){
+/* ════════════════════════════════════════════
+   CSV TIME FORMAT
+   'auto'  = auto-detect (tries all formats)
+   'mmss'  = force M:SS.mmm  (Reaper Time display)
+   'bars'  = force SS.B.TT   (Reaper Bars+Beats display)
+════════════════════════════════════════════ */
+let csvTimeFormat = 'auto';
+
+function setCsvFormat(fmt){
+  csvTimeFormat = fmt;
+  // Badge in topbar
+  const badge = $('fmtBadge');
+  const labels = {auto:'AUTO', mmss:'M:SS', bars:'SS.B.TT', hmsf:'HH:MM:SS:FF'};
+  const colors = {auto:'var(--muted)', mmss:'var(--acc)', bars:'var(--warn)', hmsf:'#38bdf8'};
+  badge.textContent = labels[fmt];
+  badge.style.color = colors[fmt];
+  badge.style.borderColor = colors[fmt];
+  // Radio label highlights
+  ['Auto','Mmss','Bars'].forEach(f=>{
+    const lbl=$('fmtLabel'+f); if(!lbl)return;
+    lbl.style.borderColor=''; lbl.style.background='';
+  });
+  const labelMap={auto:'fmtLabelAuto',mmss:'fmtLabelMmss',bars:'fmtLabelBars'};
+  const lbl=$(labelMap[fmt]);
+  if(lbl){
+    lbl.style.borderColor=colors[fmt];
+    lbl.style.background=fmt==='bars'?'rgba(245,166,35,.06)':fmt==='hmsf'?'rgba(56,189,248,.06)':'rgba(200,245,58,.06)';
+  }
+  // Show FPS selector only for HMSF
+  const fpsRow=$('fmtHmsfFps');
+  if(fpsRow) fpsRow.style.display=fmt==='hmsf'?'flex':'none';
+
+  // Preview
+  const preview=$('fmtPreview');
+  if(preview){
+    const s1=parseReaperTime('11:59.966'), s2=parseReaperTime('248.3.35');
+    preview.style.display='block';
+    preview.innerHTML='📐 &nbsp;<code>11:59.966</code> → '+(s1!=null?s1.toFixed(2)+'s':'?')+
+      ' &nbsp;·&nbsp; <code>248.3.35</code> → '+(s2!=null?s2.toFixed(2)+'s':'?');
+  }
+}
+
+function parseTimeForced(s, fmt){
+  if(!s) return null; s=s.trim();
+  let m;
+  if(fmt==='bars'){
+    m=s.match(/^(\d+)\.(\d+)\.(\d+)$/); if(m) return +m[1] + +m[2]*0.25 + +m[3]*0.0025;
+    const f=parseFloat(s); return isNaN(f)?null:f;
+  }
+  if(fmt==='mmss'){
+    m=s.match(/^(\d+):(\d{2}):(\d{2})\.(\d+)$/); if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +('0.'+m[4]);
+    m=s.match(/^(\d+):(\d{2}):(\d{2})$/);         if(m) return +m[1]*3600 + +m[2]*60 + +m[3];
+    m=s.match(/^(\d+):(\d{2})\.(\d+)$/);           if(m) return +m[1]*60  + +m[2]    + +('0.'+m[3]);
+    m=s.match(/^(\d+):(\d{2})$/);                  if(m) return +m[1]*60  + +m[2];
+    return null;
+  }
+  if(fmt==='hmsf'){
+    // HH:MM:SS:FF  — Hours:Minutes:Seconds:Frames
+    // Reaper "Transport: Time unit: Hours:Minutes:Seconds:Frames"
+    // FPS can be 24, 25, 29.97, 30 — we store at 30fps as default (0.0333s/frame)
+    // User can set FPS via the fps field; default 25 for European shows
+    const fps=parseFloat(document.getElementById('hmsfFps')?.value)||25;
+    m=s.match(/^(\d+):(\d{2}):(\d{2}):(\d{2})$/);
+    if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/fps;
+    // Also accept HH:MM:SS:FF.sub (some Reaper versions add sub-frame)
+    m=s.match(/^(\d+):(\d{2}):(\d{2}):(\d{2})\.(\d+)$/);
+    if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + (+m[4]+parseFloat('0.'+m[5]))/fps;
+    return null;
+  }
+  return parseReaperTimeAuto(s);
+}
+
+function parseReaperTimeAuto(s){
   if(!s) return null; s=s.trim();
   let m;
   m=s.match(/^(\d+):(\d{2}):(\d{2})\.(\d+)$/); if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +('0.'+m[4]);
   m=s.match(/^(\d+):(\d{2}):(\d{2})$/);         if(m) return +m[1]*3600 + +m[2]*60 + +m[3];
   m=s.match(/^(\d+):(\d{2})\.(\d+)$/);           if(m) return +m[1]*60  + +m[2]    + +('0.'+m[3]);
   m=s.match(/^(\d+):(\d{2})$/);                  if(m) return +m[1]*60  + +m[2];
+  // HH:MM:SS:FF (4 colon-separated segments — Hours:Minutes:Seconds:Frames)
+  m=s.match(/^(\d+):(\d{2}):(\d{2}):(\d{2})$/);
+  if(m){ const fps=parseFloat(document.getElementById('hmsfFps')?.value)||25; return +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/fps; }
+  // SS.B.TT bars/beats format e.g. "248.3.35"
+  m=s.match(/^(\d+)\.(\d+)\.(\d+)$/);            if(m) return +m[1] + +m[2]*0.25 + +m[3]*0.0025;
   const f=parseFloat(s); return isNaN(f)?null:f;
+}
+
+function parseReaperTime(s){
+  if(csvTimeFormat !== 'auto') return parseTimeForced(s, csvTimeFormat);
+  return parseReaperTimeAuto(s);
 }
 
 function parseCSVLine(line){
@@ -966,6 +1279,7 @@ function tick(){
   broadcastState();
   rafId=requestAnimationFrame(tick);
 }
+
 function updateClock(){$('clock').textContent=fmt(elapsed);}
 
 /* ════════════════════════════════════════════
@@ -1464,12 +1778,60 @@ function exportCSV(){
    MIDI ENGINE — robust Reaper/LoopMIDI support
 ════════════════════════════════════════════ */
 let midiAccess=null, midiInput=null, midiOutput=null, midiMode='auto';
-// MTC state
 let mtcNibs=[0,0,0,0,0,0,0,0], mtcReceived=0;
 let mtcLastElapsed=-1, mtcStopTimeout=null;
-// Auto-detect
 let seenMTC=false, seenClock=false;
+let mtcFirstRawSeconds=null; // first raw MTC value before offset, for auto-detect
 let midiLogLines=[];
+
+function setOffset(val){
+  $('mtcOff').value=val;
+  updateOffsetDisplay();
+  midiLog('ok','Offset ingesteld op '+val+'s');
+}
+
+function updateOffsetDisplay(){
+  const off=parseFloat($('mtcOff').value)||0;
+  const el=$('offsetDisplay');
+  if(!el) return;
+  if(off===0){ el.textContent=''; return; }
+  const abs=Math.abs(off);
+  const h=Math.floor(abs/3600), m=Math.floor((abs%3600)/60), s=Math.floor(abs%60);
+  el.textContent=(off<0?'−':'+')+(h?h+'u ':'')+( m?pad(m)+'m ':'')+pad(s)+'s';
+  el.style.color=off!==0?'var(--warn)':'var(--muted)';
+}
+
+function autoDetectOffset(){
+  // Strategy: use the first raw MTC value received and the start of the first region
+  // to compute the offset automatically.
+  // If regions are loaded: offset = firstRawMTC - regions[0].start
+  // If no regions: offset = -floor(firstRawMTC/3600)*3600 (strip hours)
+  if(mtcFirstRawSeconds===null){
+    midiLog('warn','Nog geen MTC ontvangen — druk eerst Play in Reaper');
+    alert('Nog geen MTC data ontvangen.\nDruk eerst Play in Reaper en probeer opnieuw.');
+    return;
+  }
+  let offset;
+  if(regions.length>0){
+    // Offset = raw MTC at current position - actual show position
+    // We use the elapsed value (after offset) as reference: elapsed = raw + offset
+    // So: offset = elapsed_show - raw_mtc
+    // Best estimate: offset = regions[0].start - mtcFirstRawSeconds
+    offset = regions[0].start - mtcFirstRawSeconds;
+    midiLog('ok','Auto offset: eerste region start='+regions[0].start.toFixed(1)+'s, eerste MTC='+mtcFirstRawSeconds.toFixed(1)+'s → offset='+offset.toFixed(1)+'s');
+  } else {
+    // No regions: strip the hours component
+    const hours = Math.floor(mtcFirstRawSeconds / 3600);
+    offset = -hours * 3600;
+    midiLog('ok','Auto offset: MTC uur='+hours+' → offset='+offset+'s');
+  }
+  setOffset(Math.round(offset));
+  // Re-apply to current elapsed
+  elapsed = mtcFirstRawSeconds + offset;
+  if(running) startedAt = performance.now() - elapsed*1000;
+  updateClock(); checkCues(); updateRegionDisplay();
+  midiLog('ok','Offset toegepast: elapsed nu '+fmt(elapsed));
+}
 
 function midiLog(cls,msg){
   const ts=fmt(elapsed);
@@ -1486,7 +1848,7 @@ async function initMidi(){
     midiLog('err','WebMIDI niet beschikbaar — gebruik Chrome/Edge');return;
   }
   try{
-    midiAccess=await navigator.requestMIDIAccess({sysex:true});
+    midiAccess=await navigator.requestMIDIAccess({sysex:false});
     badge.textContent='Verbonden';badge.className='badge ok';
     midiLog('ok','WebMIDI verbonden — kies poort en selecteer');
     fillPorts();
@@ -1618,7 +1980,7 @@ function selectMidiIn(){
     midiInput.onmidimessage=onMidi;
     midiLog('ok','▶ Luistert op: '+midiInput.name+' — druk nu Play in Reaper');
     // Reset detect state for fresh port
-    seenMTC=false;seenClock=false;
+    seenMTC=false;seenClock=false;mtcFirstRawSeconds=null;
     mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;
   }
   applyMidiMode();
@@ -1626,7 +1988,6 @@ function selectMidiIn(){
 
 function applyMidiMode(){
   midiMode=$('midiMode').value;
-  $('offsetRow').style.display=(midiMode==='mtc'||midiMode==='auto')?'block':'none';
   const lbl=$('syncLbl');
   const connected=midiMode!=='off'&&midiInput;
   if(midiMode==='auto' &&connected){lbl.textContent='AUTO';lbl.classList.add('on');}
@@ -1643,126 +2004,116 @@ function applyMidiMode(){
 function onMidi(msg){
   const data=msg.data, st=data[0], d1=data.length>1?data[1]:0;
 
-  // ── 0xF8: Clock tick — ignore silently (24 per beat, floods log)
-  if(st===0xF8) return;
-  // ── 0xFE: Active Sensing — ignore
-  if(st===0xFE) return;
+  // Ignore clock ticks (0xF8=24/beat) and active sensing (0xFE)
+  if(st===0xF8||st===0xFE) return;
 
   const wantMTC  = midiMode==='mtc'  || midiMode==='auto';
-  const wantClock= midiMode==='clock' || midiMode==='auto';
+  const wantClock= midiMode==='clock'|| midiMode==='auto';
 
-  // ══════════════════════════════════════
-  // MTC QUARTER FRAME (0xF1)
-  // ══════════════════════════════════════
+  // ── MTC QUARTER FRAME (0xF1) ──────────────────────────────────
+  // Reaper sends 8 QF messages per timecode frame (4 per display frame at 25fps).
+  // Each carries one nibble. We store all 8 and reconstruct on nibble 7.
+  // Strategy: ALWAYS apply the value when nibble 7 arrives.
+  // No plausibility filtering — let MTC be the authority.
   if(st===0xF1 && wantMTC){
     seenMTC=true;
     const nt=(d1>>4)&0x07, nv=d1&0x0F;
     mtcNibs[nt]=nv;
-    mtcReceived|=(1<<nt);
 
-    // Reconstruct as soon as we have all 8 nibble types
-    if(mtcReceived===0xFF){
-      const frames = mtcNibs[0] | ((mtcNibs[1]&0x01)<<4);
-      const secs   = mtcNibs[2] | ((mtcNibs[3]&0x03)<<4);
-      const mins   = mtcNibs[4] | ((mtcNibs[5]&0x03)<<4);
-      const hours  = mtcNibs[6] | ((mtcNibs[7]&0x01)<<4);
+    if(nt===7){
+      // Reconstruct full timecode from the 8 nibbles
+      const frames = (mtcNibs[0]&0x0F) | ((mtcNibs[1]&0x01)<<4);
+      const secs   = (mtcNibs[2]&0x0F) | ((mtcNibs[3]&0x03)<<4);
+      const mins   = (mtcNibs[4]&0x0F) | ((mtcNibs[5]&0x03)<<4);
+      const hours  = (mtcNibs[6]&0x0F) | ((mtcNibs[7]&0x01)<<4);
       const rIdx   = (mtcNibs[7]>>1)&0x03;
       const fps    = [24,25,29.97,30][rIdx];
       const off    = parseFloat($('mtcOff')?.value||'0')||0;
       const newPos = hours*3600+mins*60+secs+(frames/fps)+off;
+      const rawPos = hours*3600+mins*60+secs+(frames/fps); // before offset
+      // Store first raw MTC value for auto-detect offset feature
+      if(mtcFirstRawSeconds===null) mtcFirstRawSeconds=rawPos;
 
-      // Only log when position changes noticeably (avoid flooding)
-      if(Math.abs(newPos-mtcLastElapsed)>0.5){
-        midiLog('ok',`MTC ${pad(hours)}:${pad(mins)}:${pad(secs)}:${pad(frames)} @${fps}fps`);
-        mtcLastElapsed=newPos;
+      // Log only on significant position change (avoid log spam)
+      if(Math.abs(newPos-mtcLastElapsed)>0.5)
+        midiLog('ok','MTC '+pad(hours)+':'+pad(mins)+':'+pad(secs)+':'+pad(frames)+' @'+fps+'fps');
+
+      mtcLastElapsed = newPos;
+
+      // Apply position — MTC is the authority, no filtering
+      // The local tick() loop only runs when running=true;
+      // we update startedAt so tick() stays in sync
+      if(running){
+        // Correct the internal clock anchor so tick() computes the right elapsed
+        startedAt = performance.now() - newPos*1000;
+        // Also directly set elapsed so the UI updates immediately
+        elapsed = newPos;
+      } else {
+        // Not running yet — just set the position, let 0xFA/FB trigger start
+        elapsed = newPos;
+        updateClock();
       }
-
-      elapsed=newPos;
-      if(!running) startTimer();
-      else startedAt=performance.now()-elapsed*1000;
-
-      mtcReceived=0; // reset bitmask, keep nibble values for continuity
-
-      // Auto-stop: if MTC stops arriving for >500ms, pause
-      if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
-      mtcStopTimeout=setTimeout(()=>{
-        if(running && (midiMode==='mtc'||midiMode==='auto')){
-          pauseTimer();
-          midiLog('warn','MTC gestopt — klok gepauzeerd');
-        }
-      },500);
     }
+
+    // Reset auto-stop timer — Reaper is still playing
+    if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
+    mtcStopTimeout = setTimeout(()=>{
+      if(running && seenMTC){
+        pauseTimer();
+        midiLog('warn','MTC gestopt (geen data >2s) — klok gepauzeerd');
+        seenMTC = false;
+      }
+    }, 2000); // 2 seconds: generous for LoopMIDI latency
   }
 
-  // ══════════════════════════════════════
-  // MTC FULL FRAME SYSEX (0xF0 7F 7F 01 01 hh mm ss ff F7)
-  // ══════════════════════════════════════
-  if(st===0xF0 && wantMTC && data.length>=9 && data[1]===0x7F && data[3]===0x01 && data[4]===0x01){
+  // ── MTC FULL FRAME SYSEX ──────────────────────────────────────
+  // Reaper sends this on seek/locate before playback starts.
+  // Use it for an instant position jump and reset nibble state.
+  if(st===0xF0 && wantMTC && data.length>=9
+      && data[1]===0x7F && data[3]===0x01 && data[4]===0x01){
     seenMTC=true;
-    const hh=data[5]&0x1F, ri=(data[5]>>5)&0x03;
-    const fps=[24,25,29.97,30][ri];
-    const off=parseFloat($('mtcOff')?.value||'0')||0;
-    const newPos=hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
-    elapsed=newPos;
-    midiLog('ok',`Full-frame ${pad(hh)}:${pad(data[6])}:${pad(data[7])}:${pad(data[8])} @${fps}fps`);
-    if(!running) startTimer();
-    else startedAt=performance.now()-elapsed*1000;
+    const hh  = data[5]&0x1F;
+    const rIdx= (data[5]>>5)&0x03;
+    const fps = [24,25,29.97,30][rIdx];
+    const off = parseFloat($('mtcOff')?.value||'0')||0;
+    const newPos = hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
+
+    elapsed=newPos; mtcLastElapsed=newPos;
+    mtcNibs=[0,0,0,0,0,0,0,0]; // clean slate for next QF cycle
+
+    midiLog('ok','Locate -> '+pad(hh)+':'+pad(data[6])+':'+pad(data[7])+' @'+fps+'fps');
+
+    if(running) startedAt=performance.now()-newPos*1000;
+    else updateClock();
   }
 
-  // ══════════════════════════════════════
-  // MIDI CLOCK TRANSPORT
-  // 0xFA = Start, 0xFB = Continue, 0xFC = Stop
-  // ══════════════════════════════════════
+  // ── MIDI CLOCK TRANSPORT (0xFA / 0xFB / 0xFC) ────────────────
+  // In Reaper, these arrive alongside MTC.
+  // 0xFA = Start (begin from current position — DO NOT reset to 0 if MTC is active)
+  // 0xFB = Continue
+  // 0xFC = Stop
   if(wantClock){
     if(st===0xFA){
-      // Start: reset position to 0 and begin
       seenClock=true;
-      elapsed=0;
       if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+      // Only reset elapsed to 0 in pure MIDI Clock mode (no MTC)
+      if(!seenMTC){ elapsed=0; midiLog('ok','Start -> 0:00:00'); }
+      else          midiLog('ok','Start @ '+fmt(elapsed));
       startTimer();
-      midiLog('ok','▶ MIDI Start (pos → 0:00:00)');
     }
     if(st===0xFB){
-      // Continue: resume from current position
       seenClock=true;
       if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+      midiLog('ok','Continue @ '+fmt(elapsed));
       startTimer();
-      midiLog('ok','▶ MIDI Continue (pos: '+fmt(elapsed)+')');
     }
     if(st===0xFC){
-      // Stop
       seenClock=true;
-      pauseTimer();
       if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
-      midiLog('warn','■ MIDI Stop (pos: '+fmt(elapsed)+')');
+      midiLog('warn','Stop @ '+fmt(elapsed));
+      pauseTimer();
+      seenMTC=false; // allow next Play to re-establish MTC sync
     }
-  }
-
-  // ══════════════════════════════════════
-  // SONG POSITION POINTER (0xF2) — used by Reaper MIDI Clock
-  // Two bytes = 14-bit value of MIDI beats (1 beat = 6 clock ticks)
-  // ══════════════════════════════════════
-  if(st===0xF2 && wantClock && data.length>=3){
-    const lsb=data[1], msb=data[2];
-    const beats=(msb<<7)|lsb;
-    // 1 MIDI beat = 1/16th note. Assume 120BPM if no other info → 1 beat = 0.125s
-    // Better: just store it and apply on next Start/Continue
-    // At 120BPM: beat duration = 60/120 * (1/4) * 6 = 0.125s... actually:
-    // Song Position = number of MIDI beats from start
-    // 1 MIDI beat = 6 MIDI clock ticks = 1 sixteenth note
-    // At 120 BPM: quarter = 0.5s, sixteenth = 0.125s
-    // We don't know the tempo, so store the beat position and convert on Continue
-    window._sppBeats=beats;
-    midiLog('warn',`SPP: beat ${beats} (tempo-afhankelijk)`);
-  }
-
-  // Auto-detect feedback in log
-  if(midiMode==='auto' && (seenMTC||seenClock) && !window._autoLoggedDetect){
-    window._autoLoggedDetect=true;
-    setTimeout(()=>{
-      midiLog('ok',`Auto-detect: ${seenMTC?'MTC ':''}${seenClock?'MIDI Clock':''}actief`);
-      window._autoLoggedDetect=false;
-    },1000);
   }
 }
 
@@ -1917,8 +2268,97 @@ function broadcastState(){
   };
   try{ ws.send(JSON.stringify(payload)); }catch(e){}
 }
-function openBroadcast(){ $('broadcastModal').classList.add('open'); }
-function closeBroadcast(){ $('broadcastModal').classList.remove('open'); }
+/* ════════════════════════════════════════════
+   REGIONS-ONLY VIEW
+════════════════════════════════════════════ */
+let regionViewActive=false;
+
+function toggleRegionView(){
+  regionViewActive=!regionViewActive;
+  $('regionView').classList.toggle('active', regionViewActive);
+  $('toggleRegionView').classList.toggle('collapsed', regionViewActive);
+  $('toggleRegionView').textContent=regionViewActive?'⬜ Normaal':'⬛ Delen-view';
+  if(regionViewActive) updateRegionView();
+}
+
+function updateRegionView(){
+  if(!regionViewActive) return;
+
+  // Clock
+  const clkEl=$('rvClock');
+  clkEl.textContent=fmt(elapsed);
+  clkEl.className='rv-clock'+(running?' run':' pau');
+
+  const r=activeRegionId?regions.find(x=>x.id===activeRegionId):null;
+  const rIdx=r?regions.indexOf(r):-1;
+  const nextR=r?regions[rIdx+1]:null;
+
+  if(r){
+    // Region colour bar
+    const bc=r.color||'var(--acc)';
+    $('rvRegionBar').style.background=bc;
+
+    $('rvRegionName').textContent=r.name;
+    $('rvRegionTimes').textContent=`${fmt(r.start)}  –  ${fmt(r.end)}`;
+
+    // Elapsed time within this region
+    const inRegion=Math.max(0, elapsed-r.start);
+    const inMm=Math.floor(inRegion/60), inSs=Math.floor(inRegion%60);
+    $('rvRegionElapsed').textContent=`${pad(inMm)}:${pad(inSs)} in dit deel`;
+
+    // Progress within region
+    const span=r.end-r.start;
+    const done=elapsed-r.start;
+    const pct=Math.min(100,Math.max(0,span>0?done/span*100:0));
+    $('rvProgressFill').style.width=pct+'%';
+    $('rvProgressFill').style.background=bc;
+  } else {
+    $('rvRegionBar').style.background='var(--muted)';
+    $('rvRegionName').textContent='—';
+    $('rvRegionTimes').textContent='';
+    $('rvRegionElapsed').textContent='';
+    $('rvProgressFill').style.width='0%';
+  }
+
+  if(nextR){
+    $('rvNextName').textContent=nextR.name;
+    $('rvNoNext').style.display='none';
+    $('rvCountdown').style.display='block';
+
+    const diff=nextR.start-elapsed;
+    if(diff>0){
+      const mm=Math.floor(diff/60), ss=Math.floor(diff%60);
+      $('rvCountdown').textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
+      $('rvCountdown').className='rv-countdown'+(diff<=10?' hot':'');
+    } else {
+      $('rvCountdown').textContent='NU';
+      $('rvCountdown').className='rv-countdown hot';
+    }
+  } else if(r){
+    $('rvNextName').textContent='';
+    $('rvCountdown').style.display='none';
+    $('rvNoNext').style.display='block';
+  } else {
+    $('rvNextName').textContent='—';
+    $('rvCountdown').textContent='—';
+    $('rvCountdown').style.display='block';
+    $('rvNoNext').style.display='none';
+  }
+}
+
+
+function openBroadcast(){
+  const el=$('broadcastModal'); if(!el)return;
+  const input=$('wsUrlInput');
+  if(input && wsUrl) input.value=wsUrl;
+  el.classList.add('open');
+}
+
+function closeBroadcast(){
+  const el=$('broadcastModal'); if(!el)return;
+  el.classList.remove('open');
+}
+
 function startBroadcast(){
   const url=$('wsUrlInput').value.trim();
   if(!url){alert('Voer een WebSocket URL in.');return;}
@@ -1929,7 +2369,11 @@ document.addEventListener('keydown',e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
   if(e.code==='Space'){e.preventDefault();running?pauseTimer():startTimer();}
   if(e.code==='ArrowRight'||e.code==='KeyN')skipToNext();
-  if(e.code==='Escape'){running?pauseTimer():stopTimer();}
+  if(e.code==='Escape'){
+    if(regionViewActive){toggleRegionView();return;}
+    running?pauseTimer():stopTimer();
+  }
+  if(e.code==='KeyR'&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey) toggleRegionView();
 });
 
 /* ════════════════════════════════════════════
@@ -1937,6 +2381,13 @@ document.addEventListener('keydown',e=>{
 ════════════════════════════════════════════ */
 syncBtns();renderCues();renderRegions();updateStrip();updateClock();
 showDetailEmpty();initResize();
+
+// Region view RAF loop — must start AFTER all let declarations to avoid
+// "Cannot access before initialization" temporal dead zone error
+(function rvLoop(){
+  if(typeof regionViewActive !== 'undefined') updateRegionView();
+  requestAnimationFrame(rvLoop);
+})();
 </script>
 </body>
 </html>
