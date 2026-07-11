@@ -8,24 +8,54 @@
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
+  /* ── DONKER (standaard) ── */
   --bg:      #07070a;
   --s1:      #0d0d12;
   --s2:      #121218;
   --s3:      #18181f;
   --bdr:     #25252f;
-  --acc:     #c8f53a;
+  --acc:     #bceff6;
+  --acc-rgb: 188,239,246;   /* --acc als RGB voor glows/tints */
   --warn:    #f5a623;
   --danger:  #f53a3a;
   --text:    #f0f0fa;
   --muted:   #9090b0;
   --dim:     #5a5a78;
-  --active:  #141a05;
+  --active:  #08222a;
+  --clock-run: #ffffff;     /* lopende klok — extra fel op donker */
+  --hover:   rgba(255,255,255,.02);
+  --swatch-sel: #ffffff;
 
-  --regie:   #c4affe;
-  --kraan:   #7dd8fc;
   --licht:   #fcd34d;
-  --geluid:  #6ee7b7;
+  --spot:    #fb7185;
+  --kraan:   #7dd8fc;
+  --kaboem:  #f97316;
+  --truss:   #94a3b8;
+  --dir:     #c4affe;
+  --sound:   #6ee7b7;
+  --video:   #818cf8;
   --none:    #5a5a78;
+}
+
+/* ── LICHT ── (accent = donkerder teal uit dezelfde familie, leesbaar op wit) */
+:root[data-theme="light"] {
+  --bg:      #eef1f5;
+  --s1:      #ffffff;
+  --s2:      #f4f6f9;
+  --s3:      #e8ecf1;
+  --bdr:     #d3dae2;
+  --acc:     #0f8bab;
+  --acc-rgb: 15,139,171;
+  --warn:    #b56a00;
+  --danger:  #d62828;
+  --text:    #14181f;
+  --muted:   #566072;
+  --dim:     #8996a6;
+  --active:  #dff3f8;
+  --clock-run: #0f8bab;
+  --hover:   rgba(0,0,0,.04);
+  --swatch-sel: #14181f;
+  /* cue-type kleuren (--licht/--spot/--kraan/--kaboem/--truss/--dir/--sound/--video) blijven identiek — semantisch */
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -61,13 +91,13 @@ html,body{
 }
 .tb-btn:hover{background:var(--s2);}
 .tb-btn.acc{border-color:var(--acc);color:var(--acc);}
-.tb-btn.acc:hover{background:rgba(200,245,58,.08);}
+.tb-btn.acc:hover{background:rgba(var(--acc-rgb),.08);}
 .midi-badge{
   font-size:11px;letter-spacing:1px;padding:5px 11px;border-radius:5px;
   border:1px solid var(--bdr);color:var(--muted);background:transparent;cursor:pointer;
   transition:all .2s;
 }
-.midi-badge.connected{border-color:var(--regie);color:var(--regie);box-shadow:0 0 8px rgba(196,175,254,.25);}
+.midi-badge.connected{border-color:var(--dir);color:var(--dir);box-shadow:0 0 8px rgba(196,175,254,.25);}
 
 /* ═══════════════════════════════════════════
    LAYOUT — resizable 3 columns
@@ -106,7 +136,7 @@ html,body{
   transition:all .15s;line-height:1;
 }
 .panel-toggle:hover{border-color:var(--acc);color:var(--acc);}
-.panel-toggle.collapsed{color:var(--acc);border-color:var(--acc);background:rgba(200,245,58,.08);}
+.panel-toggle.collapsed{color:var(--acc);border-color:var(--acc);background:rgba(var(--acc-rgb),.08);}
 
 /* ═══════════════════════════════════════════
    LEFT: REGIONS PANEL
@@ -132,7 +162,7 @@ html,body{
   transition:background .15s;
 }
 .region-item:hover{background:var(--s2);}
-.region-item.active{background:rgba(200,245,58,.05);border-left-color:var(--acc);}
+.region-item.active{background:rgba(var(--acc-rgb),.05);border-left-color:var(--acc);}
 .region-item.active .ri-name{color:var(--acc);}
 .region-item.past{opacity:.4;}
 .region-item.past .ri-name{text-decoration:line-through;}
@@ -167,12 +197,13 @@ html,body{
 #clock{
   font-family:'Share Tech Mono',monospace;font-size:clamp(48px,5vw,72px);
   color:var(--acc);letter-spacing:3px;line-height:1;
-  text-shadow:0 0 32px rgba(200,245,58,.3);transition:color .25s;
+  text-shadow:0 0 32px rgba(var(--acc-rgb),.3);transition:color .25s;
 }
-#clock.run {color:#fff;text-shadow:0 0 40px rgba(200,245,58,.5);}
+#clock.run {color:var(--clock-run);text-shadow:0 0 40px rgba(var(--acc-rgb),.5);}
 #clock.pau {color:var(--warn);text-shadow:0 0 20px rgba(245,166,35,.3);}
+.clock-frames{font-size:.42em;opacity:.55;letter-spacing:1px;margin-left:2px;}
 .sync-lbl{font-size:10px;letter-spacing:2px;color:var(--dim);margin-top:2px;}
-.sync-lbl.on{color:var(--regie);}
+.sync-lbl.on{color:var(--dir);}
 
 /* Region name in clock area */
 .active-region-name{
@@ -258,7 +289,7 @@ html,body{
   border-bottom:1px solid var(--bdr);border-left:3px solid transparent;
   cursor:pointer;transition:background .15s;position:relative;
 }
-.cue-row:hover{background:rgba(255,255,255,.02);}
+.cue-row:hover{background:var(--hover);}
 .cue-row:hover .cue-sf{opacity:1;}
 .cue-row.active  {background:var(--active);border-left-color:var(--acc);}
 .cue-row.active .cue-name{color:var(--acc);font-weight:700;}
@@ -361,11 +392,33 @@ html,body{
   opacity:.55;font-family:'DM Sans',sans-serif;
 }
 .tchip.sel{opacity:1;border-color:currentColor;}
-.tchip.regie {color:var(--regie);}
-.tchip.kraan {color:var(--kraan);}
 .tchip.licht {color:var(--licht);}
-.tchip.geluid{color:var(--geluid);}
+.tchip.spot  {color:var(--spot);}
+.tchip.kraan {color:var(--kraan);}
+.tchip.kaboem{color:var(--kaboem);}
+.tchip.truss {color:var(--truss);}
+.tchip.dir   {color:var(--dir);}
+.tchip.sound {color:var(--sound);}
+.tchip.video {color:var(--video);}
 .tchip.none  {color:var(--dim);}
+.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 0 10px;}
+.filter-chip{
+  padding:4px 10px;border-radius:12px;border:1.5px solid transparent;
+  font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .12s;
+  opacity:.5;font-family:'DM Sans',sans-serif;background:var(--s2);
+}
+.filter-chip.sel{opacity:1;border-color:currentColor;background:transparent;}
+.filter-status{
+  display:none;align-items:center;gap:8px;font-size:11px;color:var(--warn);
+  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
+  border-radius:6px;padding:5px 10px;margin-top:2px;width:100%;
+}
+.filter-clear-btn{
+  background:transparent;border:1px solid var(--warn);color:var(--warn);
+  border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;
+  font-family:'DM Sans',sans-serif;margin-left:auto;
+}
+.filter-clear-btn:hover{background:rgba(245,166,35,.15);}
 .btn-detail-save{
   width:100%;margin-top:16px;padding:12px;border-radius:8px;
   background:var(--acc);color:#07070a;border:none;
@@ -393,7 +446,7 @@ html,body{
 }
 .midi-status-row label{font-size:12px;color:var(--text);}
 .badge{font-size:10px;padding:3px 9px;border-radius:8px;font-weight:700;}
-.badge.ok {background:rgba(200,245,58,.15);color:var(--acc);}
+.badge.ok {background:rgba(var(--acc-rgb),.15);color:var(--acc);}
 .badge.err{background:rgba(245,58,58,.15);color:var(--danger);}
 .badge.off{background:var(--s2);color:var(--muted);}
 .midi-note{font-size:11px;color:var(--text);line-height:1.7;padding:10px 12px;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;margin:10px 0;}
@@ -472,7 +525,7 @@ html,body{
   cursor:pointer;margin-bottom:5px;transition:background .12s;
 }
 .tp-cue-item:hover{background:var(--s2);}
-.tp-cue-item.sel{border-color:var(--acc);background:rgba(200,245,58,.05);}
+.tp-cue-item.sel{border-color:var(--acc);background:rgba(var(--acc-rgb),.05);}
 .tpci-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .tpci-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tpci-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);}
@@ -494,7 +547,7 @@ html,body{
   border:2px solid transparent;transition:transform .1s,border-color .1s;flex-shrink:0;
 }
 .swatch:hover{transform:scale(1.15);}
-.swatch.sel{border-color:#fff;transform:scale(1.1);}
+.swatch.sel{border-color:var(--swatch-sel);transform:scale(1.1);}
 .color-custom{
   display:flex;align-items:center;gap:8px;margin-top:8px;
 }
@@ -580,11 +633,11 @@ html,body{
   font-family:'Share Tech Mono',monospace;
   font-size:clamp(64px,10vw,120px);
   color:var(--acc);letter-spacing:4px;line-height:1;
-  text-shadow:0 0 40px rgba(200,245,58,.3);
+  text-shadow:0 0 40px rgba(var(--acc-rgb),.3);
   transition:color .25s;
   margin-bottom:32px;
 }
-.rv-clock.run{color:#fff;text-shadow:0 0 50px rgba(200,245,58,.5);}
+.rv-clock.run{color:var(--clock-run);text-shadow:0 0 50px rgba(var(--acc-rgb),.5);}
 .rv-clock.pau{color:var(--warn);}
 
 /* Divider */
@@ -654,7 +707,35 @@ html,body{
 .rv-no-next{
   font-size:16px;font-weight:700;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
 }
+
+/* Next cue + upcoming list (taak 9) */
+.rv-cues-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:36px;
+}
+.rv-cue-name{
+  font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,28px);
+  letter-spacing:1.5px;color:var(--text);line-height:1;text-align:center;max-width:70vw;
+}
+.rv-cue-countdown{
+  font-family:'Share Tech Mono',monospace;font-size:clamp(20px,3vw,32px);
+  color:var(--acc);letter-spacing:1px;line-height:1;margin-top:2px;
+}
+.rv-cue-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
+.rv-cue-list{
+  display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:84vw;
+}
+.rv-cue-item{
+  display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);
+  background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:6px 12px;
+}
+.rv-cue-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.rv-cue-item.now{color:var(--text);border-color:var(--acc);}
+.rv-cue-item .rv-ci-time{opacity:.6;font-family:'Share Tech Mono',monospace;}
 </style>
+<script>
+  // Pas opgeslagen thema toe vóór render (voorkomt flits). Standaard = donker.
+  (function(){ try{ if(localStorage.getItem('cueRunnerTheme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
 </head>
 <body>
 
@@ -665,29 +746,49 @@ html,body{
     <div class="dot" id="statusDot"></div>
     <span id="statusText">GESTOPT</span>
   </div>
+  <button id="controlModeBadge" onclick="onControlBadgeClick()" data-i18n="viewonly_badge" data-i18n-title="viewonly_tt" title="Klik om besturing te activeren" style="font-size:10px;font-weight:800;letter-spacing:1.5px;padding:5px 10px;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;text-transform:uppercase;border:1px solid var(--warn);color:var(--warn);background:rgba(245,166,35,.1);">👁 ALLEEN BEKIJKEN</button>
   <div class="topbar-right">
-    <span id="wsStatus" style="font-size:11px;color:var(--muted);letter-spacing:1px;cursor:pointer;" onclick="openBroadcast()" title="Live broadcast naar viewers">● Uit</span>
-    <span id="fmtBadge" onclick="switchTab('csv')" title="CSV tijdformaat — klik om te wijzigen" style="font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 9px;border-radius:4px;background:var(--s2);border:1px solid var(--bdr);color:var(--muted);cursor:pointer;text-transform:uppercase;">AUTO</span>
-    <button class="panel-toggle" id="toggleLeft"  onclick="togglePanel('left')"  title="Verberg/toon Delen paneel">◀ Delen</button>
-    <button class="panel-toggle" id="toggleRight" onclick="togglePanel('right')" title="Verberg/toon rechter paneel">Detail ▶</button>
-    <button class="panel-toggle" id="toggleRegionView" onclick="toggleRegionView()" title="Regions-only weergave">⬛ Delen-view</button>
-    <span class="midi-badge" id="midiBadge" onclick="switchTab('midi')">MIDI</span>
-    <button class="tb-btn" onclick="switchTab('csv')">CSV</button>
-    <button class="tb-btn acc" onclick="newCuePanel()">+ Cue</button>
+    <span id="wsStatus" style="font-size:11px;color:var(--muted);letter-spacing:1px;cursor:pointer;" onclick="openBroadcast()" data-i18n-title="tt_broadcast" title="Live broadcast naar viewers">● Uit</span>
+    <span id="fmtBadge" onclick="switchTab('csv')" data-i18n-title="tt_fmt" title="CSV tijdformaat — klik om te wijzigen" style="font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 9px;border-radius:4px;background:var(--s2);border:1px solid var(--bdr);color:var(--muted);cursor:pointer;text-transform:uppercase;">AUTO</span>
+    <button class="panel-toggle" id="toggleLeft"  onclick="togglePanel('left')"  data-i18n-title="tt_toggle_left">◀ Delen</button>
+    <button class="panel-toggle" id="toggleRight" onclick="togglePanel('right')" data-i18n-title="tt_toggle_right">Detail ▶</button>
+    <button class="panel-toggle" id="toggleRegionView" onclick="toggleRegionView()" data-i18n-title="tt_partsview">⬛ Delen-view</button>
+    <span class="midi-badge" id="midiBadge" onclick="switchTab('midi')" data-i18n-title="tt_open_midi" title="Open MIDI-paneel">MIDI</span>
+    <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal" style="padding:6px 8px;">
+      <option value="nl">NL</option>
+      <option value="en">EN</option>
+      <option value="fr">FR</option>
+      <option value="es">ES</option>
+    </select>
+    <button class="tb-btn" id="themeToggle" onclick="toggleTheme()" data-i18n-title="tt_theme" title="Licht / donker">🌙</button>
+    <button class="tb-btn" onclick="switchTab('csv')" data-i18n-title="tt_open_csv" title="Open CSV-paneel (import/export)">CSV</button>
+    <button class="tb-btn acc" onclick="newCuePanel()" data-i18n-title="tt_open_newcue" title="Nieuwe cue toevoegen">+ Cue</button>
   </div>
 </div>
 
 <!-- BROADCAST MODAL -->
 <div class="modal-overlay" id="broadcastModal" onclick="if(event.target===this)closeBroadcast()">
   <div class="modal">
-    <h2 style="color:var(--acc)">Live Broadcast</h2>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Verbind met de viewer-server zodat andere apparaten live kunnen meekijken. Op internet gebruik je <strong style="color:var(--acc)">wss://</strong> (met s). Lokaal gebruik je <strong>ws://</strong>.</p>
-    <label style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;display:block;margin-bottom:5px;">WebSocket URL</label>
+    <h2 style="color:var(--acc)" data-i18n="bc_title">Live Broadcast</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;" data-i18n="bc_intro">Verbind met de viewer-server zodat andere apparaten live kunnen meekijken. Op internet gebruik je <strong style="color:var(--acc)">wss://</strong> (met s). Lokaal gebruik je <strong>ws://</strong>.</p>
+    <label style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;display:block;margin-bottom:5px;" data-i18n="bc_url_label">WebSocket URL</label>
     <input id="wsUrlInput" class="finput" type="text" placeholder="wss://jouw-naam.onrender.com" value="wss://" style="margin-bottom:6px;">
-    <p style="font-size:11px;color:var(--dim);margin-bottom:10px;">Lokaal netwerk: <code style="color:var(--muted)">ws://192.168.1.x:3001</code></p>
+    <p style="font-size:11px;color:var(--dim);margin-bottom:10px;" data-i18n="bc_localnet">Lokaal netwerk: <code style="color:var(--muted)">ws://192.168.1.x:3001</code></p>
     <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeBroadcast()">Sluiten</button>
-      <button class="btn-modal-save" onclick="startBroadcast()">Verbinden</button>
+      <button class="btn-modal-cancel" onclick="closeBroadcast()" data-i18n="bc_close">Sluiten</button>
+      <button class="btn-modal-save" onclick="startBroadcast()" data-i18n="bc_connect">Verbinden</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTROL WARNING MODAL (view-only → besturen) -->
+<div class="modal-overlay" id="controlWarningModal" onclick="if(event.target===this)closeControlWarning()">
+  <div class="modal">
+    <h2 style="color:var(--warn)" data-i18n="cw_title">Besturing activeren</h2>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;" data-i18n="cw_body">Je staat op het punt de besturing van deze live show te activeren. Start/Stop, cues en delen bewerken, MIDI naar Reaper sturen en broadcast-verbinden worden dan mogelijk. Weet je zeker dat je wilt besturen?</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeControlWarning()" data-i18n="cw_cancel">Annuleren</button>
+      <button class="btn-modal-save" onclick="confirmEnableControl()" data-i18n="cw_confirm">🔓 Activeer besturing</button>
     </div>
   </div>
 </div>
@@ -700,21 +801,21 @@ html,body{
     <span style="background:#38bdf8"></span>
     <span style="background:#fbbf24"></span>
     <span style="background:#34d399"></span>
-    <span style="background:#c8f53a"></span>
+    <span style="background:var(--acc)"></span>
   </div>
 
-  <button class="rv-close" onclick="toggleRegionView()">✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span></button>
-  <div class="rv-hint">Druk ESC om terug te keren · R om te wisselen</div>
+  <button class="rv-close" onclick="toggleRegionView()" data-i18n="rv_close">✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span></button>
+  <div class="rv-hint" data-i18n="rv_hint">Druk ESC om terug te keren · R om te wisselen</div>
 
   <!-- CLOCK -->
-  <div class="rv-clock-lbl">TIMECODE</div>
+  <div class="rv-clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
   <div class="rv-clock" id="rvClock">00:00:00</div>
 
   <div class="rv-divider"></div>
 
   <!-- CURRENT REGION -->
   <div class="rv-region-wrap">
-    <div class="rv-region-lbl">Huidig deel</div>
+    <div class="rv-region-lbl" data-i18n="lbl_current_part">Huidig deel</div>
     <div class="rv-region-bar" id="rvRegionBar"></div>
     <div class="rv-region-name" id="rvRegionName">—</div>
     <div class="rv-region-times" id="rvRegionTimes"></div>
@@ -728,10 +829,18 @@ html,body{
 
   <!-- NEXT REGION -->
   <div class="rv-next-wrap">
-    <div class="rv-next-lbl">Volgend deel</div>
+    <div class="rv-next-lbl" data-i18n="lbl_next_part">Volgend deel</div>
     <div class="rv-next-name" id="rvNextName">—</div>
     <div class="rv-countdown" id="rvCountdown">—</div>
-    <div class="rv-no-next" id="rvNoNext" style="display:none">Laatste deel</div>
+    <div class="rv-no-next" id="rvNoNext" style="display:none" data-i18n="lbl_last_part">Laatste deel</div>
+  </div>
+
+  <!-- NEXT CUE + UPCOMING LIST -->
+  <div class="rv-cues-wrap">
+    <div class="rv-next-lbl" data-i18n="lbl_next_cue">Volgende cue</div>
+    <div class="rv-cue-name" id="rvCueName">—</div>
+    <div class="rv-cue-countdown" id="rvCueCountdown">—</div>
+    <div class="rv-cue-list" id="rvCueList"><!-- filled by JS --></div>
   </div>
 </div>
 
@@ -741,22 +850,22 @@ html,body{
   <!-- LEFT: REGIONS -->
   <div class="regions-panel" id="leftPanel">
     <div class="panel-header">
-      <div class="panel-title">Delen (Regions)</div>
+      <div class="panel-title" data-i18n="parts_title">Delen (Regions)</div>
       <div style="display:flex;gap:8px;align-items:center;">
         <div id="regionCount" style="font-size:10px;color:var(--muted)"></div>
-        <button class="tb-btn" style="font-size:11px;padding:4px 9px;" onclick="openRegionEdit(null)">＋</button>
+        <button class="tb-btn" style="font-size:11px;padding:4px 9px;" onclick="openRegionEdit(null)" data-i18n-title="tt_add_region" title="Nieuw deel toevoegen">＋</button>
       </div>
     </div>
     <div class="regions-list" id="regionsList">
       <div class="empty-state" style="padding:40px 20px;font-size:12px;">
         <div class="big">🎼</div>
-        <div>Importeer een Reaper CSV<br>om regions te zien</div>
+        <div data-i18n="parts_empty">Importeer een Reaper CSV<br>om regions te zien</div>
       </div>
     </div>
   </div><!-- .regions-panel -->
 
   <!-- LEFT DRAG HANDLE -->
-  <div class="drag-handle" id="dragLeft" title="Sleep om te resizen"></div>
+  <div class="drag-handle" id="dragLeft" data-i18n-title="tt_resize" title="Sleep om te resizen"></div>
 
   <!-- CENTER: CLOCK + CUES -->
   <div class="center-panel">
@@ -764,12 +873,12 @@ html,body{
     <!-- Clock hero -->
     <div class="clock-hero">
       <div class="clock-main">
-        <div class="clock-lbl">TIMECODE</div>
+        <div class="clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
         <div id="clock">00:00:00</div>
         <div class="sync-lbl" id="syncLbl">INTERN</div>
       </div>
       <div class="active-region-name">
-        <div class="arn-label">Huidig deel</div>
+        <div class="arn-label" data-i18n="lbl_current_part">Huidig deel</div>
         <div class="arn-name" id="arnName">—</div>
         <div class="arn-next" id="arnNext"></div>
       </div>
@@ -777,27 +886,27 @@ html,body{
 
     <!-- Transport -->
     <div class="transport">
-      <button class="btn-t btn-start" id="btnStart" onclick="startTimer()">
-        <span class="ic">▶</span><span>Start</span>
+      <button class="btn-t btn-start" id="btnStart" onclick="startTimer()" data-i18n-title="tt_start_kb" title="Start (spatie)">
+        <span class="ic">▶</span><span data-i18n="t_start">Start</span>
       </button>
-      <button class="btn-t btn-pause" id="btnPause" onclick="pauseTimer()" disabled>
-        <span class="ic">⏸</span><span>Pauze</span>
+      <button class="btn-t btn-pause" id="btnPause" onclick="pauseTimer()" disabled data-i18n-title="tt_pause_kb" title="Pauzeer (spatie)">
+        <span class="ic">⏸</span><span data-i18n="t_pause">Pauze</span>
       </button>
-      <button class="btn-t btn-stop" id="btnStop" onclick="stopTimer()" disabled>
-        <span class="ic">⏹</span><span>Stop</span>
+      <button class="btn-t btn-stop" id="btnStop" onclick="stopTimer()" disabled data-i18n-title="tt_stop_kb" title="Stop (Esc)">
+        <span class="ic">⏹</span><span data-i18n="t_stop">Stop</span>
       </button>
-      <button class="btn-t btn-skip" onclick="skipToNext()">
-        <span class="ic">⏭</span><span>Volgende</span>
+      <button class="btn-t btn-skip" onclick="skipToNext()" data-i18n-title="tt_skip_kb" title="Spring naar volgende cue (→ of N)">
+        <span class="ic">⏭</span><span data-i18n="t_next">Volgende</span>
       </button>
-      <button class="btn-t btn-from" onclick="switchTab('from')">
-        <span class="ic">↩</span><span>Vanaf</span>
+      <button class="btn-t btn-from" onclick="switchTab('from')" data-i18n-title="tt_from_btn" title="Spring naar een specifiek tijdstip of cue">
+        <span class="ic">↩</span><span data-i18n="t_from">Vanaf</span>
       </button>
     </div>
 
     <!-- Progress + next strip -->
     <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     <div class="next-strip">
-      <div class="ns-label">Volgend</div>
+      <div class="ns-label" data-i18n="ns_next">Volgend</div>
       <div class="ns-dot" id="nsDot"></div>
       <div class="ns-info">
         <div class="ns-name" id="nsName">—</div>
@@ -806,10 +915,19 @@ html,body{
       <div class="ns-countdown" id="nsCountdown">—</div>
     </div>
 
+    <!-- Cue type filter -->
+    <div class="filter-bar">
+      <div id="filterChips" style="display:flex;flex-wrap:wrap;gap:6px;"><!-- filled by JS --></div>
+      <div class="filter-status" id="filterStatus">
+        <span id="filterStatusText"></span>
+        <button class="filter-clear-btn" onclick="clearTypeFilter()" data-i18n="filter_clear">✕ Wissen</button>
+      </div>
+    </div>
+
     <!-- Cue list -->
     <div class="cue-list-wrap">
       <div class="list-header">
-        <span></span><span>#</span><span>Cue</span><span>Tijd</span><span></span>
+        <span></span><span>#</span><span data-i18n="list_cue">Cue</span><span data-i18n="list_time">Tijd</span><span></span>
       </div>
       <div id="cueList"></div>
     </div>
@@ -818,55 +936,64 @@ html,body{
     <div class="add-bar">
       <input type="time" id="addTime" step="1" value="00:00:00">
       <select id="addType">
-        <option value="none">— type</option>
-        <option value="regie">🎬 Regie</option>
-        <option value="kraan">🏗 Kraan</option>
-        <option value="licht">💡 Licht</option>
-        <option value="geluid">🔊 Geluid</option>
+        <option value="none" data-i18n="type_none">— type</option>
+        <option value="licht" data-i18n="type_licht">💡 Licht</option>
+        <option value="spot" data-i18n="type_spot">🔦 Spot</option>
+        <option value="kraan" data-i18n="type_kraan">🏗 Kraan</option>
+        <option value="kaboem" data-i18n="type_kaboem">💥 Kaboem</option>
+        <option value="truss" data-i18n="type_truss">🔩 Truss</option>
+        <option value="dir" data-i18n="type_dir">🎬 Dir</option>
+        <option value="sound" data-i18n="type_sound">🔊 Sound</option>
+        <option value="video" data-i18n="type_video">🎥 Video</option>
       </select>
-      <input type="text" id="addName" placeholder="Naam cue…">
-      <button class="btn-add" onclick="quickAdd()">＋ Toevoegen</button>
+      <input type="text" id="addName" data-i18n-ph="ph_cue_name" placeholder="Naam cue…">
+      <button class="btn-add" onclick="quickAdd()" data-i18n="add_cue">＋ Toevoegen</button>
     </div>
 
   </div><!-- .center-panel -->
 
   <!-- RIGHT DRAG HANDLE -->
-  <div class="drag-handle" id="dragRight" title="Sleep om te resizen"></div>
+  <div class="drag-handle" id="dragRight" data-i18n-title="tt_resize" title="Sleep om te resizen"></div>
 
   <!-- RIGHT: DETAIL / MIDI / CSV / FROM -->
   <div class="right-panel" id="rightPanel">
     <div class="right-tabs">
-      <button class="rtab" id="tab-detail" onclick="switchTab('detail')">Cue</button>
-      <button class="rtab" id="tab-region" onclick="switchTab('region')">Deel</button>
-      <button class="rtab" id="tab-from"   onclick="switchTab('from')">Vanaf</button>
-      <button class="rtab" id="tab-midi"   onclick="switchTab('midi')">MIDI</button>
-      <button class="rtab" id="tab-csv"    onclick="switchTab('csv')">CSV</button>
+      <button class="rtab" id="tab-detail" onclick="switchTab('detail')" data-i18n="tab_cue">Cue</button>
+      <button class="rtab" id="tab-region" onclick="switchTab('region')" data-i18n="tab_part">Deel</button>
+      <button class="rtab" id="tab-from"   onclick="switchTab('from')" data-i18n="tab_from">Vanaf</button>
+      <button class="rtab" id="tab-midi"   onclick="switchTab('midi')" data-i18n-title="tt_open_midi" title="Open MIDI-paneel">MIDI</button>
+      <button class="rtab" id="tab-csv"    onclick="switchTab('csv')" data-i18n-title="tt_open_csv" title="Open CSV-paneel (import/export)">CSV</button>
     </div>
 
     <!-- DETAIL PANE -->
     <div class="rpane active" id="pane-detail">
       <div class="detail-empty" id="detailEmpty">
         <div>🎯</div>
-        <div>Klik op een cue<br>om hem te bewerken</div>
+        <div data-i18n="detail_empty">Klik op een cue<br>om hem te bewerken</div>
       </div>
       <div id="detailForm" style="display:none">
         <div id="detailHeading" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--acc);margin-bottom:12px;"></div>
-        <label class="flabel">Naam</label>
-        <input class="finput" id="dName" type="text" placeholder="Naam van de cue">
-        <label class="flabel">Tijd (HH:MM:SS)</label>
+        <label class="flabel" data-i18n="fl_name">Naam</label>
+        <input class="finput" id="dName" type="text" data-i18n-ph="ph_cue_full" placeholder="Naam van de cue">
+        <label class="flabel" data-i18n="fl_time_hms">Tijd (HH:MM:SS)</label>
         <input class="finput" id="dTime" type="text" placeholder="00:01:30">
-        <label class="flabel">Type</label>
+        <label class="flabel" data-i18n="fl_type">Type</label>
         <div class="type-chips">
-          <button class="tchip none sel" data-t="none"   onclick="pickType(this)">— Geen</button>
-          <button class="tchip regie"    data-t="regie"  onclick="pickType(this)">🎬 Regie</button>
-          <button class="tchip kraan"    data-t="kraan"  onclick="pickType(this)">🏗 Kraan</button>
-          <button class="tchip licht"    data-t="licht"  onclick="pickType(this)">💡 Licht</button>
-          <button class="tchip geluid"   data-t="geluid" onclick="pickType(this)">🔊 Geluid</button>
+          <button class="tchip none sel" data-t="none"   onclick="pickType(this)" data-i18n="chip_none">— Geen</button>
+          <button class="tchip licht"    data-t="licht"  onclick="pickType(this)" data-i18n="type_licht">💡 Licht</button>
+          <button class="tchip spot"     data-t="spot"   onclick="pickType(this)" data-i18n="type_spot">🔦 Spot</button>
+          <button class="tchip kraan"    data-t="kraan"  onclick="pickType(this)" data-i18n="type_kraan">🏗 Kraan</button>
+          <button class="tchip kaboem"   data-t="kaboem" onclick="pickType(this)" data-i18n="type_kaboem">💥 Kaboem</button>
+          <button class="tchip truss"    data-t="truss"  onclick="pickType(this)" data-i18n="type_truss">🔩 Truss</button>
+          <button class="tchip dir"      data-t="dir"    onclick="pickType(this)" data-i18n="type_dir">🎬 Dir</button>
+          <button class="tchip sound"    data-t="sound"  onclick="pickType(this)" data-i18n="type_sound">🔊 Sound</button>
+          <button class="tchip video"    data-t="video"  onclick="pickType(this)" data-i18n="type_video">🎥 Video</button>
         </div>
-        <label class="flabel">Notitie</label>
-        <textarea class="ftextarea" id="dNote" placeholder="Aantekeningen…"></textarea>
-        <button class="btn-detail-save" onclick="saveDetail()">Opslaan</button>
-        <button class="btn-detail-del" id="btnDelCue" style="display:none" onclick="deleteCurrent()">Verwijder cue</button>
+        <div style="font-size:10px;color:var(--muted);margin-top:5px;" data-i18n="fl_type_hint">Meerdere types mogelijk — klik om aan/uit te zetten.</div>
+        <label class="flabel" data-i18n="fl_note">Notitie</label>
+        <textarea class="ftextarea" id="dNote" data-i18n-ph="ph_note" placeholder="Aantekeningen…"></textarea>
+        <button class="btn-detail-save" onclick="saveDetail()" data-i18n="btn_save">Opslaan</button>
+        <button class="btn-detail-del" id="btnDelCue" style="display:none" onclick="deleteCurrent()" data-i18n="btn_del_cue">Verwijder cue</button>
       </div>
     </div><!-- /pane-detail -->
 
@@ -874,97 +1001,97 @@ html,body{
     <div class="rpane" id="pane-region">
       <div class="detail-empty" id="regionEmpty">
         <div>🗂</div>
-        <div>Klik op ✏ bij een deel<br>om het te bewerken</div>
+        <div data-i18n="region_empty">Klik op ✏ bij een deel<br>om het te bewerken</div>
       </div>
       <div id="regionForm" style="display:none">
         <div class="region-edit-header" id="regionHeading">Deel bewerken</div>
 
-        <label class="flabel">Naam</label>
-        <input class="finput" id="rName" type="text" placeholder="Naam van het deel">
+        <label class="flabel" data-i18n="fl_name">Naam</label>
+        <input class="finput" id="rName" type="text" data-i18n-ph="ph_region_name" placeholder="Naam van het deel">
 
-        <label class="flabel">Start (HH:MM:SS)</label>
+        <label class="flabel" data-i18n="fl_start_hms">Start (HH:MM:SS)</label>
         <input class="finput" id="rStart" type="text" placeholder="00:00:00">
 
-        <label class="flabel">Einde (HH:MM:SS)</label>
+        <label class="flabel" data-i18n="fl_end_hms">Einde (HH:MM:SS)</label>
         <input class="finput" id="rEnd" type="text" placeholder="00:05:00">
 
-        <label class="flabel">Kleur</label>
+        <label class="flabel" data-i18n="fl_color">Kleur</label>
         <div class="color-swatches" id="colorSwatches">
           <!-- filled by JS -->
         </div>
         <div class="color-custom">
-          <input type="color" id="rColorPicker" value="#808080" oninput="pickRegionColorRaw(this.value)">
-          <label>Aangepaste kleur</label>
+          <input type="color" id="rColorPicker" value="#808080" oninput="pickRegionColorRaw(this.value)" data-i18n-title="tt_custom_color" title="Kies een eigen kleur">
+          <label data-i18n="fl_custom_color">Aangepaste kleur</label>
           <span id="rColorHex" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);">#808080</span>
         </div>
 
-        <button class="btn-region-save" onclick="saveRegion()">Opslaan</button>
-        <button class="btn-region-del" id="btnDelRegion" style="display:none" onclick="deleteCurrentRegion()">Verwijder deel</button>
+        <button class="btn-region-save" onclick="saveRegion()" data-i18n="btn_save">Opslaan</button>
+        <button class="btn-region-del" id="btnDelRegion" style="display:none" onclick="deleteCurrentRegion()" data-i18n="btn_del_region">Verwijder deel</button>
       </div>
     </div>
 
     <!-- FROM PANE -->
     <div class="rpane" id="pane-from">
       <div class="tp-grid">
-        <div class="tp-seg-wrap"><div class="tp-seg-lbl">UUR</div>
+        <div class="tp-seg-wrap"><div class="tp-seg-lbl" data-i18n="seg_hour">UUR</div>
           <input class="tp-seg" id="sfH" type="number" min="0" max="23" value="0" oninput="syncFromPicker()">
         </div>
         <div class="tp-colon">:</div>
-        <div class="tp-seg-wrap"><div class="tp-seg-lbl">MIN</div>
+        <div class="tp-seg-wrap"><div class="tp-seg-lbl" data-i18n="seg_min">MIN</div>
           <input class="tp-seg" id="sfM" type="number" min="0" max="59" value="0" oninput="syncFromPicker()">
         </div>
         <div class="tp-colon">:</div>
-        <div class="tp-seg-wrap"><div class="tp-seg-lbl">SEC</div>
+        <div class="tp-seg-wrap"><div class="tp-seg-lbl" data-i18n="seg_sec">SEC</div>
           <input class="tp-seg" id="sfS" type="number" min="0" max="59" value="0" oninput="syncFromPicker()">
         </div>
       </div>
-      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:8px;">Of kies een cue</div>
+      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:8px;" data-i18n="from_or_cue">Of kies een cue</div>
       <div class="tp-cue-list" id="tpCueList"></div>
-      <button class="btn-go" onclick="confirmFrom()">▶ Start</button>
+      <button class="btn-go" onclick="confirmFrom()" data-i18n="from_start">▶ Start</button>
     </div>
 
     <!-- MIDI PANE -->
     <div class="rpane" id="pane-midi">
       <div class="midi-status-row">
-        <label>WebMIDI status</label>
+        <label data-i18n="midi_status">WebMIDI status</label>
         <span class="badge off" id="midiBadgePane">—</span>
       </div>
       <div class="midi-field">
-        <label>MIDI Ingang (van Reaper)</label>
+        <label data-i18n="midi_in">MIDI Ingang (van Reaper)</label>
         <select class="midi-select" id="midiIn" onchange="selectMidiIn()">
-          <option value="">— kies poort —</option>
+          <option value="" data-i18n="midi_pick_port">— kies poort —</option>
         </select>
       </div>
 
       <div class="midi-field">
-        <label>MIDI Uitgang (naar Reaper)</label>
+        <label data-i18n="midi_out">MIDI Uitgang (naar Reaper)</label>
         <select class="midi-select" id="midiOut" onchange="selectMidiOut()">
-          <option value="">— kies poort —</option>
+          <option value="" data-i18n="midi_pick_port">— kies poort —</option>
         </select>
       </div>
 
       <div class="midi-field">
-        <label>Sync modus (ontvangen)</label>
+        <label data-i18n="midi_sync_mode">Sync modus (ontvangen)</label>
         <select class="midi-select" id="midiMode" onchange="applyMidiMode()">
-          <option value="off">Uit (intern)</option>
-          <option value="auto" selected>Auto (aanbevolen — detecteert MTC + Clock)</option>
-          <option value="mtc">MTC alleen — MIDI Time Code</option>
-          <option value="clock">MIDI Clock alleen (start/stop)</option>
+          <option value="off" data-i18n="midi_mode_off">Uit (intern)</option>
+          <option value="auto" selected data-i18n="midi_mode_auto">Auto (aanbevolen — detecteert MTC + Clock)</option>
+          <option value="mtc" data-i18n="midi_mode_mtc">MTC alleen — MIDI Time Code</option>
+          <option value="clock" data-i18n="midi_mode_clock">MIDI Clock alleen (start/stop)</option>
         </select>
       </div>
       <div class="midi-field" id="offsetRow">
-        <label>MTC Tijdzone-offset (seconden)</label>
+        <label data-i18n="midi_offset">MTC Tijdzone-offset (seconden)</label>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;">
           <input class="midi-input" id="mtcOff" type="number" value="0" step="1" style="width:100px;" oninput="updateOffsetDisplay()">
           <span id="offsetDisplay" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);"></span>
         </div>
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">
-          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(0)" title="Geen offset — Reaper tijdlijn start bij 0">0s</button>
-          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(-3600)" title="Reaper project start op 01:00:00:00 (broadcast standaard)">−1u</button>
-          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(-7200)" title="Reaper project start op 02:00:00:00">−2u</button>
-          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="autoDetectOffset()" title="Bereken offset automatisch op basis van de eerste ontvangen MTC waarde en de start van het eerste region">⚡ Auto</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(0)" data-i18n-title="tt_off0" title="Geen offset — Reaper tijdlijn start bij 0">0s</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(-3600)" data-i18n-title="tt_off1" title="Reaper project start op 01:00:00:00 (broadcast standaard)">−1u</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="setOffset(-7200)" data-i18n-title="tt_off2" title="Reaper project start op 02:00:00:00">−2u</button>
+          <button class="btn-test" style="flex:none;padding:5px 10px;font-size:11px;margin-top:0;" onclick="autoDetectOffset()" data-i18n-title="tt_offauto" title="Bereken offset automatisch op basis van de eerste ontvangen MTC waarde en de start van het eerste region">⚡ Auto</button>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6;">
+        <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6;" data-i18n="midi_offset_help">
           Gebruik <strong style="color:var(--text)">−1u (−3600s)</strong> als Reaper's timecode begint bij <code style="color:var(--acc)">01:00:00:00</code>.<br>
           Klik <strong style="color:var(--text)">⚡ Auto</strong> na de eerste MTC data om de offset automatisch te berekenen.
         </div>
@@ -972,14 +1099,20 @@ html,body{
 
       <!-- SEND TRANSPORT CONTROLS -->
       <div id="sendControls" style="display:none">
-        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin:12px 0 8px;">Stuur naar Reaper</div>
+        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin:12px 0 8px;" data-i18n="midi_send_hdr">Stuur naar Reaper</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn-send" onclick="sendMidiStart()">▶ Start</button>
           <button class="btn-send" onclick="sendMidiStop()">■ Stop</button>
           <button class="btn-send" onclick="sendMidiContinue()">⏸ Continue</button>
         </div>
+
+        <!-- VOLLEDIGE POSITIONERING (SysEx) — tweede trap -->
+        <button class="btn-send" id="btnEnableSysex" onclick="enableFullPositioning()" style="width:100%;margin-top:8px;" data-i18n="midi_enable_sysex">⚙ Activeer volledige positionering</button>
+        <div id="sysexActiveNote" style="display:none;font-size:10px;color:var(--acc);margin-top:6px;" data-i18n="midi_sysex_active">✓ Volledige positionering actief — "Ga naar tijdstip" en positie-sync zijn beschikbaar.</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;line-height:1.5;" data-i18n="midi_sysex_help">Nodig voor <strong style="color:var(--text)">"Ga naar tijdstip"</strong> en <strong style="color:var(--text)">"Stuur huidige positie"</strong> (vereist SysEx — aparte browserprompt). Start / Stop / Continue werken ook zonder.</div>
+
         <div style="margin-top:8px;">
-          <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:6px;">Speel vanaf tijdstip</div>
+          <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:6px;" data-i18n="midi_play_from">Speel vanaf tijdstip</div>
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
             <input class="midi-input" id="sendH" type="number" min="0" max="23" value="0" style="width:56px;text-align:center;font-size:16px;">
             <span style="color:var(--muted);font-size:18px;">:</span>
@@ -987,13 +1120,13 @@ html,body{
             <span style="color:var(--muted);font-size:18px;">:</span>
             <input class="midi-input" id="sendS" type="number" min="0" max="59" value="0" style="width:56px;text-align:center;font-size:16px;">
           </div>
-          <button class="btn-send btn-send-goto" onclick="sendMidiGoto()" style="margin-top:6px;width:100%;">↩ Ga naar tijdstip &amp; speel</button>
+          <button class="btn-send btn-send-goto" onclick="sendMidiGoto()" style="margin-top:6px;width:100%;" data-i18n="midi_goto">↩ Ga naar tijdstip &amp; speel</button>
         </div>
 
-        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin:10px 0 6px;">Sync huidige klok naar Reaper</div>
-        <button class="btn-send btn-send-sync" onclick="sendCurrentPosition()" style="width:100%;">⟳ Stuur huidige positie</button>
+        <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;margin:10px 0 6px;" data-i18n="midi_sync_clock">Sync huidige klok naar Reaper</div>
+        <button class="btn-send btn-send-sync" onclick="sendCurrentPosition()" style="width:100%;" data-i18n="midi_send_pos">⟳ Stuur huidige positie</button>
 
-        <div class="midi-note" style="margin-top:10px;font-size:10px;">
+        <div class="midi-note" style="margin-top:10px;font-size:10px;" data-i18n="midi_setup">
           <strong>Setup:</strong> Maak 2 LoopMIDI poorten:<br>
           <span style="color:var(--acc)">Poort 1</span> → Reaper uitgang → App ingang (MTC)<br>
           <span style="color:var(--warn)">Poort 2</span> → App uitgang → Reaper ingang (transport)<br><br>
@@ -1001,16 +1134,16 @@ html,body{
         </div>
       </div>
 
-      <div class="midi-note" id="midiNote">
+      <div class="midi-note" id="midiNote" data-i18n="midi_note_main">
         <strong>Auto</strong> — aanbevolen voor Reaper via LoopMIDI. Detecteert MTC én MIDI Clock automatisch.<br>
         <strong>MTC</strong> — MIDI Time Code, stuurt absolute tijdpositie. Reaper: Preferences → MIDI → Send MTC.<br>
         <strong>MIDI Clock</strong> — start/stop/continue berichten. Reaper: Preferences → MIDI → Send clock.<br>
         <strong>Let op:</strong> Selecteer eerst de poort, daarna pas Play in Reaper drukken.
       </div>
-      <button class="btn-test" onclick="testMidi()">Test verbinding</button>
+      <button class="btn-test" onclick="testMidi()" data-i18n="midi_test">Test verbinding</button>
       <div class="midi-log-wrap">
-        <div class="midi-log-label">MIDI Log</div>
-        <div class="midi-log" id="midiLog">Wacht op MIDI data…</div>
+        <div class="midi-log-label" data-i18n="midi_log_label">MIDI Log</div>
+        <div class="midi-log" id="midiLog" data-i18n="midi_log_wait">Wacht op MIDI data…</div>
       </div>
     </div>
 
@@ -1019,22 +1152,22 @@ html,body{
 
       <!-- TIME FORMAT SELECTOR -->
       <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:12px;">
-        <div class="flabel" style="margin-top:0;">Tijdformaat CSV</div>
+        <div class="flabel" style="margin-top:0;" data-i18n="csv_fmt_title">Tijdformaat CSV</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
 
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelAuto">
             <input type="radio" name="csvFmt" value="auto" id="fmtAuto" onchange="setCsvFormat('auto')" checked style="margin-top:2px;accent-color:var(--acc);">
             <div>
-              <div style="font-size:12px;font-weight:700;color:var(--text);">Auto-detectie <span style="font-size:10px;color:var(--acc);font-weight:800;letter-spacing:1px;">AANBEVOLEN</span></div>
-              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Herkent automatisch <code style="color:var(--acc)">M:SS.mmm</code> én <code style="color:var(--warn)">SS.B.TT</code></div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);"><span data-i18n="csv_auto">Auto-detectie</span> <span style="font-size:10px;color:var(--acc);font-weight:800;letter-spacing:1px;" data-i18n="csv_recommended">AANBEVOLEN</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;" data-i18n="csv_auto_desc">Herkent automatisch <code style="color:var(--acc)">M:SS.mmm</code> én <code style="color:var(--warn)">SS.B.TT</code></div>
             </div>
           </label>
 
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelMmss">
             <input type="radio" name="csvFmt" value="mmss" id="fmtMmss" onchange="setCsvFormat('mmss')" style="margin-top:2px;accent-color:var(--acc);">
             <div>
-              <div style="font-size:12px;font-weight:700;color:var(--text);">M:SS.mmm <span style="font-size:10px;color:var(--muted);">— min:sec.ms</span></div>
-              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Reaper → Project tijdsweergave op <strong style="color:var(--text)">Minuten:Seconden</strong></div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">M:SS.mmm <span style="font-size:10px;color:var(--muted);" data-i18n="csv_mmss_sub">— min:sec.ms</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;" data-i18n="csv_mmss_desc">Reaper → Project tijdsweergave op <strong style="color:var(--text)">Minuten:Seconden</strong></div>
               <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--acc);margin-top:2px;">11:59.966 → 719.97s</div>
             </div>
           </label>
@@ -1042,8 +1175,8 @@ html,body{
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelBars">
             <input type="radio" name="csvFmt" value="bars" id="fmtBars" onchange="setCsvFormat('bars')" style="margin-top:2px;accent-color:var(--warn);">
             <div>
-              <div style="font-size:12px;font-weight:700;color:var(--text);">SS.B.TT <span style="font-size:10px;color:var(--muted);">— sec.beat.ticks</span></div>
-              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Reaper → Project tijdsweergave op <strong style="color:var(--text)">Maten+Beats</strong></div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">SS.B.TT <span style="font-size:10px;color:var(--muted);" data-i18n="csv_bars_sub">— sec.beat.ticks</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;" data-i18n="csv_bars_desc">Reaper → Project tijdsweergave op <strong style="color:var(--text)">Maten+Beats</strong></div>
               <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--warn);margin-top:2px;">248.3.35 → 248.84s</div>
             </div>
           </label>
@@ -1051,37 +1184,37 @@ html,body{
           <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:8px 10px;border-radius:7px;border:1.5px solid transparent;transition:all .12s;" id="fmtLabelHmsf">
             <input type="radio" name="csvFmt" value="hmsf" id="fmtHmsf" onchange="setCsvFormat('hmsf')" style="margin-top:2px;accent-color:#38bdf8;">
             <div>
-              <div style="font-size:12px;font-weight:700;color:var(--text);">HH:MM:SS:FF <span style="font-size:10px;color:var(--muted);">— uur:min:sec:frames</span></div>
-              <div style="font-size:10px;color:var(--muted);margin-top:1px;">Reaper → Transport: Time unit: <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong></div>
-              <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#38bdf8;margin-top:2px;">1:05:23:12 → 3923.4s &nbsp;(bij 30fps)</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text);">HH:MM:SS:FF <span style="font-size:10px;color:var(--muted);" data-i18n="csv_hmsf_sub">— uur:min:sec:frames</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;" data-i18n="csv_hmsf_desc">Reaper → Transport: Time unit: <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong></div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#38bdf8;margin-top:2px;" data-i18n="csv_hmsf_at30">1:05:23:12 → 3923.4s &nbsp;(bij 30fps)</div>
             </div>
           </label>
 
         </div>
         <div id="fmtHmsfFps" style="display:none;margin-top:6px;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;">Frames per seconde (FPS)</span>
+        <span style="font-size:10px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;" data-i18n="csv_fps_label">Frames per seconde (FPS)</span>
         <select id="hmsfFps" style="background:var(--bg);border:1px solid var(--bdr);border-radius:6px;padding:5px 8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;" onchange="setCsvFormat('hmsf')">
           <option value="24">24 fps</option>
-          <option value="25" selected>25 fps (PAL / Europa)</option>
+          <option value="25" selected data-i18n="csv_fps_pal">25 fps (PAL / Europa)</option>
           <option value="29.97">29.97 fps (NTSC drop)</option>
           <option value="30">30 fps</option>
         </select>
-        <span style="font-size:10px;color:var(--muted);">Staat ook in Reaper naast de tijdweergave</span>
+        <span style="font-size:10px;color:var(--muted);" data-i18n="csv_fps_hint">Staat ook in Reaper naast de tijdweergave</span>
       </div>
       <div id="fmtPreview" style="margin-top:8px;font-size:10px;color:var(--muted);padding:6px 8px;background:var(--bg);border-radius:5px;border:1px solid var(--bdr);display:none;"></div>
       </div>
 
-      <div class="csv-info">
+      <div class="csv-info" data-i18n="csv_info">
         Reaper: File → Export → Region/Marker Manager → Export CSV<br>
         Regions (<code>R*</code>) worden geladen als <strong>delen</strong>, markers (<code>M*</code>) als <strong>cues</strong>.
       </div>
-      <div class="drop-zone" id="dropZone" onclick="$('csvFile').click()">
+      <div class="drop-zone" id="dropZone" onclick="$('csvFile').click()" data-i18n-title="tt_drop_zone" title="Klik om te bladeren, of sleep een .csv-bestand hierheen">
         <input type="file" id="csvFile" accept=".csv,.txt" onchange="importCSV(event)">
-        📂 Klik of sleep een CSV-bestand
+        <span data-i18n="csv_drop">📂 Klik of sleep een CSV-bestand</span>
       </div>
       <textarea class="csv-textarea" id="csvPaste" placeholder="#,Name,Start,End,Length&#10;R1,Intro,0:00.000,5:00.000,5:00.000&#10;M1,Lichten aan,0:00.000,,,"></textarea>
-      <button class="btn-csv" onclick="importPaste()">Importeer tekst</button>
-      <button class="btn-csv prim" onclick="exportCSV()">⬇ Exporteer CSV</button>
+      <button class="btn-csv" onclick="importPaste()" data-i18n="csv_import_text">Importeer tekst</button>
+      <button class="btn-csv prim" onclick="exportCSV()" data-i18n="csv_export">⬇ Exporteer CSV</button>
     </div>
 
   </div><!-- .right-panel -->
@@ -1092,10 +1225,271 @@ html,body{
 /* ════════════════════════════════════════════
    SHARED HELPERS
 ════════════════════════════════════════════ */
-const TYPE_COLORS={regie:'#c4affe',kraan:'#7dd8fc',licht:'#fcd34d',geluid:'#6ee7b7',none:'#5a5a78'};
+const TYPE_ORDER=['licht','spot','kraan','kaboem','truss','dir','sound','video'];
+const TYPE_COLORS={licht:'#fcd34d',spot:'#fb7185',kraan:'#7dd8fc',kaboem:'#f97316',truss:'#94a3b8',dir:'#c4affe',sound:'#6ee7b7',video:'#818cf8',none:'#5a5a78'};
+// Eén representatieve kleur voor compacte indicatoren (eerste type, of grijs als leeg)
+const typeColor=types=>TYPE_COLORS[(types&&types[0])||'none'];
 const pad=n=>String(n).padStart(2,'0');
 const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
+// FPS voor de framesweergave op de live klok — hergebruikt de CSV-paneel FPS-instelling
+// (zelfde project-framerate als voor Reaper-tijdcode), valt terug op 25 (PAL/EU).
+const clockFps=()=>parseFloat(document.getElementById('hmsfFps')?.value)||25;
+// Alleen voor de grote live klok (hero + delen-view) — cue-tijden elders blijven HH:MM:SS via fmt().
+const fmtFrames=s=>`${fmt(s)}<span class="clock-frames">:${pad(Math.floor((s%1)*clockFps()))}</span>`;
 const $=id=>document.getElementById(id);
+
+/* ════════════════════════════════════════════
+   I18N — vertaalsysteem (NL/EN/FR/ES)
+   NL is de brontaal/fallback. Nieuwe tekst hoort
+   hier als sleutel + 4 talen te komen.
+════════════════════════════════════════════ */
+const I18N_LANGS=['nl','en','fr','es'];
+const I18N_LANG_NAMES={nl:'Nederlands',en:'English',fr:'Français',es:'Español'};
+const T={
+  // ── Topbar / status ──
+  status_stopped:{nl:'GESTOPT',en:'STOPPED',fr:'ARRÊTÉ',es:'DETENIDO'},
+  status_live:{nl:'LIVE',en:'LIVE',fr:'EN DIRECT',es:'EN VIVO'},
+  status_paused:{nl:'GEPAUZEERD',en:'PAUSED',fr:'EN PAUSE',es:'EN PAUSA'},
+  ws_off:{nl:'● Uit',en:'● Off',fr:'● Inactif',es:'● Apagado'},
+  ws_live:{nl:'● LIVE',en:'● LIVE',fr:'● EN DIRECT',es:'● EN VIVO'},
+  ws_error:{nl:'● FOUT',en:'● ERROR',fr:'● ERREUR',es:'● ERROR'},
+  tt_broadcast:{nl:'Live broadcast naar viewers',en:'Live broadcast to viewers',fr:'Diffusion en direct vers les spectateurs',es:'Transmisión en vivo a los espectadores'},
+  tt_fmt:{nl:'CSV tijdformaat — klik om te wijzigen',en:'CSV time format — click to change',fr:'Format de temps CSV — cliquez pour modifier',es:'Formato de tiempo CSV — clic para cambiar'},
+  tb_parts:{nl:'◀ Delen',en:'◀ Parts',fr:'◀ Parties',es:'◀ Partes'},
+  tt_toggle_left:{nl:'Verberg/toon Delen paneel',en:'Hide/show Parts panel',fr:'Masquer/afficher le panneau Parties',es:'Ocultar/mostrar panel de Partes'},
+  tb_detail:{nl:'Detail ▶',en:'Detail ▶',fr:'Détail ▶',es:'Detalle ▶'},
+  tt_toggle_right:{nl:'Verberg/toon rechter paneel',en:'Hide/show right panel',fr:'Masquer/afficher le panneau droit',es:'Ocultar/mostrar panel derecho'},
+  tb_partsview:{nl:'⬛ Delen-view',en:'⬛ Parts view',fr:'⬛ Vue Parties',es:'⬛ Vista Partes'},
+  tt_partsview:{nl:'Regions-only weergave (R)',en:'Regions-only view (R)',fr:'Affichage parties uniquement (R)',es:'Vista solo de partes (R)'},
+  tt_theme:{nl:'Licht / donker',en:'Light / dark',fr:'Clair / sombre',es:'Claro / oscuro'},
+  theme_to_dark:{nl:'Schakel naar donker',en:'Switch to dark',fr:'Passer en sombre',es:'Cambiar a oscuro'},
+  theme_to_light:{nl:'Schakel naar licht',en:'Switch to light',fr:'Passer en clair',es:'Cambiar a claro'},
+  tt_lang:{nl:'Taal',en:'Language',fr:'Langue',es:'Idioma'},
+
+  // ── Broadcast modal ──
+  bc_title:{nl:'Live Broadcast',en:'Live Broadcast',fr:'Diffusion en direct',es:'Transmisión en vivo'},
+  bc_intro:{nl:'Verbind met de viewer-server zodat andere apparaten live kunnen meekijken. Op internet gebruik je <strong style="color:var(--acc)">wss://</strong> (met s). Lokaal gebruik je <strong>ws://</strong>.',en:'Connect to the viewer server so other devices can watch live. On the internet use <strong style="color:var(--acc)">wss://</strong> (with s). Locally use <strong>ws://</strong>.',fr:'Connectez-vous au serveur spectateur pour que d\'autres appareils puissent suivre en direct. Sur internet, utilisez <strong style="color:var(--acc)">wss://</strong> (avec s). En local, utilisez <strong>ws://</strong>.',es:'Conéctate al servidor de espectadores para que otros dispositivos puedan ver en vivo. En internet usa <strong style="color:var(--acc)">wss://</strong> (con s). En local usa <strong>ws://</strong>.'},
+  bc_url_label:{nl:'WebSocket URL',en:'WebSocket URL',fr:'URL WebSocket',es:'URL de WebSocket'},
+  bc_localnet:{nl:'Lokaal netwerk: <code style="color:var(--muted)">ws://192.168.1.x:3001</code>',en:'Local network: <code style="color:var(--muted)">ws://192.168.1.x:3001</code>',fr:'Réseau local : <code style="color:var(--muted)">ws://192.168.1.x:3001</code>',es:'Red local: <code style="color:var(--muted)">ws://192.168.1.x:3001</code>'},
+  bc_close:{nl:'Sluiten',en:'Close',fr:'Fermer',es:'Cerrar'},
+  bc_connect:{nl:'Verbinden',en:'Connect',fr:'Connecter',es:'Conectar'},
+
+  // ── Region view overlay ──
+  rv_close:{nl:'✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span>',en:'✕ Close  <span style="opacity:.4;font-size:10px">ESC</span>',fr:'✕ Fermer  <span style="opacity:.4;font-size:10px">ÉCHAP</span>',es:'✕ Cerrar  <span style="opacity:.4;font-size:10px">ESC</span>'},
+  rv_hint:{nl:'Druk ESC om terug te keren · R om te wisselen',en:'Press ESC to return · R to toggle',fr:'Appuyez sur ÉCHAP pour revenir · R pour basculer',es:'Pulsa ESC para volver · R para alternar'},
+  lbl_timecode:{nl:'TIMECODE',en:'TIMECODE',fr:'TIMECODE',es:'TIMECODE'},
+  lbl_current_part:{nl:'Huidig deel',en:'Current part',fr:'Partie actuelle',es:'Parte actual'},
+  lbl_next_part:{nl:'Volgend deel',en:'Next part',fr:'Partie suivante',es:'Parte siguiente'},
+  lbl_next_cue:{nl:'Volgende cue',en:'Next cue',fr:'Cue suivant',es:'Cue siguiente'},
+  lbl_last_part:{nl:'Laatste deel',en:'Last part',fr:'Dernière partie',es:'Última parte'},
+
+  // ── Left regions panel ──
+  parts_title:{nl:'Delen (Regions)',en:'Parts (Regions)',fr:'Parties (Regions)',es:'Partes (Regions)'},
+  parts_empty:{nl:'Importeer een Reaper CSV<br>om regions te zien',en:'Import a Reaper CSV<br>to see regions',fr:'Importez un CSV Reaper<br>pour voir les regions',es:'Importa un CSV de Reaper<br>para ver las regions'},
+  tt_add_region:{nl:'Nieuw deel toevoegen',en:'Add new part',fr:'Ajouter une partie',es:'Añadir parte'},
+
+  // ── Clock / transport ──
+  sync_intern:{nl:'INTERN',en:'INTERNAL',fr:'INTERNE',es:'INTERNO'},
+  t_start:{nl:'Start',en:'Start',fr:'Départ',es:'Iniciar'},
+  t_pause:{nl:'Pauze',en:'Pause',fr:'Pause',es:'Pausa'},
+  t_stop:{nl:'Stop',en:'Stop',fr:'Arrêt',es:'Detener'},
+  t_next:{nl:'Volgende',en:'Next',fr:'Suivant',es:'Siguiente'},
+  t_from:{nl:'Vanaf',en:'From',fr:'À partir de',es:'Desde'},
+  ns_next:{nl:'Volgend',en:'Next',fr:'Suivant',es:'Siguiente'},
+  list_cue:{nl:'Cue',en:'Cue',fr:'Cue',es:'Cue'},
+  list_time:{nl:'Tijd',en:'Time',fr:'Temps',es:'Tiempo'},
+
+  // ── Add cue bar ──
+  type_none:{nl:'— type',en:'— type',fr:'— type',es:'— tipo'},
+  type_licht:{nl:'💡 Licht',en:'💡 Light',fr:'💡 Lumière',es:'💡 Luz'},
+  type_spot:{nl:'🔦 Spot',en:'🔦 Spot',fr:'🔦 Poursuite',es:'🔦 Seguidor'},
+  type_kraan:{nl:'🏗 Kraan',en:'🏗 Crane',fr:'🏗 Grue',es:'🏗 Grúa'},
+  type_kaboem:{nl:'💥 Kaboem',en:'💥 Boom',fr:'💥 Boum',es:'💥 Boom'},
+  type_truss:{nl:'🔩 Truss',en:'🔩 Truss',fr:'🔩 Structure',es:'🔩 Estructura'},
+  type_dir:{nl:'🎬 Dir',en:'🎬 Dir',fr:'🎬 Rég.',es:'🎬 Dir'},
+  type_sound:{nl:'🔊 Sound',en:'🔊 Sound',fr:'🔊 Son',es:'🔊 Sonido'},
+  type_video:{nl:'🎥 Video',en:'🎥 Video',fr:'🎥 Vidéo',es:'🎥 Video'},
+  fl_type_hint:{nl:'Meerdere types mogelijk — klik om aan/uit te zetten.',en:'Multiple types allowed — click to toggle.',fr:'Plusieurs types possibles — cliquez pour activer/désactiver.',es:'Se permiten varios tipos — haz clic para activar/desactivar.'},
+  no_cues_loaded:{nl:'Geen cues geladen',en:'No cues loaded',fr:'Aucun cue chargé',es:'Ningún cue cargado'},
+  filter_clear:{nl:'✕ Wissen',en:'✕ Clear',fr:'✕ Effacer',es:'✕ Borrar'},
+  filter_status:{nl:'⚠ Filter actief — {shown} van {total} cues getoond',en:'⚠ Filter active — showing {shown} of {total} cues',fr:'⚠ Filtre actif — {shown} cues affichés sur {total}',es:'⚠ Filtro activo — mostrando {shown} de {total} cues'},
+  filter_no_match:{nl:'Geen cues voldoen aan het filter',en:'No cues match the filter',fr:'Aucun cue ne correspond au filtre',es:'Ningún cue coincide con el filtro'},
+  ph_cue_name:{nl:'Naam cue…',en:'Cue name…',fr:'Nom du cue…',es:'Nombre del cue…'},
+  add_cue:{nl:'＋ Toevoegen',en:'＋ Add',fr:'＋ Ajouter',es:'＋ Añadir'},
+
+  // ── Right tabs ──
+  tab_cue:{nl:'Cue',en:'Cue',fr:'Cue',es:'Cue'},
+  tab_part:{nl:'Deel',en:'Part',fr:'Partie',es:'Parte'},
+  tab_from:{nl:'Vanaf',en:'From',fr:'Départ',es:'Desde'},
+
+  // ── Detail pane ──
+  detail_empty:{nl:'Klik op een cue<br>om hem te bewerken',en:'Click a cue<br>to edit it',fr:'Cliquez sur un cue<br>pour le modifier',es:'Haz clic en un cue<br>para editarlo'},
+  fl_name:{nl:'Naam',en:'Name',fr:'Nom',es:'Nombre'},
+  ph_cue_full:{nl:'Naam van de cue',en:'Name of the cue',fr:'Nom du cue',es:'Nombre del cue'},
+  fl_time_hms:{nl:'Tijd (HH:MM:SS)',en:'Time (HH:MM:SS)',fr:'Temps (HH:MM:SS)',es:'Tiempo (HH:MM:SS)'},
+  fl_type:{nl:'Type',en:'Type',fr:'Type',es:'Tipo'},
+  chip_none:{nl:'— Geen',en:'— None',fr:'— Aucun',es:'— Ninguno'},
+  fl_note:{nl:'Notitie',en:'Note',fr:'Note',es:'Nota'},
+  ph_note:{nl:'Aantekeningen…',en:'Notes…',fr:'Remarques…',es:'Notas…'},
+  btn_save:{nl:'Opslaan',en:'Save',fr:'Enregistrer',es:'Guardar'},
+  btn_del_cue:{nl:'Verwijder cue',en:'Delete cue',fr:'Supprimer le cue',es:'Eliminar cue'},
+
+  // ── Region edit pane ──
+  region_empty:{nl:'Klik op ✏ bij een deel<br>om het te bewerken',en:'Click ✏ on a part<br>to edit it',fr:'Cliquez sur ✏ d\'une partie<br>pour la modifier',es:'Haz clic en ✏ de una parte<br>para editarla'},
+  region_edit_hdr:{nl:'Deel bewerken',en:'Edit part',fr:'Modifier la partie',es:'Editar parte'},
+  ph_region_name:{nl:'Naam van het deel',en:'Name of the part',fr:'Nom de la partie',es:'Nombre de la parte'},
+  fl_start_hms:{nl:'Start (HH:MM:SS)',en:'Start (HH:MM:SS)',fr:'Début (HH:MM:SS)',es:'Inicio (HH:MM:SS)'},
+  fl_end_hms:{nl:'Einde (HH:MM:SS)',en:'End (HH:MM:SS)',fr:'Fin (HH:MM:SS)',es:'Fin (HH:MM:SS)'},
+  fl_color:{nl:'Kleur',en:'Color',fr:'Couleur',es:'Color'},
+  fl_custom_color:{nl:'Aangepaste kleur',en:'Custom color',fr:'Couleur personnalisée',es:'Color personalizado'},
+  btn_del_region:{nl:'Verwijder deel',en:'Delete part',fr:'Supprimer la partie',es:'Eliminar parte'},
+
+  // ── From pane ──
+  seg_hour:{nl:'UUR',en:'HOUR',fr:'HEURE',es:'HORA'},
+  seg_min:{nl:'MIN',en:'MIN',fr:'MIN',es:'MIN'},
+  seg_sec:{nl:'SEC',en:'SEC',fr:'SEC',es:'SEG'},
+  from_or_cue:{nl:'Of kies een cue',en:'Or pick a cue',fr:'Ou choisissez un cue',es:'O elige un cue'},
+  from_start:{nl:'▶ Start',en:'▶ Start',fr:'▶ Départ',es:'▶ Iniciar'},
+
+  // ── MIDI pane ──
+  midi_status:{nl:'WebMIDI status',en:'WebMIDI status',fr:'État WebMIDI',es:'Estado WebMIDI'},
+  midi_in:{nl:'MIDI Ingang (van Reaper)',en:'MIDI Input (from Reaper)',fr:'Entrée MIDI (depuis Reaper)',es:'Entrada MIDI (desde Reaper)'},
+  midi_out:{nl:'MIDI Uitgang (naar Reaper)',en:'MIDI Output (to Reaper)',fr:'Sortie MIDI (vers Reaper)',es:'Salida MIDI (hacia Reaper)'},
+  midi_pick_port:{nl:'— kies poort —',en:'— pick port —',fr:'— choisir un port —',es:'— elegir puerto —'},
+  midi_sync_mode:{nl:'Sync modus (ontvangen)',en:'Sync mode (receive)',fr:'Mode sync (réception)',es:'Modo sync (recepción)'},
+  midi_mode_off:{nl:'Uit (intern)',en:'Off (internal)',fr:'Désactivé (interne)',es:'Apagado (interno)'},
+  midi_mode_auto:{nl:'Auto (aanbevolen — detecteert MTC + Clock)',en:'Auto (recommended — detects MTC + Clock)',fr:'Auto (recommandé — détecte MTC + Clock)',es:'Auto (recomendado — detecta MTC + Clock)'},
+  midi_mode_mtc:{nl:'MTC alleen — MIDI Time Code',en:'MTC only — MIDI Time Code',fr:'MTC seul — MIDI Time Code',es:'Solo MTC — MIDI Time Code'},
+  midi_mode_clock:{nl:'MIDI Clock alleen (start/stop)',en:'MIDI Clock only (start/stop)',fr:'MIDI Clock seul (start/stop)',es:'Solo MIDI Clock (start/stop)'},
+  midi_offset:{nl:'MTC Tijdzone-offset (seconden)',en:'MTC timezone offset (seconds)',fr:'Décalage horaire MTC (secondes)',es:'Desfase horario MTC (segundos)'},
+  tt_off0:{nl:'Geen offset — Reaper tijdlijn start bij 0',en:'No offset — Reaper timeline starts at 0',fr:'Aucun décalage — la timeline Reaper commence à 0',es:'Sin desfase — la línea de tiempo de Reaper empieza en 0'},
+  tt_off1:{nl:'Reaper project start op 01:00:00:00 (broadcast standaard)',en:'Reaper project starts at 01:00:00:00 (broadcast standard)',fr:'Le projet Reaper commence à 01:00:00:00 (standard broadcast)',es:'El proyecto de Reaper empieza en 01:00:00:00 (estándar broadcast)'},
+  tt_off2:{nl:'Reaper project start op 02:00:00:00',en:'Reaper project starts at 02:00:00:00',fr:'Le projet Reaper commence à 02:00:00:00',es:'El proyecto de Reaper empieza en 02:00:00:00'},
+  tt_offauto:{nl:'Bereken offset automatisch op basis van de eerste ontvangen MTC waarde en de start van het eerste region',en:'Calculate offset automatically from the first received MTC value and the start of the first region',fr:'Calcule le décalage automatiquement à partir de la première valeur MTC reçue et du début de la première region',es:'Calcula el desfase automáticamente a partir del primer valor MTC recibido y el inicio de la primera region'},
+  midi_offset_help:{nl:'Gebruik <strong style="color:var(--text)">−1u (−3600s)</strong> als Reaper\'s timecode begint bij <code style="color:var(--acc)">01:00:00:00</code>.<br>Klik <strong style="color:var(--text)">⚡ Auto</strong> na de eerste MTC data om de offset automatisch te berekenen.',en:'Use <strong style="color:var(--text)">−1h (−3600s)</strong> if Reaper\'s timecode starts at <code style="color:var(--acc)">01:00:00:00</code>.<br>Click <strong style="color:var(--text)">⚡ Auto</strong> after the first MTC data to calculate the offset automatically.',fr:'Utilisez <strong style="color:var(--text)">−1h (−3600s)</strong> si le timecode de Reaper commence à <code style="color:var(--acc)">01:00:00:00</code>.<br>Cliquez sur <strong style="color:var(--text)">⚡ Auto</strong> après les premières données MTC pour calculer le décalage automatiquement.',es:'Usa <strong style="color:var(--text)">−1h (−3600s)</strong> si el timecode de Reaper empieza en <code style="color:var(--acc)">01:00:00:00</code>.<br>Haz clic en <strong style="color:var(--text)">⚡ Auto</strong> tras los primeros datos MTC para calcular el desfase automáticamente.'},
+  midi_send_hdr:{nl:'Stuur naar Reaper',en:'Send to Reaper',fr:'Envoyer vers Reaper',es:'Enviar a Reaper'},
+  midi_enable_sysex:{nl:'⚙ Activeer volledige positionering',en:'⚙ Enable full positioning',fr:'⚙ Activer le positionnement complet',es:'⚙ Activar posicionamiento completo'},
+  midi_sysex_active:{nl:'✓ Volledige positionering actief — "Ga naar tijdstip" en positie-sync zijn beschikbaar.',en:'✓ Full positioning active — "Go to time" and position sync are available.',fr:'✓ Positionnement complet actif — « Aller au temps » et la synchro de position sont disponibles.',es:'✓ Posicionamiento completo activo — «Ir al tiempo» y la sincronización de posición están disponibles.'},
+  midi_sysex_help:{nl:'Nodig voor <strong style="color:var(--text)">"Ga naar tijdstip"</strong> en <strong style="color:var(--text)">"Stuur huidige positie"</strong> (vereist SysEx — aparte browserprompt). Start / Stop / Continue werken ook zonder.',en:'Needed for <strong style="color:var(--text)">"Go to time"</strong> and <strong style="color:var(--text)">"Send current position"</strong> (requires SysEx — separate browser prompt). Start / Stop / Continue also work without it.',fr:'Nécessaire pour <strong style="color:var(--text)">« Aller au temps »</strong> et <strong style="color:var(--text)">« Envoyer la position actuelle »</strong> (nécessite SysEx — invite navigateur séparée). Start / Stop / Continue fonctionnent aussi sans.',es:'Necesario para <strong style="color:var(--text)">«Ir al tiempo»</strong> y <strong style="color:var(--text)">«Enviar posición actual»</strong> (requiere SysEx — aviso del navegador aparte). Start / Stop / Continue también funcionan sin él.'},
+  midi_play_from:{nl:'Speel vanaf tijdstip',en:'Play from time',fr:'Lire à partir du temps',es:'Reproducir desde el tiempo'},
+  midi_goto:{nl:'↩ Ga naar tijdstip &amp; speel',en:'↩ Go to time &amp; play',fr:'↩ Aller au temps &amp; lire',es:'↩ Ir al tiempo y reproducir'},
+  midi_sync_clock:{nl:'Sync huidige klok naar Reaper',en:'Sync current clock to Reaper',fr:'Synchroniser l\'horloge actuelle vers Reaper',es:'Sincronizar el reloj actual con Reaper'},
+  midi_send_pos:{nl:'⟳ Stuur huidige positie',en:'⟳ Send current position',fr:'⟳ Envoyer la position actuelle',es:'⟳ Enviar posición actual'},
+  midi_setup:{nl:'<strong>Setup:</strong> Maak 2 LoopMIDI poorten:<br><span style="color:var(--acc)">Poort 1</span> → Reaper uitgang → App ingang (MTC)<br><span style="color:var(--warn)">Poort 2</span> → App uitgang → Reaper ingang (transport)<br><br>In Reaper: Preferences → MIDI Devices → selecteer Poort 2 als ingang.',en:'<strong>Setup:</strong> Create 2 LoopMIDI ports:<br><span style="color:var(--acc)">Port 1</span> → Reaper output → App input (MTC)<br><span style="color:var(--warn)">Port 2</span> → App output → Reaper input (transport)<br><br>In Reaper: Preferences → MIDI Devices → select Port 2 as input.',fr:'<strong>Configuration :</strong> Créez 2 ports LoopMIDI :<br><span style="color:var(--acc)">Port 1</span> → sortie Reaper → entrée App (MTC)<br><span style="color:var(--warn)">Port 2</span> → sortie App → entrée Reaper (transport)<br><br>Dans Reaper : Preferences → MIDI Devices → sélectionnez le Port 2 comme entrée.',es:'<strong>Configuración:</strong> Crea 2 puertos LoopMIDI:<br><span style="color:var(--acc)">Puerto 1</span> → salida Reaper → entrada App (MTC)<br><span style="color:var(--warn)">Puerto 2</span> → salida App → entrada Reaper (transporte)<br><br>En Reaper: Preferences → MIDI Devices → selecciona el Puerto 2 como entrada.'},
+  midi_note_main:{nl:'<strong>Auto</strong> — aanbevolen voor Reaper via LoopMIDI. Detecteert MTC én MIDI Clock automatisch.<br><strong>MTC</strong> — MIDI Time Code, stuurt absolute tijdpositie. Reaper: Preferences → MIDI → Send MTC.<br><strong>MIDI Clock</strong> — start/stop/continue berichten. Reaper: Preferences → MIDI → Send clock.<br><strong>Let op:</strong> Selecteer eerst de poort, daarna pas Play in Reaper drukken.',en:'<strong>Auto</strong> — recommended for Reaper via LoopMIDI. Detects both MTC and MIDI Clock automatically.<br><strong>MTC</strong> — MIDI Time Code, sends absolute time position. Reaper: Preferences → MIDI → Send MTC.<br><strong>MIDI Clock</strong> — start/stop/continue messages. Reaper: Preferences → MIDI → Send clock.<br><strong>Note:</strong> Select the port first, only then press Play in Reaper.',fr:'<strong>Auto</strong> — recommandé pour Reaper via LoopMIDI. Détecte MTC et MIDI Clock automatiquement.<br><strong>MTC</strong> — MIDI Time Code, envoie la position temporelle absolue. Reaper : Preferences → MIDI → Send MTC.<br><strong>MIDI Clock</strong> — messages start/stop/continue. Reaper : Preferences → MIDI → Send clock.<br><strong>Attention :</strong> sélectionnez d\'abord le port, puis seulement appuyez sur Play dans Reaper.',es:'<strong>Auto</strong> — recomendado para Reaper vía LoopMIDI. Detecta MTC y MIDI Clock automáticamente.<br><strong>MTC</strong> — MIDI Time Code, envía la posición temporal absoluta. Reaper: Preferences → MIDI → Send MTC.<br><strong>MIDI Clock</strong> — mensajes start/stop/continue. Reaper: Preferences → MIDI → Send clock.<br><strong>Nota:</strong> selecciona primero el puerto y solo después pulsa Play en Reaper.'},
+  midi_test:{nl:'Test verbinding',en:'Test connection',fr:'Tester la connexion',es:'Probar conexión'},
+  midi_log_label:{nl:'MIDI Log',en:'MIDI Log',fr:'Journal MIDI',es:'Registro MIDI'},
+  midi_log_wait:{nl:'Wacht op MIDI data…',en:'Waiting for MIDI data…',fr:'En attente de données MIDI…',es:'Esperando datos MIDI…'},
+
+  // ── CSV pane ──
+  csv_fmt_title:{nl:'Tijdformaat CSV',en:'CSV time format',fr:'Format de temps CSV',es:'Formato de tiempo CSV'},
+  csv_auto:{nl:'Auto-detectie',en:'Auto-detect',fr:'Détection auto',es:'Detección auto'},
+  csv_recommended:{nl:'AANBEVOLEN',en:'RECOMMENDED',fr:'RECOMMANDÉ',es:'RECOMENDADO'},
+  csv_auto_desc:{nl:'Herkent automatisch <code style="color:var(--acc)">M:SS.mmm</code> én <code style="color:var(--warn)">SS.B.TT</code>',en:'Automatically recognizes <code style="color:var(--acc)">M:SS.mmm</code> and <code style="color:var(--warn)">SS.B.TT</code>',fr:'Reconnaît automatiquement <code style="color:var(--acc)">M:SS.mmm</code> et <code style="color:var(--warn)">SS.B.TT</code>',es:'Reconoce automáticamente <code style="color:var(--acc)">M:SS.mmm</code> y <code style="color:var(--warn)">SS.B.TT</code>'},
+  csv_mmss_sub:{nl:'— min:sec.ms',en:'— min:sec.ms',fr:'— min:sec.ms',es:'— min:seg.ms'},
+  csv_mmss_desc:{nl:'Reaper → Project tijdsweergave op <strong style="color:var(--text)">Minuten:Seconden</strong>',en:'Reaper → Project time display set to <strong style="color:var(--text)">Minutes:Seconds</strong>',fr:'Reaper → Affichage du temps du projet sur <strong style="color:var(--text)">Minutes:Secondes</strong>',es:'Reaper → Visualización de tiempo del proyecto en <strong style="color:var(--text)">Minutos:Segundos</strong>'},
+  csv_bars_sub:{nl:'— sec.beat.ticks',en:'— sec.beat.ticks',fr:'— sec.beat.ticks',es:'— seg.beat.ticks'},
+  csv_bars_desc:{nl:'Reaper → Project tijdsweergave op <strong style="color:var(--text)">Maten+Beats</strong>',en:'Reaper → Project time display set to <strong style="color:var(--text)">Bars+Beats</strong>',fr:'Reaper → Affichage du temps du projet sur <strong style="color:var(--text)">Mesures+Temps</strong>',es:'Reaper → Visualización de tiempo del proyecto en <strong style="color:var(--text)">Compases+Beats</strong>'},
+  csv_hmsf_sub:{nl:'— uur:min:sec:frames',en:'— hour:min:sec:frames',fr:'— heure:min:sec:frames',es:'— hora:min:seg:frames'},
+  csv_hmsf_desc:{nl:'Reaper → Transport: Time unit: <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong>',en:'Reaper → Transport: Time unit: <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong>',fr:'Reaper → Transport : Time unit : <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong>',es:'Reaper → Transport: Time unit: <strong style="color:var(--text)">Hours:Minutes:Seconds:Frames</strong>'},
+  csv_hmsf_at30:{nl:'1:05:23:12 → 3923.4s &nbsp;(bij 30fps)',en:'1:05:23:12 → 3923.4s &nbsp;(at 30fps)',fr:'1:05:23:12 → 3923.4s &nbsp;(à 30fps)',es:'1:05:23:12 → 3923.4s &nbsp;(a 30fps)'},
+  csv_fps_label:{nl:'Frames per seconde (FPS)',en:'Frames per second (FPS)',fr:'Images par seconde (FPS)',es:'Fotogramas por segundo (FPS)'},
+  csv_fps_pal:{nl:'25 fps (PAL / Europa)',en:'25 fps (PAL / Europe)',fr:'25 fps (PAL / Europe)',es:'25 fps (PAL / Europa)'},
+  csv_fps_hint:{nl:'Staat ook in Reaper naast de tijdweergave',en:'Also shown in Reaper next to the time display',fr:'Également affiché dans Reaper à côté de l\'affichage du temps',es:'También se muestra en Reaper junto a la visualización de tiempo'},
+  csv_info:{nl:'Reaper: File → Export → Region/Marker Manager → Export CSV<br>Regions (<code>R*</code>) worden geladen als <strong>delen</strong>, markers (<code>M*</code>) als <strong>cues</strong>.',en:'Reaper: File → Export → Region/Marker Manager → Export CSV<br>Regions (<code>R*</code>) are loaded as <strong>parts</strong>, markers (<code>M*</code>) as <strong>cues</strong>.',fr:'Reaper : File → Export → Region/Marker Manager → Export CSV<br>Les regions (<code>R*</code>) sont chargées comme <strong>parties</strong>, les markers (<code>M*</code>) comme <strong>cues</strong>.',es:'Reaper: File → Export → Region/Marker Manager → Export CSV<br>Las regions (<code>R*</code>) se cargan como <strong>partes</strong>, los markers (<code>M*</code>) como <strong>cues</strong>.'},
+  csv_drop:{nl:'📂 Klik of sleep een CSV-bestand',en:'📂 Click or drag a CSV file',fr:'📂 Cliquez ou déposez un fichier CSV',es:'📂 Haz clic o arrastra un archivo CSV'},
+  csv_import_text:{nl:'Importeer tekst',en:'Import text',fr:'Importer le texte',es:'Importar texto'},
+  csv_export:{nl:'⬇ Exporteer CSV',en:'⬇ Export CSV',fr:'⬇ Exporter CSV',es:'⬇ Exportar CSV'},
+
+  // ── Drag handles ──
+  tt_resize:{nl:'Sleep om te resizen',en:'Drag to resize',fr:'Glisser pour redimensionner',es:'Arrastra para redimensionar'},
+
+  // ── Dynamisch (JS) ──
+  ns_end_show:{nl:'Einde show',en:'End of show',fr:'Fin du spectacle',es:'Fin del espectáculo'},
+  region_count:{nl:'{n} delen',en:'{n} parts',fr:'{n} parties',es:'{n} partes'},
+  region_new:{nl:'Nieuw deel',en:'New part',fr:'Nouvelle partie',es:'Nueva parte'},
+  region_edit_named:{nl:'{id} bewerken',en:'Edit {id}',fr:'Modifier {id}',es:'Editar {id}'},
+  saved_flash:{nl:'✓ Opgeslagen',en:'✓ Saved',fr:'✓ Enregistré',es:'✓ Guardado'},
+  cue_new:{nl:'Nieuwe cue',en:'New cue',fr:'Nouveau cue',es:'Nuevo cue'},
+  cue_edit_named:{nl:'Q{n} bewerken',en:'Edit Q{n}',fr:'Modifier Q{n}',es:'Editar Q{n}'},
+  rv_in_part:{nl:'in dit deel',en:'in this part',fr:'dans cette partie',es:'en esta parte'},
+  countdown_now:{nl:'NU',en:'NOW',fr:'MAINT.',es:'AHORA'},
+  tb_parts_collapsed:{nl:'▶ Delen',en:'▶ Parts',fr:'▶ Parties',es:'▶ Partes'},
+  tb_detail_collapsed:{nl:'◀ Detail',en:'◀ Detail',fr:'◀ Détail',es:'◀ Detalle'},
+  tb_normal:{nl:'⬜ Normaal',en:'⬜ Normal',fr:'⬜ Normal',es:'⬜ Normal'},
+
+  // ── View-only modus ──
+  viewonly_badge:{nl:'👁 ALLEEN BEKIJKEN',en:'👁 VIEW ONLY',fr:'👁 LECTURE SEULE',es:'👁 SOLO LECTURA'},
+  viewonly_tt:{nl:'Klik om besturing te activeren',en:'Click to enable control',fr:'Cliquez pour activer le contrôle',es:'Haz clic para activar el control'},
+  controls_badge:{nl:'🔓 Bestuurbaar',en:'🔓 Control active',fr:'🔓 Contrôle actif',es:'🔓 Control activo'},
+  controls_tt:{nl:'Besturing is actief voor deze sessie',en:'Control is active for this session',fr:'Le contrôle est actif pour cette session',es:'El control está activo para esta sesión'},
+  cw_title:{nl:'Besturing activeren',en:'Enable control',fr:'Activer le contrôle',es:'Activar control'},
+  cw_body:{nl:'Je staat op het punt de besturing van deze live show te activeren. Start/Stop, cues en delen bewerken, MIDI naar Reaper sturen en broadcast-verbinden worden dan mogelijk. Weet je zeker dat je wilt besturen?',en:'You are about to enable control of this live show. Start/Stop, editing cues and parts, sending MIDI to Reaper and connecting the broadcast will become possible. Are you sure you want to take control?',fr:'Vous êtes sur le point d\'activer le contrôle de ce spectacle en direct. Start/Stop, modifier les cues et parties, envoyer du MIDI à Reaper et connecter la diffusion deviendront possibles. Voulez-vous vraiment prendre le contrôle ?',es:'Estás a punto de activar el control de este espectáculo en vivo. Start/Stop, editar cues y partes, enviar MIDI a Reaper y conectar la transmisión serán posibles. ¿Seguro que quieres tomar el control?'},
+  cw_cancel:{nl:'Annuleren',en:'Cancel',fr:'Annuler',es:'Cancelar'},
+  cw_confirm:{nl:'🔓 Activeer besturing',en:'🔓 Enable control',fr:'🔓 Activer le contrôle',es:'🔓 Activar control'},
+
+  // ── Tooltips (taak 5) ──
+  tt_open_csv:{nl:'Open CSV-paneel (import/export)',en:'Open CSV panel (import/export)',fr:'Ouvrir le panneau CSV (import/export)',es:'Abrir panel CSV (importar/exportar)'},
+  tt_open_newcue:{nl:'Nieuwe cue toevoegen',en:'Add a new cue',fr:'Ajouter un nouveau cue',es:'Añadir un nuevo cue'},
+  tt_open_midi:{nl:'Open MIDI-paneel',en:'Open MIDI panel',fr:'Ouvrir le panneau MIDI',es:'Abrir panel MIDI'},
+  tt_start_kb:{nl:'Start (spatie)',en:'Start (space)',fr:'Démarrer (espace)',es:'Iniciar (espacio)'},
+  tt_pause_kb:{nl:'Pauzeer (spatie)',en:'Pause (space)',fr:'Pause (espace)',es:'Pausar (espacio)'},
+  tt_stop_kb:{nl:'Stop (Esc)',en:'Stop (Esc)',fr:'Arrêt (Échap)',es:'Detener (Esc)'},
+  tt_skip_kb:{nl:'Spring naar volgende cue (→ of N)',en:'Jump to next cue (→ or N)',fr:'Aller au cue suivant (→ ou N)',es:'Saltar al siguiente cue (→ o N)'},
+  tt_from_btn:{nl:'Spring naar een specifiek tijdstip of cue',en:'Jump to a specific time or cue',fr:'Aller à un temps ou un cue spécifique',es:'Saltar a un tiempo o cue específico'},
+  tt_edit_region:{nl:'Bewerk dit deel',en:'Edit this part',fr:'Modifier cette partie',es:'Editar esta parte'},
+  tt_delete_cue_row:{nl:'Verwijder deze cue',en:'Delete this cue',fr:'Supprimer ce cue',es:'Eliminar este cue'},
+  tt_start_from_here:{nl:'Start de show vanaf deze cue',en:'Start the show from this cue',fr:'Démarrer le spectacle à partir de ce cue',es:'Iniciar el espectáculo desde este cue'},
+  tt_start_from_region:{nl:'Start de show vanaf dit deel',en:'Start the show from this part',fr:'Démarrer le spectacle à partir de cette partie',es:'Iniciar el espectáculo desde esta parte'},
+  tt_pick_color:{nl:'Kies kleur {hex}',en:'Pick color {hex}',fr:'Choisir la couleur {hex}',es:'Elegir color {hex}'},
+  tt_custom_color:{nl:'Kies een eigen kleur',en:'Pick a custom color',fr:'Choisir une couleur personnalisée',es:'Elegir un color personalizado'},
+  tt_drop_zone:{nl:'Klik om te bladeren, of sleep een .csv-bestand hierheen',en:'Click to browse, or drag a .csv file here',fr:'Cliquez pour parcourir, ou glissez un fichier .csv ici',es:'Haz clic para explorar, o arrastra un archivo .csv aquí'},
+};
+
+let LANG='nl';
+function t(key){ const e=T[key]; if(!e) return key; return e[LANG]||e.nl||key; }
+function tf(key,vars){ let s=t(key); if(vars) for(const k in vars) s=s.split('{'+k+'}').join(vars[k]); return s; }
+function applyTranslations(root){
+  const scope=root||document;
+  scope.querySelectorAll('[data-i18n]').forEach(el=>{ el.innerHTML=t(el.getAttribute('data-i18n')); });
+  scope.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title=t(el.getAttribute('data-i18n-title')); });
+  scope.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder=t(el.getAttribute('data-i18n-ph')); });
+}
+function setLang(lang){
+  if(!I18N_LANGS.includes(lang)) lang='nl';
+  LANG=lang;
+  document.documentElement.setAttribute('lang',lang);
+  try{ localStorage.setItem('cueRunnerLang',lang); }catch(e){}
+  applyTranslations();
+  // Dynamische stukken die niet via data-i18n lopen opnieuw renderen
+  if(typeof setStatusText==='function') setStatusText();
+  if(typeof updateWsStatus==='function') updateWsStatus(_wsState);
+  if(typeof renderSyncLbl==='function') renderSyncLbl();
+  if(typeof refreshPanelToggles==='function') refreshPanelToggles();
+  if(typeof applyThemeIcon==='function') applyThemeIcon();
+  if(typeof applyControlBadge==='function') applyControlBadge();
+  // Dynamisch gerenderde inhoud die vertaalde stukjes bevat opnieuw opbouwen
+  if(window._i18nReady){
+    if(typeof renderRegions==='function') renderRegions();
+    if(typeof updateStrip==='function') updateStrip();
+    if(typeof updateRegionDisplay==='function') updateRegionDisplay();
+    if(typeof buildFilterChips==='function') buildFilterChips();
+    if(typeof renderCues==='function') renderCues();
+    if(typeof buildSwatches==='function' && $('regionForm') && $('regionForm').style.display!=='none') buildSwatches();
+  }
+  const sel=$('langSelect'); if(sel) sel.value=lang;
+}
+// Toestand-afhankelijke toggle-labels (in-/uitgeklapt, delen-view) opnieuw zetten
+function refreshPanelToggles(){
+  const l=$('toggleLeft');  if(l&&typeof leftCollapsed!=='undefined')  l.textContent=leftCollapsed?t('tb_parts_collapsed'):t('tb_parts');
+  const r=$('toggleRight'); if(r&&typeof rightCollapsed!=='undefined') r.textContent=rightCollapsed?t('tb_detail_collapsed'):t('tb_detail');
+  const v=$('toggleRegionView'); if(v&&typeof regionViewActive!=='undefined') v.textContent=regionViewActive?t('tb_normal'):t('tb_partsview');
+}
+function initLang(){
+  let saved='nl';
+  try{ saved=localStorage.getItem('cueRunnerLang')||'nl'; }catch(e){}
+  setLang(saved);
+}
 
 /* ════════════════════════════════════════════
    CSV TIME FORMAT
@@ -1123,7 +1517,7 @@ function setCsvFormat(fmt){
   const lbl=$(labelMap[fmt]);
   if(lbl){
     lbl.style.borderColor=colors[fmt];
-    lbl.style.background=fmt==='bars'?'rgba(245,166,35,.06)':fmt==='hmsf'?'rgba(56,189,248,.06)':'rgba(200,245,58,.06)';
+    lbl.style.background=fmt==='bars'?'rgba(245,166,35,.06)':fmt==='hmsf'?'rgba(56,189,248,.06)':'rgba(var(--acc-rgb),.06)';
   }
   // Show FPS selector only for HMSF
   const fpsRow=$('fmtHmsfFps');
@@ -1207,21 +1601,28 @@ const parseTime=s=>{
   return null;
 };
 
-function guessType(n){
+function guessTypes(n){
   const u=n.toUpperCase();
   // Explicit uppercase keywords first (Reaper naming convention)
-  if(/\bKRAAN\b/.test(u)) return 'kraan';
-  if(/\bSPOT\b|\bLICHT\b|\bDIM\b|\bWASH\b/.test(u)) return 'licht';
-  if(/\bGELUID\b|\bAUDIO\b|\bMUSIC\b/.test(u)) return 'geluid';
-  if(/\bENGEL\b|\bDAME\b|\bBRUID\b|\bREGIE\b|\bACTEUR\b/.test(u)) return 'regie';
-  if(/\bKABOEM\b|\bVUURWERK\b/.test(u)) return 'regie';
+  if(/\bKRAAN\b/.test(u)) return ['kraan'];
+  if(/\bSPOT\b/.test(u)) return ['spot'];
+  if(/\bLICHT\b|\bDIM\b|\bWASH\b/.test(u)) return ['licht'];
+  if(/\bTRUSS\b|\bRIG\b/.test(u)) return ['truss'];
+  if(/\bVIDEO\b|\bSCHERM\b|\bSCREEN\b|\bPROJECT/.test(u)) return ['video'];
+  if(/\bGELUID\b|\bAUDIO\b|\bMUSIC\b|\bSOUND\b/.test(u)) return ['sound'];
+  if(/\bKABOEM\b|\bVUURWERK\b/.test(u)) return ['kaboem'];
+  if(/\bENGEL\b|\bDAME\b|\bBRUID\b|\bREGIE\b|\bACTEUR\b/.test(u)) return ['dir'];
   // Lowercase fallback
   const l=n.toLowerCase();
-  if(/kraan|fly|rigg|aerial/.test(l)) return 'kraan';
-  if(/licht|light|dim|spot|wash/.test(l)) return 'licht';
-  if(/geluid|sound|audio|music/.test(l)) return 'geluid';
-  if(/regie|actor|scene|engel|dame|bruid/.test(l)) return 'regie';
-  return 'none';
+  if(/kraan|fly|rigg|aerial/.test(l)) return ['kraan'];
+  if(/spot/.test(l)) return ['spot'];
+  if(/licht|light|dim|wash/.test(l)) return ['licht'];
+  if(/truss|rigg/.test(l)) return ['truss'];
+  if(/video|scherm|screen|project/.test(l)) return ['video'];
+  if(/geluid|sound|audio|music/.test(l)) return ['sound'];
+  if(/kaboem|vuurwerk|pyro/.test(l)) return ['kaboem'];
+  if(/regie|actor|scene|engel|dame|bruid/.test(l)) return ['dir'];
+  return [];
 }
 
 function fmtReaper(s){
@@ -1233,30 +1634,34 @@ function fmtReaper(s){
    STATE
 ════════════════════════════════════════════ */
 let cues=[
-  {time:60,   name:'Lichten aan — scene 1',type:'licht', note:'Dimmer 80%',regionId:null},
-  {time:150,  name:'Muziek fade in',        type:'geluid',note:'Track 3',   regionId:null},
-  {time:300,  name:'Acteur A op podium',    type:'regie', note:'Vanuit links',regionId:null},
+  {time:60,   name:'Lichten aan — scene 1',types:['licht'],note:'Dimmer 80%',regionId:null},
+  {time:150,  name:'Muziek fade in',        types:['sound'],note:'Track 3',   regionId:null},
+  {time:300,  name:'Acteur A op podium',    types:['dir'],  note:'Vanuit links',regionId:null},
 ];
 let regions=[];
 let elapsed=0,running=false,startedAt=null,rafId=null,activeCueIndex=-1,activeRegionId=null;
-let detailIdx=-1,detailType='none';
+let detailIdx=-1,detailTypes=new Set();
 let sfTime=0;
+let activeFilter=new Set(); // lege set = geen filter = alle cues zichtbaar
 
 /* ════════════════════════════════════════════
    TRANSPORT
 ════════════════════════════════════════════ */
 function startTimer(){
+  if(!requireControl())return;
   if(running)return;
   running=true;startedAt=performance.now()-elapsed*1000;
   rafId=requestAnimationFrame(tick);
   setStatus('live');syncBtns();broadcastState();
 }
 function pauseTimer(){
+  if(!requireControl())return;
   if(!running)return;
   running=false;cancelAnimationFrame(rafId);
   setStatus('pau');syncBtns();broadcastState();
 }
 function stopTimer(){
+  if(!requireControl())return;
   pauseTimer();elapsed=0;activeCueIndex=-1;activeRegionId=null;
   setStatus('off');updateClock();renderCues();renderRegions();updateStrip();updateRegionDisplay();syncBtns();broadcastState();
 }
@@ -1265,12 +1670,18 @@ function syncBtns(){
   $('btnPause').disabled=!running;
   $('btnStop').disabled=!running&&elapsed===0;
 }
+let _statusState='off';
 function setStatus(s){
-  const dot=$('statusDot'),txt=$('statusText'),clk=$('clock');
+  _statusState=s;
+  const dot=$('statusDot'),clk=$('clock');
   dot.className='dot';clk.className='';
-  if(s==='live'){dot.classList.add('live');clk.classList.add('run');txt.textContent='LIVE';}
-  if(s==='pau'){dot.classList.add('paused');clk.classList.add('pau');txt.textContent='GEPAUZEERD';}
-  if(s==='off'){txt.textContent='GESTOPT';}
+  if(s==='live'){dot.classList.add('live');clk.classList.add('run');}
+  if(s==='pau'){dot.classList.add('paused');clk.classList.add('pau');}
+  setStatusText();
+}
+function setStatusText(){
+  const txt=$('statusText'); if(!txt) return;
+  txt.textContent=_statusState==='live'?t('status_live'):_statusState==='pau'?t('status_paused'):t('status_stopped');
 }
 
 function tick(){
@@ -1280,7 +1691,7 @@ function tick(){
   rafId=requestAnimationFrame(tick);
 }
 
-function updateClock(){$('clock').textContent=fmt(elapsed);}
+function updateClock(){$('clock').innerHTML=fmtFrames(elapsed);}
 
 /* ════════════════════════════════════════════
    CUE LOGIC
@@ -1298,6 +1709,7 @@ function nextIdx(){
   return -1;
 }
 function skipToNext(){
+  if(!requireControl())return;
   const ni=nextIdx();if(ni<0)return;
   elapsed=cues[ni].time+0.05;
   if(running)startedAt=performance.now()-elapsed*1000;
@@ -1322,7 +1734,7 @@ function updateRegionDisplay(){
     const diff=next.start-elapsed;
     const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
     $('arnNext').textContent=`→ ${next.name}  ${mm}:${pad(ss)}`;
-  } else $('arnNext').textContent='Laatste deel';
+  } else $('arnNext').textContent=t('lbl_last_part');
 }
 
 /* ════════════════════════════════════════════
@@ -1333,12 +1745,12 @@ function updateStrip(){
   const ni=nextIdx();
   const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),dE=$('nsDot');
   if(ni===-1){
-    nE.textContent='Einde show';tE.textContent='—';cE.textContent='—';cE.className='ns-countdown';
+    nE.textContent=t('ns_end_show');tE.textContent='—';cE.textContent='—';cE.className='ns-countdown';
     fE.style.width='100%';fE.style.background='var(--muted)';dE.style.background='var(--muted)';return;
   }
   const next=cues[ni];
   nE.textContent=next.name;tE.textContent=fmt(next.time);
-  dE.style.background=TYPE_COLORS[next.type||'none'];
+  dE.style.background=typeColor(next.types);
   const diff=next.time-elapsed;
   const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
   cE.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
@@ -1356,11 +1768,11 @@ function renderRegions(){
   const list=$('regionsList');
   if(!regions.length){
     list.innerHTML=`<div class="empty-state" style="padding:40px 20px;font-size:12px;">
-      <div class="big">🎼</div><div>Importeer een Reaper CSV<br>om regions te zien</div></div>`;
+      <div class="big">🎼</div><div>${t('parts_empty')}</div></div>`;
     $('regionCount').textContent='';
     return;
   }
-  $('regionCount').textContent=`${regions.length} delen`;
+  $('regionCount').textContent=tf('region_count',{n:regions.length});
   list.innerHTML=regions.map(r=>{
     const isPast=elapsed>=r.end;
     const isActive=r.id===activeRegionId;
@@ -1371,13 +1783,13 @@ function renderRegions(){
     else if(isPast) pct=100;
     return `<div class="region-item ${isActive?'active':''} ${isPast&&!isActive?'past':''}" >
       <div class="ri-bar" style="background:${bc};min-height:28px;"></div>
-      <div class="ri-body" onclick="startFromTime(${r.start})" style="cursor:pointer">
+      <div class="ri-body" onclick="startFromTime(${r.start})" style="cursor:pointer" title="${t('tt_start_from_region')}">
         <div class="ri-id">${r.id}</div>
         <div class="ri-name">${r.name}</div>
         <div class="ri-time">${fmt(r.start)} – ${fmt(r.end)}</div>
         <div class="ri-progress"><div class="ri-progress-fill" style="width:${pct}%"></div></div>
       </div>
-      <button class="region-item-edit-btn" onclick="openRegionEdit('${r.id}')" title="Bewerken">✏</button>
+      <button class="region-item-edit-btn" onclick="openRegionEdit('${r.id}')" title="${t('tt_edit_region')}">✏</button>
     </div>`;
   }).join('');
 }
@@ -1385,15 +1797,33 @@ function renderRegions(){
 /* ════════════════════════════════════════════
    RENDER CUES
 ════════════════════════════════════════════ */
+// Kleurbalk links van een cue-rij: één blok bij 1 type, gestapelde banden bij meerdere
+function renderTypeBar(types){
+  if(!types||!types.length) return `<div class="cue-type-bar" style="background:${TYPE_COLORS.none};width:4px;height:36px;border-radius:2px;"></div>`;
+  if(types.length===1) return `<div class="cue-type-bar" style="background:${TYPE_COLORS[types[0]]};width:4px;height:36px;border-radius:2px;"></div>`;
+  const segs=types.map(tp=>`<div style="flex:1;background:${TYPE_COLORS[tp]};"></div>`).join('');
+  return `<div class="cue-type-bar" style="width:4px;height:36px;border-radius:2px;overflow:hidden;display:flex;flex-direction:column;">${segs}</div>`;
+}
+
 function renderCues(){
   const ni=nextIdx();
   const list=$('cueList');
   if(!cues.length){
-    list.innerHTML=`<div class="empty-state"><div class="big">🎭</div><div>Geen cues geladen</div></div>`;
+    list.innerHTML=`<div class="empty-state"><div class="big">🎭</div><div>${t('no_cues_loaded')}</div></div>`;
+    updateFilterStatus(0,0);
+    return;
+  }
+  const visibleIdx=cues.map((c,i)=>i).filter(i=>{
+    const c=cues[i];
+    return activeFilter.size===0 || (c.types&&c.types.some(tp=>activeFilter.has(tp)));
+  });
+  updateFilterStatus(visibleIdx.length,cues.length);
+  if(!visibleIdx.length){
+    list.innerHTML=`<div class="empty-state"><div class="big">🔍</div><div>${t('filter_no_match')}</div></div>`;
     return;
   }
   let html='',lastRid='__';
-  for(let i=0;i<cues.length;i++){
+  for(const i of visibleIdx){
     const c=cues[i];
     if(c.regionId!==lastRid){
       lastRid=c.regionId;
@@ -1411,23 +1841,50 @@ function renderCues(){
     if(i===activeCueIndex) cls='active';
     else if(i===ni) cls='upcoming';
     else if(i<activeCueIndex||(activeCueIndex===-1&&elapsed>c.time)) cls='past';
-    const col=TYPE_COLORS[c.type||'none'];
     html+=`<div class="cue-row ${cls}" id="cue-${i}" onclick="openDetail(${i})">
-      <div class="cue-type-bar" style="background:${col};width:4px;height:36px;border-radius:2px;"></div>
+      ${renderTypeBar(c.types)}
       <span class="cue-num">Q${i+1}</span>
       <div class="cue-name-wrap">
         <div class="cue-name">${c.name}</div>
         ${c.note?`<div class="cue-note">📝 ${c.note}</div>`:''}
       </div>
       <span class="cue-time">${fmt(c.time)}</span>
-      <button class="cue-sf" onclick="event.stopPropagation();startFromCue(${i})">▶ Vanaf hier</button>
-      <button class="cue-del" onclick="event.stopPropagation();deleteCue(${i})">✕</button>
+      <button class="cue-sf" onclick="event.stopPropagation();startFromCue(${i})" title="${t('tt_start_from_here')}">▶ Vanaf hier</button>
+      <button class="cue-del" onclick="event.stopPropagation();deleteCue(${i})" title="${t('tt_delete_cue_row')}">✕</button>
     </div>`;
   }
   list.innerHTML=html;
 }
 
+/* ════════════════════════════════════════════
+   CUE-TYPE FILTER
+   Raakt alleen de weergave van de lijst — show-logica
+   (actieve cue, "Volgende"-strip, sneltoetsen) blijft
+   altijd op de volledige, ongefilterde cue-set werken.
+════════════════════════════════════════════ */
+function buildFilterChips(){
+  const el=$('filterChips'); if(!el) return;
+  el.innerHTML=TYPE_ORDER.map(tp=>
+    `<button class="filter-chip ${activeFilter.has(tp)?'sel':''}" style="color:${TYPE_COLORS[tp]}" data-t="${tp}" onclick="toggleTypeFilter('${tp}')">${t('type_'+tp)}</button>`
+  ).join('');
+}
+function toggleTypeFilter(tp){
+  if(activeFilter.has(tp)) activeFilter.delete(tp); else activeFilter.add(tp);
+  buildFilterChips();renderCues();
+}
+function clearTypeFilter(){
+  activeFilter.clear();
+  buildFilterChips();renderCues();
+}
+function updateFilterStatus(shown,total){
+  const bar=$('filterStatus'); if(!bar) return;
+  if(activeFilter.size===0){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  $('filterStatusText').textContent=tf('filter_status',{shown,total});
+}
+
 function deleteCue(i){
+  if(!requireControl())return;
   cues.splice(i,1);
   if(activeCueIndex>=cues.length)activeCueIndex=cues.length-1;
   renderCues();updateStrip();
@@ -1450,7 +1907,7 @@ function buildSwatches(){
   const el=$('colorSwatches');
   el.innerHTML=REGION_COLORS.map(c=>`
     <div class="swatch ${c===regionColor?'sel':''}"
-      style="background:${c}"
+      style="background:${c}" title="${tf('tt_pick_color',{hex:c})}"
       onclick="pickRegionColor('${c}')"></div>`).join('');
 }
 
@@ -1474,7 +1931,7 @@ function openRegionEdit(rid){
   $('regionForm').style.display='block';
   if(rid===null){
     // New region
-    $('regionHeading').textContent='Nieuw deel';
+    $('regionHeading').textContent=t('region_new');
     $('rName').value='';
     $('rStart').value='00:00:00';
     $('rEnd').value='00:05:00';
@@ -1483,7 +1940,7 @@ function openRegionEdit(rid){
   } else {
     const r=regions.find(x=>x.id===rid);
     if(!r) return;
-    $('regionHeading').textContent=`${r.id} bewerken`;
+    $('regionHeading').textContent=tf('region_edit_named',{id:r.id});
     $('rName').value=r.name;
     $('rStart').value=fmt(r.start);
     $('rEnd').value=fmt(r.end);
@@ -1496,6 +1953,7 @@ function openRegionEdit(rid){
 }
 
 function saveRegion(){
+  if(!requireControl())return;
   const name=$('rName').value.trim();
   const start=parseTime($('rStart').value.trim());
   const end=parseTime($('rEnd').value.trim());
@@ -1524,11 +1982,12 @@ function saveRegion(){
 
   // Flash confirmation
   const h=$('regionHeading');
-  h.textContent='✓ Opgeslagen';
-  setTimeout(()=>{h.textContent=regionEditId?`${regionEditId} bewerken`:'Nieuw deel';},1200);
+  h.textContent=t('saved_flash');
+  setTimeout(()=>{h.textContent=regionEditId?tf('region_edit_named',{id:regionEditId}):t('region_new');},1200);
 }
 
 function deleteCurrentRegion(){
+  if(!requireControl())return;
   if(!regionEditId)return;
   const idx=regions.findIndex(r=>r.id===regionEditId);
   if(idx>=0) regions.splice(idx,1);
@@ -1548,25 +2007,32 @@ function showDetailEmpty(){
   $('detailForm').style.display='none';
 }
 
+function renderDetailChips(){
+  document.querySelectorAll('.type-chips .tchip').forEach(b=>{
+    const tp=b.dataset.t;
+    b.classList.toggle('sel', tp==='none' ? detailTypes.size===0 : detailTypes.has(tp));
+  });
+}
+
 function openDetail(i){
   detailIdx=i;
   switchTab('detail');
   const c=cues[i];
-  $('detailHeading').textContent=`Q${i+1} bewerken`;
+  $('detailHeading').textContent=tf('cue_edit_named',{n:i+1});
   $('dName').value=c.name;$('dTime').value=fmt(c.time);$('dNote').value=c.note||'';
-  detailType=c.type||'none';
-  document.querySelectorAll('.tchip').forEach(b=>b.classList.toggle('sel',b.dataset.t===detailType));
+  detailTypes=new Set(c.types||[]);
+  renderDetailChips();
   $('btnDelCue').style.display='block';
   $('detailEmpty').style.display='none';
   $('detailForm').style.display='block';
 }
 
 function newCuePanel(){
-  detailIdx=-1;detailType='none';
+  detailIdx=-1;detailTypes=new Set();
   switchTab('detail');
-  $('detailHeading').textContent='Nieuwe cue';
+  $('detailHeading').textContent=t('cue_new');
   $('dName').value='';$('dTime').value='00:00:00';$('dNote').value='';
-  document.querySelectorAll('.tchip').forEach(b=>b.classList.toggle('sel',b.dataset.t==='none'));
+  renderDetailChips();
   $('btnDelCue').style.display='none';
   $('detailEmpty').style.display='none';
   $('detailForm').style.display='block';
@@ -1574,11 +2040,14 @@ function newCuePanel(){
 }
 
 function pickType(btn){
-  document.querySelectorAll('.tchip').forEach(b=>b.classList.remove('sel'));
-  btn.classList.add('sel');detailType=btn.dataset.t;
+  const tp=btn.dataset.t;
+  if(tp==='none') detailTypes.clear();
+  else { if(detailTypes.has(tp)) detailTypes.delete(tp); else detailTypes.add(tp); }
+  renderDetailChips();
 }
 
 function saveDetail(){
+  if(!requireControl())return;
   const name=$('dName').value.trim();
   const time=parseTime($('dTime').value.trim());
   if(!name){$('dName').style.borderColor='var(--danger)';$('dName').focus();return;}
@@ -1592,7 +2061,8 @@ function saveDetail(){
     regionId=r?r.id:null;
   }
 
-  const entry={time,name,type:detailType,note:$('dNote').value.trim(),regionId};
+  const types=TYPE_ORDER.filter(tp=>detailTypes.has(tp));
+  const entry={time,name,types,note:$('dNote').value.trim(),regionId};
 
   if(detailIdx===-1){
     cues.push(entry);
@@ -1610,11 +2080,12 @@ function saveDetail(){
   // Flash save confirmation in the heading
   const h=$('detailHeading');
   const prev=h.textContent;
-  h.textContent='✓ Opgeslagen';h.style.color='var(--acc)';
-  setTimeout(()=>{h.textContent=detailIdx>=0?`Q${detailIdx+1} bewerken`:prev;h.style.color='';},1200);
+  h.textContent=t('saved_flash');h.style.color='var(--acc)';
+  setTimeout(()=>{h.textContent=detailIdx>=0?tf('cue_edit_named',{n:detailIdx+1}):prev;h.style.color='';},1200);
 }
 
 function deleteCurrent(){
+  if(!requireControl())return;
   if(detailIdx<0)return;
   deleteCue(detailIdx);
 }
@@ -1623,13 +2094,14 @@ function deleteCurrent(){
    QUICK ADD
 ════════════════════════════════════════════ */
 function quickAdd(){
+  if(!requireControl())return;
   const tRaw=$('addTime').value||'00:00:00';
   const parts=tRaw.split(':').map(Number);
   const sec=parts.length===3?parts[0]*3600+parts[1]*60+parts[2]:parts[0]*60+(parts[1]||0);
   const name=$('addName').value.trim();
   const type=$('addType').value;
   if(!name){$('addName').focus();return;}
-  cues.push({time:sec,name,type,note:'',regionId:null});
+  cues.push({time:sec,name,types:type==='none'?[]:[type],note:'',regionId:null});
   cues.sort((a,b)=>a.time-b.time);
   $('addName').value='';
   renderCues();updateStrip();
@@ -1639,8 +2111,8 @@ $('addName').addEventListener('keydown',e=>{if(e.key==='Enter')quickAdd();});
 /* ════════════════════════════════════════════
    START FROM
 ════════════════════════════════════════════ */
-function startFromCue(i){jumpTo(cues[i].time);startTimer();}
-function startFromTime(t){jumpTo(t);startTimer();}
+function startFromCue(i){if(!requireControl())return;jumpTo(cues[i].time);startTimer();}
+function startFromTime(t){if(!requireControl())return;jumpTo(t);startTimer();}
 function jumpTo(t){
   pauseTimer();elapsed=Math.max(0,t);activeCueIndex=-1;
   checkCues();updateClock();renderCues();updateStrip();updateRegionDisplay();syncBtns();
@@ -1658,7 +2130,7 @@ function buildTpCueList(){
   const el=$('tpCueList');
   el.innerHTML=cues.map((c,i)=>`
     <div class="tp-cue-item ${Math.floor(c.time)===Math.floor(sfTime)?'sel':''}" id="tpci-${i}" onclick="selectTpCue(${i})">
-      <div class="tpci-dot" style="background:${TYPE_COLORS[c.type||'none']}"></div>
+      <div class="tpci-dot" style="background:${typeColor(c.types)}"></div>
       <div class="tpci-name">Q${i+1} — ${c.name}</div>
       <div class="tpci-time">${fmt(c.time)}</div>
     </div>`).join('');
@@ -1680,7 +2152,7 @@ function highlightTpCue(){
     }
   });
 }
-function confirmFrom(){jumpTo(sfTime);startTimer();}
+function confirmFrom(){if(!requireControl())return;jumpTo(sfTime);startTimer();}
 
 /* ════════════════════════════════════════════
    TABS
@@ -1716,11 +2188,12 @@ dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.a
 dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag'));
 dropZone.addEventListener('drop',e=>{
   e.preventDefault();dropZone.classList.remove('drag');
+  if(!requireControl())return;
   const f=e.dataTransfer.files[0];if(f)readCSV(f);
 });
-function importCSV(e){readCSV(e.target.files[0]);}
+function importCSV(e){if(!requireControl()){e.target.value='';return;}readCSV(e.target.files[0]);}
 function readCSV(f){const r=new FileReader();r.onload=ev=>parseAndImport(ev.target.result);r.readAsText(f);}
-function importPaste(){parseAndImport($('csvPaste').value);}
+function importPaste(){if(!requireControl())return;parseAndImport($('csvPaste').value);}
 
 function parseAndImport(txt){
   txt=txt.replace(/^\uFEFF/,'');
@@ -1739,7 +2212,7 @@ function parseAndImport(txt){
         const en=parseReaperTime(cols[3]||'');
         newR.push({id,name,start:st,end:en||st,color:cols[5]?'#'+cols[5]:null});
       } else if(id.startsWith('M')){
-        newC.push({time:st,name,type:guessType(name),note:'',regionId:null});
+        newC.push({time:st,name,types:guessTypes(name),note:'',regionId:null});
       }
     }
     newR.sort((a,b)=>a.start-b.start);
@@ -1754,9 +2227,9 @@ function parseAndImport(txt){
   const out=[];
   for(const line of lines){
     const cols=line.split(/\t/);
-    if(cols.length>=2){const t=parseReaperTime(cols[0]);if(t!==null){out.push({time:t,name:cols[1].trim(),type:'none',note:'',regionId:null});continue;}}
+    if(cols.length>=2){const t=parseReaperTime(cols[0]);if(t!==null){out.push({time:t,name:cols[1].trim(),types:[],note:'',regionId:null});continue;}}
     const m=line.match(/^(\S+)\s+(.+)$/);
-    if(m){const t=parseReaperTime(m[1]);if(t!==null)out.push({time:t,name:m[2].trim(),type:'none',note:'',regionId:null});}
+    if(m){const t=parseReaperTime(m[1]);if(t!==null)out.push({time:t,name:m[2].trim(),types:[],note:'',regionId:null});}
   }
   if(!out.length){alert('Geen cues gevonden.');return;}
   out.sort((a,b)=>a.time-b.time);
@@ -1778,6 +2251,7 @@ function exportCSV(){
    MIDI ENGINE — robust Reaper/LoopMIDI support
 ════════════════════════════════════════════ */
 let midiAccess=null, midiInput=null, midiOutput=null, midiMode='auto';
+let sysexEnabled=false; // false = stabiele standaardverbinding; true = volledige MTC-positionering (SysEx)
 let mtcNibs=[0,0,0,0,0,0,0,0], mtcReceived=0;
 let mtcLastElapsed=-1, mtcStopTimeout=null;
 let seenMTC=false, seenClock=false;
@@ -1838,7 +2312,7 @@ function midiLog(cls,msg){
   midiLogLines.unshift(`<span class="${cls}">[${ts}] ${msg}</span>`);
   if(midiLogLines.length>40)midiLogLines.length=40;
   const el=$('midiLog');
-  if(el)el.innerHTML=midiLogLines.join('<br>');
+  if(el){ el.removeAttribute('data-i18n'); el.innerHTML=midiLogLines.join('<br>'); }
 }
 
 async function initMidi(){
@@ -1847,19 +2321,70 @@ async function initMidi(){
     badge.textContent='Niet ondersteund';badge.className='badge err';
     midiLog('err','WebMIDI niet beschikbaar — gebruik Chrome/Edge');return;
   }
+  // Al verbonden? Alleen poorten verversen — niet opnieuw aanvragen, anders zou
+  // een actieve SysEx-verbinding terugvallen naar sysex:false.
+  if(midiAccess){ fillPorts(); updateSysexUI(); return; }
+  await requestMidi(false);
+}
+
+// Vraag (of hervraag) WebMIDI-toegang aan op het gegeven sysex-niveau.
+// sysex:false = stabiele standaard (kan geen SysEx versturen).
+// sysex:true  = volledige MTC-positionering (MTC full-frame via SysEx).
+// Bij het wisselen krijg je een NIEUW MIDIAccess-object waardoor bestaande
+// poort-referenties verlopen; die resolven we hieronder opnieuw.
+async function requestMidi(sysex){
+  const badge=$('midiBadgePane');
   try{
-    midiAccess=await navigator.requestMIDIAccess({sysex:false});
-    badge.textContent='Verbonden';badge.className='badge ok';
-    midiLog('ok','WebMIDI verbonden — kies poort en selecteer');
-    fillPorts();
+    const access=await navigator.requestMIDIAccess({sysex});
+    // Oude input-listener loskoppelen voor we van access-object wisselen
+    if(midiInput){ try{midiInput.onmidimessage=null;}catch(e){} }
+    midiAccess=access;
+    sysexEnabled=sysex;
     midiAccess.onstatechange=e=>{
       fillPorts();
       midiLog('warn',`Poort ${e.port.name}: ${e.port.state}`);
     };
+    fillPorts(); // herresolvet midiOutput uit het nieuwe access-object
+    // Geselecteerde input opnieuw resolven op het nieuwe access-object + listener herbinden
+    const inId=$('midiIn').value;
+    if(inId){
+      midiInput=midiAccess.inputs.get(inId)||null;
+      if(midiInput) midiInput.onmidimessage=onMidi;
+    }
+    updateSysexUI();
+    midiLog('ok', sysex
+      ? 'WebMIDI verbonden mét volledige positionering (SysEx) — "Ga naar tijdstip" en positie-sync zijn nu actief'
+      : 'WebMIDI verbonden — kies poort en selecteer');
+    return true;
   }catch(e){
-    badge.textContent='Geblokkeerd';badge.className='badge err';
-    midiLog('err','Toegang geweigerd: '+e.message);
+    badge.textContent = sysex?'SysEx geweigerd':'Geblokkeerd';
+    badge.className='badge err';
+    midiLog('err', (sysex?'Volledige positionering geweigerd: ':'Toegang geweigerd: ')+e.message);
+    return false;
   }
+}
+
+// Reflecteer het sysex-niveau in de UI (badge, activatieknop, status-notitie).
+function updateSysexUI(){
+  const badge=$('midiBadgePane');
+  if(midiAccess){
+    badge.textContent=sysexEnabled?'Verbonden · SysEx':'Verbonden';
+    badge.className='badge ok';
+  }
+  const btn=$('btnEnableSysex');
+  if(btn) btn.style.display=sysexEnabled?'none':'block';
+  const note=$('sysexActiveNote');
+  if(note) note.style.display=sysexEnabled?'block':'none';
+}
+
+// Tweede trap: upgrade naar een sysex:true-verbinding op expliciet verzoek.
+// Dit triggert een eigen browserprompt en maakt MTC full-frame positionering mogelijk.
+async function enableFullPositioning(){
+  if(!requireControl())return;
+  if(sysexEnabled){ midiLog('ok','Volledige positionering is al actief'); return; }
+  if(!navigator.requestMIDIAccess){ midiLog('err','WebMIDI niet beschikbaar'); return; }
+  midiLog('warn','Volledige positionering aanvragen… bevestig de browserprompt');
+  await requestMidi(true);
 }
 
 function fillPorts(){
@@ -1912,22 +2437,30 @@ function midiSend(bytes){
 
 // MIDI Clock Start (0xFA) — Reaper jumps to pos 0 and plays
 function sendMidiStart(){
+  if(!requireControl())return;
   if(midiSend([0xFA])){ midiLog('ok','→ MIDI Start gestuurd (Reaper → pos 0)'); }
 }
 
 // MIDI Clock Stop (0xFC)
 function sendMidiStop(){
+  if(!requireControl())return;
   if(midiSend([0xFC])){ midiLog('warn','→ MIDI Stop gestuurd'); }
 }
 
 // MIDI Clock Continue (0xFB) — resume from current position
 function sendMidiContinue(){
+  if(!requireControl())return;
   if(midiSend([0xFB])){ midiLog('ok','→ MIDI Continue gestuurd (pos: '+fmt(elapsed)+')'); }
 }
 
 // Send MTC Full Frame SysEx — tells Reaper to jump to exact timecode position
 // Format: F0 7F 7F 01 01 hh mm ss ff F7
 function sendMTCFullFrame(seconds, fps30){
+  if(!sysexEnabled){
+    midiLog('err','Activeer eerst "Volledige positionering" — MTC-positie vereist SysEx-toegang');
+    alert('Volledige MTC-positionering is nog niet geactiveerd.\n\nKlik in het MIDI-paneel op "⚙ Activeer volledige positionering" en bevestig de browserprompt. Daarna werken "Ga naar tijdstip" en "Stuur huidige positie".\n\n(Start / Stop / Continue werken ook zonder activatie.)');
+    return false;
+  }
   const fps=30; // Reaper defaults to 30fps for full frame
   const h=Math.floor(seconds/3600);
   const m=Math.floor((seconds%3600)/60);
@@ -1950,6 +2483,7 @@ function sendSPP(seconds){
 
 // Go to specific time and play — sends MTC full frame + Continue
 function sendMidiGoto(){
+  if(!requireControl())return;
   const h=parseInt($('sendH').value)||0;
   const m=parseInt($('sendM').value)||0;
   const s=parseInt($('sendS').value)||0;
@@ -1968,6 +2502,7 @@ function sendMidiGoto(){
 
 // Send current app clock position to Reaper
 function sendCurrentPosition(){
+  if(!requireControl())return;
   const ok=sendMTCFullFrame(elapsed);
   if(ok) midiLog('ok',`→ Huidige positie gestuurd: ${fmt(elapsed)}`);
 }
@@ -1986,14 +2521,18 @@ function selectMidiIn(){
   applyMidiMode();
 }
 
+function renderSyncLbl(){
+  const lbl=$('syncLbl'); if(!lbl) return;
+  const connected=midiMode!=='off'&&midiInput;
+  if(connected && midiMode==='auto'){lbl.textContent='AUTO';lbl.classList.add('on');}
+  else if(connected && midiMode==='mtc'){lbl.textContent='MTC';lbl.classList.add('on');}
+  else if(connected && midiMode==='clock'){lbl.textContent='CLK';lbl.classList.add('on');}
+  else{lbl.textContent=t('sync_intern');lbl.classList.remove('on');}
+}
 function applyMidiMode(){
   midiMode=$('midiMode').value;
-  const lbl=$('syncLbl');
   const connected=midiMode!=='off'&&midiInput;
-  if(midiMode==='auto' &&connected){lbl.textContent='AUTO';lbl.classList.add('on');}
-  else if(midiMode==='mtc'&&connected){lbl.textContent='MTC';lbl.classList.add('on');}
-  else if(midiMode==='clock'&&connected){lbl.textContent='CLK';lbl.classList.add('on');}
-  else{lbl.textContent='INTERN';lbl.classList.remove('on');}
+  renderSyncLbl();
   $('midiBadge').className='midi-badge'+(connected?' connected':'');
   // Reset
   mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;seenMTC=false;seenClock=false;
@@ -2147,7 +2686,7 @@ function togglePanel(side){
     }
     leftCollapsed=!leftCollapsed;
     $('toggleLeft').classList.toggle('collapsed', leftCollapsed);
-    $('toggleLeft').textContent = leftCollapsed ? '▶ Delen' : '◀ Delen';
+    $('toggleLeft').textContent = leftCollapsed ? t('tb_parts_collapsed') : t('tb_parts');
   } else {
     if(!rightCollapsed){
       const w=$('rightPanel').offsetWidth;
@@ -2155,7 +2694,7 @@ function togglePanel(side){
     }
     rightCollapsed=!rightCollapsed;
     $('toggleRight').classList.toggle('collapsed', rightCollapsed);
-    $('toggleRight').textContent = rightCollapsed ? '◀ Detail' : 'Detail ▶';
+    $('toggleRight').textContent = rightCollapsed ? t('tb_detail_collapsed') : t('tb_detail');
   }
   applyGrid();
 }
@@ -2185,14 +2724,14 @@ function setupDrag(handleId, side){
         if(leftCollapsed && leftW>MIN_W){
           leftCollapsed=false;
           $('toggleLeft').classList.remove('collapsed');
-          $('toggleLeft').textContent='◀ Delen';
+          $('toggleLeft').textContent=t('tb_parts');
         }
       } else {
         rightW=Math.max(MIN_W, Math.min(MAX_RIGHT, startW-dx));
         if(rightCollapsed && rightW>MIN_W){
           rightCollapsed=false;
           $('toggleRight').classList.remove('collapsed');
-          $('toggleRight').textContent='Detail ▶';
+          $('toggleRight').textContent=t('tb_detail');
         }
       }
       applyGrid();
@@ -2246,9 +2785,11 @@ function wsConnect(url){
   }catch(e){ wsBroadcast=false; updateWsStatus('err'); }
 }
 
+let _wsState='off';
 function updateWsStatus(s){
+  _wsState=s;
   const el=$('wsStatus'); if(!el)return;
-  el.textContent=s==='ok'?'● LIVE':s==='err'?'● FOUT':'● Uit';
+  el.textContent=s==='ok'?t('ws_live'):s==='err'?t('ws_error'):t('ws_off');
   el.style.color=s==='ok'?'var(--acc)':s==='err'?'var(--danger)':'var(--muted)';
 }
 
@@ -2259,11 +2800,11 @@ function broadcastState(){
   const payload={
     t: Math.round(elapsed*1000)/1000,
     running,
-    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, type:cues[activeCueIndex].type||'none'} : null,
-    nextCue: ni>=0 ? {name:cues[ni].name, time:cues[ni].time, type:cues[ni].type||'none'} : null,
+    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, type:(cues[activeCueIndex].types&&cues[activeCueIndex].types[0])||'none', types:cues[activeCueIndex].types||[]} : null,
+    nextCue: ni>=0 ? {name:cues[ni].name, time:cues[ni].time, type:(cues[ni].types&&cues[ni].types[0])||'none', types:cues[ni].types||[]} : null,
     prevCueTime: prevTime,
     region: activeRegionId ? (regions.find(r=>r.id===activeRegionId)||null) : null,
-    cues: cues.map(c=>({time:c.time,name:c.name,type:c.type||'none',regionId:c.regionId||null})),
+    cues: cues.map(c=>({time:c.time,name:c.name,type:(c.types&&c.types[0])||'none',types:c.types||[],regionId:c.regionId||null})),
     regions: regions.map(r=>({id:r.id,name:r.name,start:r.start,end:r.end,color:r.color||null})),
   };
   try{ ws.send(JSON.stringify(payload)); }catch(e){}
@@ -2277,7 +2818,7 @@ function toggleRegionView(){
   regionViewActive=!regionViewActive;
   $('regionView').classList.toggle('active', regionViewActive);
   $('toggleRegionView').classList.toggle('collapsed', regionViewActive);
-  $('toggleRegionView').textContent=regionViewActive?'⬜ Normaal':'⬛ Delen-view';
+  $('toggleRegionView').textContent=regionViewActive?t('tb_normal'):t('tb_partsview');
   if(regionViewActive) updateRegionView();
 }
 
@@ -2286,7 +2827,7 @@ function updateRegionView(){
 
   // Clock
   const clkEl=$('rvClock');
-  clkEl.textContent=fmt(elapsed);
+  clkEl.innerHTML=fmtFrames(elapsed);
   clkEl.className='rv-clock'+(running?' run':' pau');
 
   const r=activeRegionId?regions.find(x=>x.id===activeRegionId):null;
@@ -2304,7 +2845,7 @@ function updateRegionView(){
     // Elapsed time within this region
     const inRegion=Math.max(0, elapsed-r.start);
     const inMm=Math.floor(inRegion/60), inSs=Math.floor(inRegion%60);
-    $('rvRegionElapsed').textContent=`${pad(inMm)}:${pad(inSs)} in dit deel`;
+    $('rvRegionElapsed').textContent=`${pad(inMm)}:${pad(inSs)} ${t('rv_in_part')}`;
 
     // Progress within region
     const span=r.end-r.start;
@@ -2331,7 +2872,7 @@ function updateRegionView(){
       $('rvCountdown').textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
       $('rvCountdown').className='rv-countdown'+(diff<=10?' hot':'');
     } else {
-      $('rvCountdown').textContent='NU';
+      $('rvCountdown').textContent=t('countdown_now');
       $('rvCountdown').className='rv-countdown hot';
     }
   } else if(r){
@@ -2344,6 +2885,34 @@ function updateRegionView(){
     $('rvCountdown').style.display='block';
     $('rvNoNext').style.display='none';
   }
+
+  // ── Volgende cue: countdown + lijst van 3 aankomende cues ──
+  const ni=nextIdx();
+  if(ni>=0){
+    const nc=cues[ni];
+    $('rvCueName').textContent=nc.name;
+    const cdiff=nc.time-elapsed;
+    const ccdEl=$('rvCueCountdown');
+    if(cdiff>0){
+      const cmm=Math.floor(cdiff/60), css_=Math.floor(cdiff%60);
+      ccdEl.textContent=cmm>0?`${cmm}:${pad(css_)}`:`${Math.ceil(cdiff)}s`;
+      ccdEl.className='rv-cue-countdown'+(cdiff<=5?' hot':'');
+    } else {
+      ccdEl.textContent=t('countdown_now');
+      ccdEl.className='rv-cue-countdown hot';
+    }
+  } else {
+    $('rvCueName').textContent=t('ns_end_show');
+    $('rvCueCountdown').textContent='—';
+    $('rvCueCountdown').className='rv-cue-countdown';
+  }
+  const upcoming=ni>=0?cues.slice(ni,ni+3):[];
+  $('rvCueList').innerHTML=upcoming.map((c,idx)=>`
+    <div class="rv-cue-item${idx===0?' now':''}">
+      <span class="dot" style="background:${typeColor(c.types)}"></span>
+      <span>${c.name}</span>
+      <span class="rv-ci-time">${fmt(c.time)}</span>
+    </div>`).join('');
 }
 
 
@@ -2360,6 +2929,7 @@ function closeBroadcast(){
 }
 
 function startBroadcast(){
+  if(!requireControl())return;
   const url=$('wsUrlInput').value.trim();
   if(!url){alert('Voer een WebSocket URL in.');return;}
   wsConnect(url); closeBroadcast();
@@ -2377,10 +2947,69 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ════════════════════════════════════════════
+   THEMA (licht / donker)
+════════════════════════════════════════════ */
+function currentTheme(){ return document.documentElement.getAttribute('data-theme')==='light'?'light':'dark'; }
+function applyThemeIcon(){
+  const b=$('themeToggle'); if(!b) return;
+  const light=currentTheme()==='light';
+  b.textContent=light?'☀️':'🌙';
+  b.title=light?t('theme_to_dark'):t('theme_to_light');
+}
+function toggleTheme(){
+  const next=currentTheme()==='light'?'dark':'light';
+  if(next==='light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  try{ localStorage.setItem('cueRunnerTheme', next); }catch(e){}
+  applyThemeIcon();
+}
+
+/* ════════════════════════════════════════════
+   VIEW-ONLY MODUS
+   App start altijd view-only. Elke actie die de live
+   show kan beïnvloeden (transport, cue/deel bewerken,
+   MIDI-send, broadcast-verbinden) loopt via requireControl().
+   Navigeren/bekijken (tabs, panelen, taal, thema, MIDI-poort
+   kiezen) blijft altijd toegestaan.
+════════════════════════════════════════════ */
+let controlsEnabled=false;
+function requireControl(){
+  if(controlsEnabled) return true;
+  openControlWarning();
+  return false;
+}
+function applyControlBadge(){
+  const b=$('controlModeBadge'); if(!b) return;
+  b.removeAttribute('data-i18n'); b.removeAttribute('data-i18n-title');
+  if(controlsEnabled){
+    b.textContent=t('controls_badge');
+    b.title=t('controls_tt');
+    b.style.borderColor='var(--acc)';b.style.color='var(--acc)';b.style.background='rgba(var(--acc-rgb),.1)';
+    b.style.cursor='default';
+  } else {
+    b.textContent=t('viewonly_badge');
+    b.title=t('viewonly_tt');
+    b.style.borderColor='var(--warn)';b.style.color='var(--warn)';b.style.background='rgba(245,166,35,.1)';
+    b.style.cursor='pointer';
+  }
+}
+function onControlBadgeClick(){ if(!controlsEnabled) openControlWarning(); }
+function openControlWarning(){ $('controlWarningModal').classList.add('open'); }
+function closeControlWarning(){ $('controlWarningModal').classList.remove('open'); }
+function confirmEnableControl(){
+  controlsEnabled=true;
+  applyControlBadge();
+  closeControlWarning();
+}
+
+/* ════════════════════════════════════════════
    INIT
 ════════════════════════════════════════════ */
+applyThemeIcon();
 syncBtns();renderCues();renderRegions();updateStrip();updateClock();
 showDetailEmpty();initResize();
+window._i18nReady=true;
+initLang();
 
 // Region view RAF loop — must start AFTER all let declarations to avoid
 // "Cannot access before initialization" temporal dead zone error
