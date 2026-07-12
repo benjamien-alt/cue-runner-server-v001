@@ -1,4 +1,10 @@
 <!DOCTYPE html>
+<!--
+  CUE RUNNER — VIEWER (read-only "slave" van cue-runner-desktop.html)
+  Spiegelt qua UI de desktop-app, maar zonder besturing/bewerken/MIDI/CSV.
+  Wordt gedreven door de WebSocket-state die de desktop-app (master) verstuurt.
+  Houd dit bestand in sync met cue-runner-desktop.html.
+-->
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -7,226 +13,151 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>CUE RUNNER — Viewer</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@600;700;800&display=swap');
-:root{
-  /* ── DONKER (standaard) — zelfde systeem als cue-runner-desktop.html ── */
-  --bg:      #07070a;
-  --s1:      #0d0d12;
-  --s2:      #121218;
-  --s3:      #18181f;
-  --bdr:     #25252f;
-  --acc:     #bceff6;
-  --acc-rgb: 188,239,246;
-  --warn:    #f5a623;
-  --danger:  #f53a3a;
-  --text:    #f0f0fa;
-  --muted:   #9090b0;
-  --dim:     #5a5a78;
-  --clock-run: #ffffff;
-  --hover:   rgba(255,255,255,.02);
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
-  --licht:   #fcd34d;
-  --spot:    #fb7185;
-  --kraan:   #7dd8fc;
-  --kaboem:  #f97316;
-  --truss:   #94a3b8;
-  --dir:     #c4affe;
-  --sound:   #6ee7b7;
-  --video:   #818cf8;
-  --none:    #5a5a78;
+:root{
+  /* ── DONKER (standaard) — identiek aan cue-runner-desktop.html ── */
+  --bg:#07070a; --s1:#0d0d12; --s2:#121218; --s3:#18181f; --bdr:#25252f;
+  --acc:#bceff6; --acc-rgb:188,239,246; --warn:#f5a623; --danger:#f53a3a;
+  --text:#f0f0fa; --muted:#9090b0; --dim:#5a5a78; --active:#08222a;
+  --clock-run:#ffffff; --hover:rgba(255,255,255,.02);
+  --licht:#fcd34d; --spot:#fb7185; --kraan:#7dd8fc; --kaboem:#f97316;
+  --truss:#94a3b8; --dir:#c4affe; --sound:#6ee7b7; --video:#818cf8; --none:#5a5a78;
 }
 :root[data-theme="light"]{
-  --bg:      #eef1f5;
-  --s1:      #ffffff;
-  --s2:      #f4f6f9;
-  --s3:      #e8ecf1;
-  --bdr:     #d3dae2;
-  --acc:     #0f8bab;
-  --acc-rgb: 15,139,171;
-  --warn:    #b56a00;
-  --danger:  #d62828;
-  --text:    #14181f;
-  --muted:   #566072;
-  --dim:     #8996a6;
-  --clock-run: #0f8bab;
-  --hover:   rgba(0,0,0,.04);
-  /* cue-type kleuren blijven identiek — semantisch */
+  --bg:#eef1f5; --s1:#ffffff; --s2:#f4f6f9; --s3:#e8ecf1; --bdr:#d3dae2;
+  --acc:#0f8bab; --acc-rgb:15,139,171; --warn:#b56a00; --danger:#d62828;
+  --text:#14181f; --muted:#566072; --dim:#8996a6; --active:#dff3f8;
+  --clock-run:#0f8bab; --hover:rgba(0,0,0,.04);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow:hidden;}
 
 /* ── TOP BAR ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
-  padding:10px 16px;background:var(--s1);border-bottom:1px solid var(--bdr);
-}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--acc);flex-shrink:0;}
-.conn-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.conn-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);transition:background .3s;flex-shrink:0;}
-.conn-dot.live  {background:var(--acc);box-shadow:0 0 8px var(--acc);animation:blink 1s infinite;}
-.conn-dot.error {background:var(--danger);}
-.conn-dot.offline{background:var(--warn);}
+.topbar{height:52px;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s1);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--acc);flex-shrink:0;}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:background .2s;flex-shrink:0;}
+.dot.live{background:var(--acc);box-shadow:0 0 10px var(--acc);animation:blink 1s infinite;}
+.dot.offline{background:var(--warn);}
+.dot.error{background:var(--danger);}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.conn-label{font-size:11px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
-.badge-viewer{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;}
+.badge-viewer{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;white-space:nowrap;}
 .topbar-right{display:flex;gap:8px;align-items:center;margin-left:auto;}
-.tb-btn{
-  background:transparent;border:1px solid var(--bdr);border-radius:6px;
-  color:var(--text);font-size:12px;padding:6px 9px;cursor:pointer;
-  font-family:'DM Sans',sans-serif;font-weight:600;
-}
+.tb-btn{background:transparent;border:1px solid var(--bdr);border-radius:6px;color:var(--text);font-size:12px;padding:6px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;white-space:nowrap;transition:background .12s,border-color .12s;}
 .tb-btn:hover{background:var(--s2);}
-.offline-banner{
-  display:none;background:rgba(245,166,35,.15);border-bottom:1px solid rgba(245,166,35,.3);
-  padding:6px 16px;font-size:11px;color:var(--warn);letter-spacing:1px;text-align:center;
-}
+.panel-toggle{background:transparent;border:1px solid var(--bdr);border-radius:5px;color:var(--muted);font-size:12px;padding:6px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.panel-toggle:hover{border-color:var(--acc);color:var(--acc);}
+.panel-toggle.collapsed{color:var(--acc);border-color:var(--acc);background:rgba(var(--acc-rgb),.08);}
+
+/* ── OFFLINE BANNER ── */
+.offline-banner{display:none;background:rgba(245,166,35,.15);border-bottom:1px solid rgba(245,166,35,.3);padding:6px 16px;font-size:11px;color:var(--warn);letter-spacing:1px;text-align:center;flex-shrink:0;}
 .offline-banner.show{display:block;}
 
-/* ── LAYOUT ── */
-.main{display:grid;grid-template-columns:1fr;gap:0;max-width:1400px;margin:0 auto;}
-@media(min-width:700px){.main{grid-template-columns:1fr 1fr;}}
-@media(min-width:1100px){.main{grid-template-columns:200px 1fr 1fr 220px;}}
+/* ── LAYOUT (2 koloms: delen | center) ── */
+.layout{display:grid;grid-template-columns:240px 1fr;grid-template-rows:1fr;height:calc(100vh - 52px);overflow:hidden;}
+.layout.left-collapsed{grid-template-columns:0 1fr;}
+.regions-panel{background:var(--s1);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.panel-header{padding:14px 16px 10px;border-bottom:1px solid var(--bdr);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+.regions-list{flex:1;overflow-y:auto;}
+.regions-list::-webkit-scrollbar{width:3px;}
+.regions-list::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
 
-/* ── CLOCK ── */
-.clock-section{
-  grid-column:1/-1;padding:18px 20px 14px;background:var(--s1);
-  border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:20px;flex-wrap:wrap;
-}
-.clock-group{display:flex;flex-direction:column;gap:2px;}
-.clock-lbl{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;}
-#clock{
-  font-family:'Share Tech Mono',monospace;font-size:clamp(44px,7vw,76px);
-  color:var(--acc);letter-spacing:3px;line-height:1;
-  text-shadow:0 0 28px rgba(var(--acc-rgb),.3);transition:color .25s;
-}
-#clock.run{color:var(--clock-run);text-shadow:0 0 36px rgba(var(--acc-rgb),.5);}
-#clock.pau{color:var(--warn);}
+.region-item{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bdr);border-left:3px solid transparent;transition:background .15s;}
+.region-item.active{background:rgba(var(--acc-rgb),.05);border-left-color:var(--acc);}
+.region-item.active .ri-name{color:var(--acc);}
+.region-item.past{opacity:.4;}
+.region-item.past .ri-name{text-decoration:line-through;}
+.ri-bar{width:4px;border-radius:2px;min-height:28px;flex-shrink:0;margin-top:2px;}
+.ri-body{flex:1;min-width:0;}
+.ri-id{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;font-weight:700;}
+.ri-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;color:var(--text);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ri-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px;}
+.ri-progress{height:2px;background:var(--bdr);border-radius:1px;margin-top:5px;overflow:hidden;}
+.ri-progress-fill{height:100%;background:var(--acc);width:0%;transition:width .5s linear;}
+
+/* ── CENTER: klok + volgend-strip + filter + cue-lijst ── */
+.center-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);min-width:0;}
+.clock-hero{padding:20px 24px 16px;background:var(--s1);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:24px;flex-shrink:0;}
+.clock-main{display:flex;flex-direction:column;gap:2px;}
+.clock-lbl{font-size:10px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+#clock{font-family:'Share Tech Mono',monospace;font-size:clamp(48px,5vw,72px);color:var(--acc);letter-spacing:3px;line-height:1;text-shadow:0 0 32px rgba(var(--acc-rgb),.3);transition:color .25s;}
+#clock.run{color:var(--clock-run);text-shadow:0 0 40px rgba(var(--acc-rgb),.5);}
+#clock.pau{color:var(--warn);text-shadow:0 0 20px rgba(245,166,35,.3);}
 #clock.offline{color:var(--warn);animation:clockPulse 1s infinite alternate;}
 @keyframes clockPulse{from{opacity:1}to{opacity:.6}}
 .clock-frames{font-size:.42em;opacity:.55;letter-spacing:1px;margin-left:2px;}
-.status-badge{
-  font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:800;
-  padding:5px 12px;border-radius:6px;background:var(--s2);color:var(--muted);border:1px solid var(--bdr);
-  white-space:nowrap;
-}
-.status-badge.live{background:rgba(var(--acc-rgb),.12);color:var(--acc);border-color:var(--acc);}
-.status-badge.pau {background:rgba(245,166,35,.12);color:var(--warn);border-color:var(--warn);}
-.region-display{
-  flex:1;min-width:180px;display:flex;flex-direction:column;gap:4px;
-  padding:10px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--bdr);
-}
-.rd-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;}
-.rd-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);line-height:1;}
-.rd-next{font-size:11px;color:var(--muted);margin-top:2px;}
+.play-status{font-size:11px;letter-spacing:2px;margin-top:3px;font-weight:800;text-transform:uppercase;color:var(--muted);}
+.play-status.live{color:var(--acc);}
+.play-status.pau{color:var(--warn);}
+.active-region-name{flex:1;display:flex;flex-direction:column;justify-content:center;padding-left:16px;border-left:1px solid var(--bdr);}
+.arn-label{font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;font-weight:800;margin-bottom:3px;}
+.arn-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.arn-next{font-size:11px;color:var(--muted);margin-top:3px;}
 
-/* ── CUE CARDS ── */
-.cue-cards{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bdr);}
-@media(min-width:1100px){.cue-cards{grid-column:2/4;grid-row:2;}}
-.cue-card{background:var(--s1);padding:16px 18px;display:flex;flex-direction:column;gap:5px;}
-.cc-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;}
-.cc-type{display:flex;align-items:center;gap:6px;}
-.cc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.cc-name{
-  font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,26px);
-  letter-spacing:1.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.cc-name.active{color:var(--acc);}
-.cc-name.next  {color:var(--warn);}
-.cc-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);}
-.cc-countdown{font-family:'Share Tech Mono',monospace;font-size:22px;color:var(--warn);}
-.cc-countdown.hot{color:var(--danger);animation:pulse .5s infinite alternate;}
+/* Volgend-strip */
+.progress-strip{height:2px;background:var(--bdr);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--warn);transition:width .4s linear;}
+.next-strip{display:flex;align-items:center;gap:12px;padding:9px 16px;background:var(--s2);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.ns-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;}
+.ns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ns-info{flex:1;overflow:hidden;}
+.ns-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ns-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-top:1px;}
+.ns-countdown{font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--warn);flex-shrink:0;min-width:80px;text-align:right;}
+.ns-countdown.hot{color:var(--danger);animation:pulse .5s infinite alternate;}
 @keyframes pulse{from{opacity:1}to{opacity:.2}}
-.progress-bar{height:3px;background:var(--bdr);border-radius:2px;overflow:hidden;margin-top:3px;}
-.progress-fill{height:100%;background:var(--warn);width:0%;transition:width .4s linear;}
 
-/* ── REGIONS ── */
-.regions-col{grid-column:1/-1;background:var(--s1);border-top:1px solid var(--bdr);}
-@media(min-width:1100px){.regions-col{grid-column:1/2;grid-row:2/4;border-top:none;border-right:1px solid var(--bdr);}}
-.panel-hdr{padding:10px 14px;border-bottom:1px solid var(--bdr);}
-.panel-hdr-title{font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;}
-.region-row{
-  display:flex;align-items:center;gap:8px;padding:8px 14px;
-  border-bottom:1px solid var(--bdr);border-left:3px solid transparent;
-}
-.region-row.active{background:rgba(var(--acc-rgb),.05);border-left-color:var(--acc);}
-.region-row.past  {opacity:.35;}
-.rr-bar{width:4px;height:28px;border-radius:2px;flex-shrink:0;}
-.rr-body{flex:1;min-width:0;}
-.rr-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rr-name.active{color:var(--acc);}
-.rr-time{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);margin-top:1px;}
-.rr-prog{height:2px;background:var(--bdr);border-radius:1px;margin-top:3px;overflow:hidden;}
-.rr-prog-fill{height:100%;background:var(--acc);transition:width .5s linear;}
-
-/* ── CUE-TYPE FILTER ── */
-.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--bdr);}
-.filter-chip{
-  padding:4px 9px;border-radius:12px;border:1.5px solid transparent;
-  font-size:9px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .12s;
-  opacity:.5;font-family:'DM Sans',sans-serif;background:var(--s2);
-}
+/* Filterbalk */
+.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.filter-chip{padding:4px 10px;border-radius:12px;border:1.5px solid transparent;font-size:10px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .12s;opacity:.5;font-family:'DM Sans',sans-serif;background:var(--s2);}
 .filter-chip.sel{opacity:1;border-color:currentColor;background:transparent;}
-.filter-status{
-  display:none;align-items:center;gap:8px;font-size:10px;color:var(--warn);
-  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
-  border-radius:6px;padding:4px 9px;margin-top:2px;width:100%;
-}
-.filter-clear-btn{
-  background:transparent;border:1px solid var(--warn);color:var(--warn);
-  border-radius:5px;padding:2px 8px;font-size:9px;font-weight:700;cursor:pointer;
-  font-family:'DM Sans',sans-serif;margin-left:auto;
-}
+.filter-status{display:none;align-items:center;gap:8px;font-size:11px;color:var(--warn);background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:6px;padding:5px 10px;margin-top:2px;width:100%;}
+.filter-clear-btn{background:transparent;border:1px solid var(--warn);color:var(--warn);border-radius:5px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;margin-left:auto;}
 .filter-clear-btn:hover{background:rgba(245,166,35,.15);}
 
-/* ── CUE LIST ── */
-.cuelist-col{grid-column:1/-1;background:var(--bg);}
-@media(min-width:1100px){.cuelist-col{grid-column:4/5;grid-row:2/4;border-left:1px solid var(--bdr);}}
-.cue-row{
-  display:flex;align-items:center;gap:8px;padding:8px 14px;
-  border-bottom:1px solid var(--bdr);border-left:3px solid transparent;font-size:13px;
-}
-.cue-row.active  {background:rgba(var(--acc-rgb),.05);border-left-color:var(--acc);}
+/* Cue-lijst */
+.cue-list-wrap{flex:1;overflow-y:auto;}
+.cue-list-wrap::-webkit-scrollbar{width:4px;}
+.cue-list-wrap::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
+.list-header{display:grid;grid-template-columns:10px 42px 1fr 100px;padding:7px 16px;border-bottom:1px solid var(--bdr);background:var(--bg);position:sticky;top:0;z-index:5;gap:10px;align-items:center;}
+.list-header span{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+.list-header span:nth-child(4){text-align:right;}
+.region-row{display:flex;align-items:center;gap:10px;padding:5px 16px;background:var(--s1);border-bottom:1px solid var(--bdr);border-left:4px solid var(--muted);position:sticky;top:33px;z-index:4;}
+.rr-id{font-size:9px;font-weight:800;color:var(--muted);letter-spacing:1px;flex-shrink:0;}
+.rr-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--text);flex:1;}
+.rr-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim);flex-shrink:0;}
+.cue-row{display:grid;grid-template-columns:10px 42px 1fr 100px;align-items:center;padding:0 16px;min-height:52px;gap:10px;border-bottom:1px solid var(--bdr);border-left:3px solid transparent;position:relative;}
+.cue-row.active{background:var(--active);border-left-color:var(--acc);}
+.cue-row.active .cue-name{color:var(--acc);font-weight:700;}
 .cue-row.upcoming{background:rgba(245,166,35,.04);border-left-color:var(--warn);}
-.cue-row.past    {opacity:.3;}
-.cr-bar{width:4px;flex-shrink:0;border-radius:2px;overflow:hidden;display:flex;flex-direction:column;align-self:stretch;min-height:28px;}
-.cr-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.cr-name.active{color:var(--acc);font-weight:700;}
-.cr-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
-.empty-hint{padding:16px;font-size:12px;color:var(--muted);}
+.cue-row.past .cue-num,.cue-row.past .cue-name,.cue-row.past .cue-time{color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(90,90,120,.5);}
+.cue-type-bar{width:4px;height:36px;border-radius:2px;overflow:hidden;display:flex;flex-direction:column;}
+.cue-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+.cue-name-wrap{overflow:hidden;padding:7px 0;}
+.cue-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cue-note{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.cue-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--muted);gap:10px;text-align:center;}
+.empty-state .big{font-size:48px;margin-bottom:6px;}
 
 /* ── CONNECTING OVERLAY ── */
-.overlay{
-  position:fixed;inset:0;background:rgba(8,8,9,.92);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:16px;z-index:100;transition:opacity .4s;
-}
+.overlay{position:fixed;inset:0;background:rgba(8,8,9,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100;transition:opacity .4s;}
 :root[data-theme="light"] .overlay{background:rgba(238,241,245,.92);}
 .overlay.hidden{opacity:0;pointer-events:none;}
 .overlay-icon{font-size:44px;}
 .overlay-text{font-size:14px;color:var(--muted);text-align:center;line-height:1.8;}
 .overlay-url{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--acc);margin-top:4px;}
 
-/* ── REGIONS-ONLY VIEW (delen-view) — zelfde ontwerp als desktop-app ── */
-#regionView{
-  display:none;position:fixed;inset:0;z-index:500;background:var(--bg);
-  flex-direction:column;align-items:center;justify-content:center;gap:0;
-  font-family:'DM Sans',sans-serif;
-}
+/* ── REGIONS-ONLY VIEW (delen-view) — identiek aan desktop ── */
+#regionView{display:none;position:fixed;inset:0;z-index:500;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:0;font-family:'DM Sans',sans-serif;}
 #regionView.active{display:flex;}
-.rv-close{
-  position:absolute;top:16px;right:20px;
-  background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
-  color:var(--muted);font-size:12px;font-weight:700;letter-spacing:1px;
-  padding:8px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
-}
+.rv-close{position:absolute;top:16px;right:20px;background:var(--s2);border:1px solid var(--bdr);border-radius:8px;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:1px;padding:8px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
 .rv-close:hover{color:var(--text);border-color:var(--muted);}
 .rv-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);letter-spacing:1px;}
 .rv-clock-lbl{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:6px;}
-.rv-clock{
-  font-family:'Share Tech Mono',monospace;font-size:clamp(64px,10vw,120px);
-  color:var(--acc);letter-spacing:4px;line-height:1;text-shadow:0 0 40px rgba(var(--acc-rgb),.3);
-  transition:color .25s;margin-bottom:32px;
-}
+.rv-clock{font-family:'Share Tech Mono',monospace;font-size:clamp(64px,10vw,120px);color:var(--acc);letter-spacing:4px;line-height:1;text-shadow:0 0 40px rgba(var(--acc-rgb),.3);transition:color .25s;margin-bottom:32px;}
 .rv-clock.run{color:var(--clock-run);text-shadow:0 0 50px rgba(var(--acc-rgb),.5);}
 .rv-clock.pau{color:var(--warn);}
 .rv-divider{width:60px;height:2px;background:var(--bdr);border-radius:1px;margin:0 auto 32px;}
@@ -249,41 +180,60 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
 .rv-cue-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,28px);letter-spacing:1.5px;color:var(--text);line-height:1;text-align:center;max-width:70vw;}
 .rv-cue-countdown{font-family:'Share Tech Mono',monospace;font-size:clamp(20px,3vw,32px);color:var(--acc);letter-spacing:1px;line-height:1;margin-top:2px;}
 .rv-cue-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
+.rv-cue-note{margin-top:12px;max-width:min(680px,86vw);background:var(--s2);border:1px solid var(--bdr);border-left:3px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:clamp(13px,1.8vw,16px);line-height:1.5;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;}
+.rv-cue-note::before{content:'📝';margin-right:7px;opacity:.7;}
 .rv-cue-list{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:84vw;}
 .rv-cue-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:6px 12px;}
 .rv-cue-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .rv-cue-item.now{color:var(--text);border-color:var(--acc);}
 .rv-cue-item .rv-ci-time{opacity:.6;font-family:'Share Tech Mono',monospace;}
+
+/* ═══════ RESPONSIVE (identiek concept aan desktop) ═══════ */
+.mobile-nav{display:none;}
+:root[data-view="tablet"] body,:root[data-view="phone"] body{display:flex;flex-direction:column;height:100dvh;overflow:hidden;}
+:root[data-view="tablet"] .topbar,:root[data-view="phone"] .topbar{height:auto;flex-wrap:wrap;gap:8px 10px;padding:8px 12px;}
+:root[data-view="tablet"] .layout,:root[data-view="phone"] .layout{display:block;height:auto;flex:1;min-height:0;overflow:hidden;grid-template-columns:none;}
+:root[data-view="tablet"] #toggleLeft,:root[data-view="phone"] #toggleLeft{display:none !important;}
+:root[data-view="tablet"] .regions-panel,:root[data-view="phone"] .regions-panel,
+:root[data-view="tablet"] .center-panel,:root[data-view="phone"] .center-panel{height:100%;border:none;display:none;}
+:root[data-view="tablet"][data-section="delen"] .regions-panel,:root[data-view="phone"][data-section="delen"] .regions-panel,
+:root[data-view="tablet"][data-section="show"] .center-panel,:root[data-view="phone"][data-section="show"] .center-panel{display:flex;}
+:root[data-view="tablet"] .mobile-nav,:root[data-view="phone"] .mobile-nav{display:flex;flex-shrink:0;background:var(--s1);border-top:1px solid var(--bdr);}
+.mobile-nav button{flex:1;background:none;border:none;color:var(--muted);padding:9px 4px 8px;font-family:'DM Sans',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;border-top:2px solid transparent;}
+.mobile-nav button .mn-ic{font-size:18px;line-height:1;}
+.mobile-nav button.active{color:var(--acc);border-top-color:var(--acc);background:rgba(var(--acc-rgb),.06);}
+:root[data-view="phone"] #clock{font-size:clamp(40px,13vw,60px);}
+:root[data-view="phone"] .clock-hero{padding:14px 16px 12px;flex-wrap:wrap;gap:12px;}
+:root[data-view="phone"] .active-region-name{border-left:none;padding-left:0;flex-basis:100%;}
 </style>
 <script>
-  // Pas opgeslagen thema toe vóór render (voorkomt flits). Standaard = donker.
-  (function(){ try{ if(localStorage.getItem('cueRunnerTheme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+  // Thema + weergavemodus toepassen vóór render (voorkomt flits).
+  (function(){
+    try{ if(localStorage.getItem('cueRunnerTheme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){}
+    try{
+      var vm=localStorage.getItem('cueRunnerView')||'auto';
+      var v = vm!=='auto' ? vm : (window.innerWidth<=640?'phone':window.innerWidth<=1024?'tablet':'desktop');
+      document.documentElement.setAttribute('data-view', v);
+      document.documentElement.setAttribute('data-section','show');
+    }catch(e){ document.documentElement.setAttribute('data-view','desktop'); }
+  })();
 </script>
 </head>
 <body>
 
 <div class="overlay" id="overlay">
   <div class="overlay-icon">📡</div>
-  <div class="overlay-text">
-    <span data-i18n="connecting">Verbinding maken met de Cue Runner server…</span><br>
-    <span id="overlayUrl" class="overlay-url"></span>
-  </div>
+  <div class="overlay-text"><span data-i18n="connecting">Verbinding maken met de Cue Runner server…</span><br>
+    <span id="overlayUrl" class="overlay-url"></span></div>
 </div>
 
-<div class="offline-banner" id="offlineBanner" data-i18n="offline_banner">
-  ⚠ Verbinding verbroken — klok loopt lokaal door. Herverbinden…
-</div>
-
-<!-- REGIONS-ONLY VIEW (delen-view) -->
+<!-- DELEN-VIEW OVERLAY -->
 <div id="regionView">
   <button class="rv-close" onclick="toggleRegionView()" data-i18n="rv_close">✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span></button>
   <div class="rv-hint" data-i18n="rv_hint">Druk ESC om terug te keren · R om te wisselen</div>
-
   <div class="rv-clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
   <div class="rv-clock" id="rvClock">00:00:00</div>
-
   <div class="rv-divider"></div>
-
   <div class="rv-region-wrap">
     <div class="rv-region-lbl" data-i18n="lbl_current_part">Huidig deel</div>
     <div class="rv-region-bar" id="rvRegionBar"></div>
@@ -291,97 +241,92 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
     <div class="rv-region-times" id="rvRegionTimes"></div>
     <div class="rv-region-elapsed" id="rvRegionElapsed"></div>
   </div>
-
-  <div class="rv-progress-wrap">
-    <div class="rv-progress-fill" id="rvProgressFill"></div>
-  </div>
-
+  <div class="rv-progress-wrap"><div class="rv-progress-fill" id="rvProgressFill"></div></div>
   <div class="rv-next-wrap">
     <div class="rv-next-lbl" data-i18n="lbl_next_part">Volgend deel</div>
     <div class="rv-next-name" id="rvNextName">—</div>
     <div class="rv-countdown" id="rvCountdown">—</div>
     <div class="rv-no-next" id="rvNoNext" style="display:none" data-i18n="lbl_last_part">Laatste deel</div>
   </div>
-
   <div class="rv-cues-wrap">
     <div class="rv-next-lbl" data-i18n="lbl_next_cue">Volgende cue</div>
     <div class="rv-cue-name" id="rvCueName">—</div>
     <div class="rv-cue-countdown" id="rvCueCountdown">—</div>
+    <div class="rv-cue-note" id="rvCueNote" style="display:none"></div>
     <div class="rv-cue-list" id="rvCueList"></div>
   </div>
 </div>
 
+<!-- TOP BAR -->
 <div class="topbar">
   <div class="logo">CUE RUNNER</div>
-  <div class="conn-group">
-    <div class="conn-dot" id="connDot"></div>
-    <div class="conn-label" id="connLabel" data-i18n="conn_connecting">Verbinden…</div>
-    <span class="badge-viewer" data-i18n="viewer_badge">VIEWER — alleen lezen</span>
+  <div class="status-pill">
+    <div class="dot" id="connDot"></div>
+    <span id="connLabel" data-i18n="conn_connecting">Verbinden…</span>
   </div>
+  <span class="badge-viewer" data-i18n="viewer_badge">VIEWER — alleen lezen</span>
   <div class="topbar-right">
-    <button class="tb-btn" id="toggleRegionViewBtn" onclick="toggleRegionView()" data-i18n-title="tt_partsview" title="Regions-only weergave (R)">⬛</button>
-    <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal">
-      <option value="nl">NL</option>
-      <option value="en">EN</option>
-      <option value="fr">FR</option>
-      <option value="es">ES</option>
+    <button class="panel-toggle" id="toggleLeft" onclick="toggleRegions()" data-i18n-title="tt_toggle_left" title="Verberg/toon Delen paneel">◀ Delen</button>
+    <button class="panel-toggle" id="toggleRegionViewBtn" onclick="toggleRegionView()" data-i18n-title="tt_partsview" title="Regions-only weergave (R)">⬛ Delen-view</button>
+    <select class="tb-btn" id="viewSelect" onchange="setViewMode(this.value)" data-i18n-title="tt_view" title="Weergave" style="padding:6px 8px;">
+      <option value="auto" data-i18n="view_auto">Auto</option>
+      <option value="desktop" data-i18n="view_desktop">🖥 Desktop</option>
+      <option value="tablet" data-i18n="view_tablet">📋 Tablet</option>
+      <option value="phone" data-i18n="view_phone">📱 Telefoon</option>
+    </select>
+    <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal" style="padding:6px 8px;">
+      <option value="nl">NL</option><option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
     </select>
     <button class="tb-btn" id="themeToggle" onclick="toggleTheme()" title="Licht / donker">🌙</button>
   </div>
 </div>
 
-<div class="main">
-  <div class="clock-section">
-    <div class="clock-group">
-      <div class="clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
-      <div id="clock">00:00:00</div>
-    </div>
-    <div class="status-badge" id="statusBadge">GESTOPT</div>
-    <div class="region-display">
-      <div class="rd-label" data-i18n="lbl_current_part">Huidig deel</div>
-      <div class="rd-name" id="rdName">—</div>
-      <div class="rd-next" id="rdNext"></div>
-    </div>
+<div class="offline-banner" id="offlineBanner" data-i18n="offline_banner">⚠ Verbinding verbroken — klok loopt lokaal door. Herverbinden…</div>
+
+<!-- LAYOUT -->
+<div class="layout" id="layout">
+  <div class="regions-panel" id="leftPanel">
+    <div class="panel-header"><div class="panel-title" data-i18n="parts_title">Delen (Regions)</div><div id="regionCount" style="font-size:10px;color:var(--muted)"></div></div>
+    <div class="regions-list" id="regionsList"></div>
   </div>
-  <div class="cue-cards">
-    <div class="cue-card">
-      <div class="cc-label" data-i18n="cc_active_lbl">Nu actief</div>
-      <div class="cc-type"><div class="cc-dot" id="activeDot"></div></div>
-      <div class="cc-name active" id="activeName">—</div>
-      <div class="cc-time" id="activeTime"></div>
-    </div>
-    <div class="cue-card">
-      <div class="cc-label" data-i18n="ns_next">Volgend</div>
-      <div class="cc-type"><div class="cc-dot" id="nextDot"></div></div>
-      <div class="cc-name next" id="nextName">—</div>
-      <div class="cc-time" id="nextTime"></div>
-      <div class="cc-countdown" id="countdown">—</div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-    </div>
-  </div>
-  <div class="regions-col">
-    <div class="panel-hdr"><div class="panel-hdr-title" data-i18n="panel_parts">Delen</div></div>
-    <div id="regionsList"></div>
-  </div>
-  <div class="cuelist-col">
-    <div class="panel-hdr"><div class="panel-hdr-title" data-i18n="panel_cues">Cuelijst</div></div>
-    <div class="filter-bar">
-      <div id="filterChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-      <div class="filter-status" id="filterStatus">
-        <span id="filterStatusText"></span>
-        <button class="filter-clear-btn" onclick="clearTypeFilter()" data-i18n="filter_clear">✕ Wissen</button>
+  <div class="center-panel">
+    <div class="clock-hero">
+      <div class="clock-main">
+        <div class="clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
+        <div id="clock">00:00:00</div>
+        <div class="play-status" id="playStatus" data-i18n="status_stopped">GESTOPT</div>
+      </div>
+      <div class="active-region-name">
+        <div class="arn-label" data-i18n="lbl_current_part">Huidig deel</div>
+        <div class="arn-name" id="arnName">—</div>
+        <div class="arn-next" id="arnNext"></div>
       </div>
     </div>
-    <div id="cueList"></div>
+    <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="next-strip">
+      <div class="ns-label" data-i18n="ns_next">Volgend</div>
+      <div class="ns-dot" id="nsDot"></div>
+      <div class="ns-info"><div class="ns-name" id="nsName">—</div><div class="ns-time" id="nsTime">—</div></div>
+      <div class="ns-countdown" id="nsCountdown">—</div>
+    </div>
+    <div class="filter-bar">
+      <div id="filterChips" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div class="filter-status" id="filterStatus"><span id="filterStatusText"></span><button class="filter-clear-btn" onclick="clearTypeFilter()" data-i18n="filter_clear">✕ Wissen</button></div>
+    </div>
+    <div class="cue-list-wrap">
+      <div class="list-header"><span></span><span>#</span><span data-i18n="list_cue">Cue</span><span data-i18n="list_time">Tijd</span></div>
+      <div id="cueList"></div>
+    </div>
   </div>
 </div>
 
+<nav class="mobile-nav" id="mobileNav">
+  <button data-section="show" onclick="setSection('show')"><span class="mn-ic">🎛</span><span data-i18n="nav_show">Show</span></button>
+  <button data-section="delen" onclick="setSection('delen')"><span class="mn-ic">🗂</span><span data-i18n="nav_parts">Delen</span></button>
+</nav>
+
 <script>
-/* ══════════════════════════════════════
-   I18N — vertaalsysteem (NL/EN/FR/ES)
-   Zelfde sleutels/waarden als cue-runner-desktop.html waar het concept
-   overlapt, voor een consistente ervaring tussen master en slave.
-══════════════════════════════════════ */
+/* ══════ I18N ══════ */
 const I18N_LANGS=['nl','en','fr','es'];
 const T={
   connecting:{nl:'Verbinding maken met de Cue Runner server…',en:'Connecting to the Cue Runner server…',fr:'Connexion au serveur Cue Runner…',es:'Conectando con el servidor Cue Runner…'},
@@ -391,10 +336,19 @@ const T={
   conn_offline:{nl:'Offline — herverbinden…',en:'Offline — reconnecting…',fr:'Hors ligne — reconnexion…',es:'Sin conexión — reconectando…'},
   conn_error:{nl:'Verbindingsfout',en:'Connection error',fr:'Erreur de connexion',es:'Error de conexión'},
   viewer_badge:{nl:'VIEWER — alleen lezen',en:'VIEWER — read only',fr:'VIEWER — lecture seule',es:'VIEWER — solo lectura'},
+  tt_toggle_left:{nl:'Verberg/toon Delen paneel',en:'Hide/show Parts panel',fr:'Masquer/afficher le panneau Parties',es:'Ocultar/mostrar panel de Partes'},
   tt_partsview:{nl:'Regions-only weergave (R)',en:'Regions-only view (R)',fr:'Affichage parties uniquement (R)',es:'Vista solo de partes (R)'},
   tt_lang:{nl:'Taal',en:'Language',fr:'Langue',es:'Idioma'},
+  tt_view:{nl:'Weergave (auto / desktop / tablet / telefoon)',en:'View (auto / desktop / tablet / phone)',fr:'Affichage (auto / bureau / tablette / téléphone)',es:'Vista (auto / escritorio / tablet / teléfono)'},
+  view_auto:{nl:'Auto',en:'Auto',fr:'Auto',es:'Auto'},
+  view_desktop:{nl:'🖥 Desktop',en:'🖥 Desktop',fr:'🖥 Bureau',es:'🖥 Escritorio'},
+  view_tablet:{nl:'📋 Tablet',en:'📋 Tablet',fr:'📋 Tablette',es:'📋 Tablet'},
+  view_phone:{nl:'📱 Telefoon',en:'📱 Phone',fr:'📱 Téléphone',es:'📱 Teléfono'},
   theme_to_dark:{nl:'Schakel naar donker',en:'Switch to dark',fr:'Passer en sombre',es:'Cambiar a oscuro'},
   theme_to_light:{nl:'Schakel naar licht',en:'Switch to light',fr:'Passer en clair',es:'Cambiar a claro'},
+  nav_show:{nl:'Show',en:'Show',fr:'Spectacle',es:'Show'},
+  nav_parts:{nl:'Delen',en:'Parts',fr:'Parties',es:'Partes'},
+  parts_title:{nl:'Delen (Regions)',en:'Parts (Regions)',fr:'Parties (Regions)',es:'Partes (Regions)'},
   lbl_timecode:{nl:'TIMECODE',en:'TIMECODE',fr:'TIMECODE',es:'TIMECODE'},
   status_stopped:{nl:'GESTOPT',en:'STOPPED',fr:'ARRÊTÉ',es:'DETENIDO'},
   status_live:{nl:'LIVE',en:'LIVE',fr:'EN DIRECT',es:'EN VIVO'},
@@ -408,13 +362,13 @@ const T={
   rv_hint:{nl:'Druk ESC om terug te keren · R om te wisselen',en:'Press ESC to return · R to toggle',fr:'Appuyez sur ÉCHAP pour revenir · R pour basculer',es:'Pulsa ESC para volver · R para alternar'},
   rv_in_part:{nl:'in dit deel',en:'in this part',fr:'dans cette partie',es:'en esta parte'},
   countdown_now:{nl:'NU',en:'NOW',fr:'MAINT.',es:'AHORA'},
-  cc_active_lbl:{nl:'Nu actief',en:'Now active',fr:'Actif maintenant',es:'Activo ahora'},
   ns_next:{nl:'Volgend',en:'Next',fr:'Suivant',es:'Siguiente'},
   ns_end_show:{nl:'Einde show',en:'End of show',fr:'Fin du spectacle',es:'Fin del espectáculo'},
-  panel_parts:{nl:'Delen',en:'Parts',fr:'Parties',es:'Partes'},
-  panel_cues:{nl:'Cuelijst',en:'Cue list',fr:'Liste des cues',es:'Lista de cues'},
+  list_cue:{nl:'Cue',en:'Cue',fr:'Cue',es:'Cue'},
+  list_time:{nl:'Tijd',en:'Time',fr:'Temps',es:'Tiempo'},
   no_parts:{nl:'Geen delen',en:'No parts',fr:'Aucune partie',es:'Sin partes'},
   no_cues:{nl:'Geen cues',en:'No cues',fr:'Aucun cue',es:'Sin cues'},
+  region_count:{nl:'{n} delen',en:'{n} parts',fr:'{n} parties',es:'{n} partes'},
   filter_clear:{nl:'✕ Wissen',en:'✕ Clear',fr:'✕ Effacer',es:'✕ Borrar'},
   filter_status:{nl:'⚠ Filter actief — {shown} van {total} cues getoond',en:'⚠ Filter active — showing {shown} of {total} cues',fr:'⚠ Filtre actif — {shown} cues affichés sur {total}',es:'⚠ Filtro activo — mostrando {shown} de {total} cues'},
   filter_no_match:{nl:'Geen cues voldoen aan het filter',en:'No cues match the filter',fr:'Aucun cue ne correspond au filtre',es:'Ningún cue coincide con el filtro'},
@@ -436,454 +390,228 @@ function applyTranslations(){
 }
 function setLang(lang){
   if(!I18N_LANGS.includes(lang)) lang='nl';
-  LANG=lang;
-  document.documentElement.setAttribute('lang',lang);
+  LANG=lang; document.documentElement.setAttribute('lang',lang);
   try{ localStorage.setItem('cueRunnerLang',lang); }catch(e){}
-  applyTranslations();
-  applyThemeIcon();
-  buildFilterChips();
-  if(lastState) renderFull(lastState, localElapsed);
+  applyTranslations(); applyThemeIcon(); buildFilterChips();
   const sel=$('langSelect'); if(sel) sel.value=lang;
+  if(lastState) renderFull(lastState, localElapsed);
 }
-function initLang(){
-  let saved='nl';
-  try{ saved=localStorage.getItem('cueRunnerLang')||'nl'; }catch(e){}
-  setLang(saved);
-}
+function initLang(){ let s='nl'; try{ s=localStorage.getItem('cueRunnerLang')||'nl'; }catch(e){} setLang(s); }
 
-/* ══════════════════════════════════════
-   THEMA (licht / donker)
-══════════════════════════════════════ */
+/* ══════ THEMA ══════ */
 function currentTheme(){ return document.documentElement.getAttribute('data-theme')==='light'?'light':'dark'; }
-function applyThemeIcon(){
-  const b=$('themeToggle'); if(!b) return;
-  const light=currentTheme()==='light';
-  b.textContent=light?'☀️':'🌙';
-  b.title=light?t('theme_to_dark'):t('theme_to_light');
-}
-function toggleTheme(){
-  const next=currentTheme()==='light'?'dark':'light';
-  if(next==='light') document.documentElement.setAttribute('data-theme','light');
-  else document.documentElement.removeAttribute('data-theme');
-  try{ localStorage.setItem('cueRunnerTheme', next); }catch(e){}
-  applyThemeIcon();
-}
+function applyThemeIcon(){ const b=$('themeToggle'); if(!b) return; const l=currentTheme()==='light'; b.textContent=l?'☀️':'🌙'; b.title=l?t('theme_to_dark'):t('theme_to_light'); }
+function toggleTheme(){ const n=currentTheme()==='light'?'dark':'light'; if(n==='light') document.documentElement.setAttribute('data-theme','light'); else document.documentElement.removeAttribute('data-theme'); try{ localStorage.setItem('cueRunnerTheme',n); }catch(e){} applyThemeIcon(); }
 
-/* ══════════════════════════════════════
-   CUE-TYPES (zelfde 8 types + kleuren als desktop-app)
-══════════════════════════════════════ */
+/* ══════ WEERGAVEMODUS ══════ */
+let viewMode='auto';
+try{ viewMode=localStorage.getItem('cueRunnerView')||'auto'; }catch(e){}
+function resolveView(){ if(viewMode==='desktop'||viewMode==='tablet'||viewMode==='phone') return viewMode; const w=window.innerWidth; return w<=640?'phone':w<=1024?'tablet':'desktop'; }
+function applyView(){ document.documentElement.setAttribute('data-view', resolveView()); refreshMobileNav(); }
+function setViewMode(m){ viewMode=(['auto','desktop','tablet','phone'].includes(m))?m:'auto'; try{ localStorage.setItem('cueRunnerView',viewMode); }catch(e){} const s=$('viewSelect'); if(s) s.value=viewMode; applyView(); }
+function setSection(sec){ if(!['show','delen'].includes(sec)) sec='show'; document.documentElement.setAttribute('data-section',sec); refreshMobileNav(); }
+function currentSection(){ return document.documentElement.getAttribute('data-section')||'show'; }
+function refreshMobileNav(){ const cur=currentSection(); document.querySelectorAll('#mobileNav button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-section')===cur)); }
+let _vrt=null;
+window.addEventListener('resize', ()=>{ if(viewMode!=='auto') return; clearTimeout(_vrt); _vrt=setTimeout(applyView,120); });
+
+/* ══════ DELEN-PANEEL INKLAPPEN ══════ */
+let leftCollapsed=false;
+function toggleRegions(){ leftCollapsed=!leftCollapsed; $('layout').classList.toggle('left-collapsed', leftCollapsed); $('toggleLeft').classList.toggle('collapsed', leftCollapsed); }
+
+/* ══════ CUE-TYPES + FILTER ══════ */
 const TYPE_ORDER=['licht','spot','kraan','kaboem','truss','dir','sound','video'];
 const TYPE_COLORS={licht:'#fcd34d',spot:'#fb7185',kraan:'#7dd8fc',kaboem:'#f97316',truss:'#94a3b8',dir:'#c4affe',sound:'#6ee7b7',video:'#818cf8',none:'#5a5a78'};
 const typeColor=types=>TYPE_COLORS[(types&&types[0])||'none'];
 function renderTypeBar(types){
-  if(!types||!types.length) return `<div class="cr-bar" style="background:${TYPE_COLORS.none}"></div>`;
-  if(types.length===1) return `<div class="cr-bar" style="background:${TYPE_COLORS[types[0]]}"></div>`;
-  const segs=types.map(tp=>`<div style="flex:1;background:${TYPE_COLORS[tp]};"></div>`).join('');
-  return `<div class="cr-bar">${segs}</div>`;
+  if(!types||!types.length) return `<div class="cue-type-bar" style="background:${TYPE_COLORS.none}"></div>`;
+  if(types.length===1) return `<div class="cue-type-bar" style="background:${TYPE_COLORS[types[0]]}"></div>`;
+  return `<div class="cue-type-bar">${types.map(tp=>`<div style="flex:1;background:${TYPE_COLORS[tp]};"></div>`).join('')}</div>`;
 }
-
-/* ══════════════════════════════════════
-   CUE-TYPE FILTER — zelfde gedrag als desktop:
-   volledig verbergen bij match, wissen-knop, werkt altijd (geen "besturen"-concept in de viewer)
-══════════════════════════════════════ */
 let activeFilter=new Set();
-function buildFilterChips(){
-  const el=$('filterChips'); if(!el) return;
-  el.innerHTML=TYPE_ORDER.map(tp=>
-    `<button class="filter-chip ${activeFilter.has(tp)?'sel':''}" style="color:${TYPE_COLORS[tp]}" onclick="toggleTypeFilter('${tp}')">${t('type_'+tp)}</button>`
-  ).join('');
-}
-function toggleTypeFilter(tp){
-  if(activeFilter.has(tp)) activeFilter.delete(tp); else activeFilter.add(tp);
-  buildFilterChips();
-  if(lastState) renderCues(lastState, localElapsed);
-}
-function clearTypeFilter(){
-  activeFilter.clear();
-  buildFilterChips();
-  if(lastState) renderCues(lastState, localElapsed);
-}
-function updateFilterStatus(shown,total){
-  const bar=$('filterStatus'); if(!bar) return;
-  if(activeFilter.size===0){ bar.style.display='none'; return; }
-  bar.style.display='flex';
-  $('filterStatusText').textContent=tf('filter_status',{shown,total});
-}
+function buildFilterChips(){ const el=$('filterChips'); if(!el) return; el.innerHTML=TYPE_ORDER.map(tp=>`<button class="filter-chip ${activeFilter.has(tp)?'sel':''}" style="color:${TYPE_COLORS[tp]}" onclick="toggleTypeFilter('${tp}')">${t('type_'+tp)}</button>`).join(''); }
+function toggleTypeFilter(tp){ if(activeFilter.has(tp)) activeFilter.delete(tp); else activeFilter.add(tp); buildFilterChips(); if(lastState) renderFull(lastState, localElapsed); }
+function clearTypeFilter(){ activeFilter.clear(); buildFilterChips(); if(lastState) renderFull(lastState, localElapsed); }
+function updateFilterStatus(shown,total){ const bar=$('filterStatus'); if(!bar) return; if(activeFilter.size===0){ bar.style.display='none'; return; } bar.style.display='flex'; $('filterStatusText').textContent=tf('filter_status',{shown,total}); }
+function cueMatchesFilter(c){ return activeFilter.size===0 || (c.types && c.types.some(tp=>activeFilter.has(tp))); }
+// Volgende cue (index in lastState.cues) die aan het filter voldoet, obv lokale klok.
+function nextIdxFiltered(tm){ const cs=(lastState&&lastState.cues)||[]; for(let i=0;i<cs.length;i++){ if(tm<cs[i].time && cueMatchesFilter(cs[i])) return i; } return -1; }
 
-/* ══════════════════════════════════════
-   HELPERS
-══════════════════════════════════════ */
+/* ══════ HELPERS ══════ */
 const pad=n=>String(n).padStart(2,'0');
 const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
-// Frames alleen op de grote klokken (hero + delen-view) — fps komt van de master via broadcast.
-const fmtFrames=s=>{
-  const fps=(lastState&&lastState.fps)||25;
-  return `${fmt(s)}<span class="clock-frames">:${pad(Math.floor((s%1)*fps))}</span>`;
-};
+const fmtFrames=s=>{ const fps=(lastState&&lastState.fps)||25; return `${fmt(s)}<span class="clock-frames">:${pad(Math.floor((s%1)*fps))}</span>`; };
 const $=id=>document.getElementById(id);
-function findNextCueIdx(cues,tm){
-  for(let i=0;i<cues.length;i++){ if(tm<cues[i].time) return i; }
-  return -1;
-}
 
-/* ══════════════════════════════════════
-   STATE
-══════════════════════════════════════ */
+/* ══════ STATE ══════ */
 let ws=null, pingIv=null;
-let lastState=null;           // last received full state
-let localElapsed=0;           // local clock that keeps running offline
-let localRunning=false;       // is the show playing (locally known)
-let localStartedAt=null;      // performance.now() when show started locally
-let connectedOnce=false;      // have we ever successfully connected?
-let isOnline=false;
-let regionViewActive=false;   // moet vóór de klok-loop staan (die leest deze var synchroon bij de eerste tick)
+let lastState=null, localElapsed=0, localRunning=false, localStartedAt=null;
+let connectedOnce=false, isOnline=false;
+let regionViewActive=false;
 
-/* ══════════════════════════════════════
-   DETERMINE SERVER URL AUTOMATICALLY
-   Priority: 1) ?server= param, 2) same host (wss://thishost), 3) manual input
-══════════════════════════════════════ */
-function resolveServerUrl(){
-  const qp=new URLSearchParams(location.search).get('server');
-  if(qp) return qp;
-  const proto=location.protocol==='https:'?'wss:':'ws:';
-  return `${proto}//${location.host}`;
-}
-
+/* ══════ SERVER URL ══════ */
+function resolveServerUrl(){ const qp=new URLSearchParams(location.search).get('server'); if(qp) return qp; const proto=location.protocol==='https:'?'wss:':'ws:'; return `${proto}//${location.host}`; }
 const SERVER_URL=resolveServerUrl();
 $('overlayUrl').textContent=SERVER_URL;
 
-/* ══════════════════════════════════════
-   CONNECTION
-══════════════════════════════════════ */
+/* ══════ CONNECTIE ══════ */
 function connect(){
   if(ws){try{ws.close();}catch(e){}}
   if(pingIv){clearInterval(pingIv);pingIv=null;}
-
-  try{ ws=new WebSocket(SERVER_URL); }
-  catch(e){ scheduleReconnect(); return; }
-
+  try{ ws=new WebSocket(SERVER_URL); }catch(e){ scheduleReconnect(); return; }
   ws.onopen=()=>{
-    isOnline=true;
-    setConn('live');
-    if(connectedOnce){
-      $('offlineBanner').classList.remove('show');
-      $('clock').classList.remove('offline');
-    }
-    connectedOnce=true;
-    $('overlay').classList.add('hidden');
-
-    pingIv=setInterval(()=>{
-      if(ws&&ws.readyState===1) try{ws.send('__ping__');}catch(e){}
-    },20000);
+    isOnline=true; setConn('live');
+    if(connectedOnce){ $('offlineBanner').classList.remove('show'); $('clock').classList.remove('offline'); }
+    connectedOnce=true; $('overlay').classList.add('hidden');
+    pingIv=setInterval(()=>{ if(ws&&ws.readyState===1) try{ws.send('__ping__');}catch(e){} },20000);
   };
-
   ws.onclose=()=>{
-    isOnline=false;
-    setConn('offline');
+    isOnline=false; setConn('offline');
     if(pingIv){clearInterval(pingIv);pingIv=null;}
-    if(connectedOnce && localRunning){
-      $('offlineBanner').classList.add('show');
-      $('clock').classList.add('offline');
-    } else if(!connectedOnce){
-      $('overlay').classList.remove('hidden');
-    }
+    if(connectedOnce && localRunning){ $('offlineBanner').classList.add('show'); $('clock').classList.add('offline'); }
+    else if(!connectedOnce){ $('overlay').classList.remove('hidden'); }
     scheduleReconnect();
   };
-
   ws.onerror=()=>{ isOnline=false; setConn('error'); };
-
   ws.onmessage=e=>{
     if(e.data==='__pong__') return;
-    try{
-      const d=JSON.parse(e.data);
-      if(d.disconnected){
-        setConn('live');
-        $('statusBadge').textContent=t('app_offline');
-        $('statusBadge').className='status-badge';
-        return;
-      }
+    try{ const d=JSON.parse(e.data);
+      if(d.disconnected){ setConn('live'); $('playStatus').textContent=t('app_offline'); $('playStatus').className='play-status'; return; }
       applyServerState(d);
     }catch(err){}
   };
 }
-
 let reconnectTimer=null;
-function scheduleReconnect(){
-  if(reconnectTimer)clearTimeout(reconnectTimer);
-  reconnectTimer=setTimeout(connect,3000);
-}
+function scheduleReconnect(){ if(reconnectTimer)clearTimeout(reconnectTimer); reconnectTimer=setTimeout(connect,3000); }
+function setConn(s){ const dot=$('connDot'),lbl=$('connLabel'); dot.className='dot'+(s==='live'?' live':s==='offline'?' offline':s==='error'?' error':''); lbl.textContent=s==='live'?t('conn_connected'):s==='offline'?t('conn_offline'):s==='error'?t('conn_error'):t('conn_connecting'); }
 
-function setConn(s){
-  const dot=$('connDot'),lbl=$('connLabel');
-  dot.className='conn-dot'+(s==='live'?' live':s==='offline'?' offline':s==='error'?' error':'');
-  lbl.textContent=s==='live'?t('conn_connected'):s==='offline'?t('conn_offline'):s==='error'?t('conn_error'):t('conn_connecting');
-}
-
-/* ══════════════════════════════════════
-   APPLY SERVER STATE
-══════════════════════════════════════ */
+/* ══════ STATE TOEPASSEN ══════ */
 function applyServerState(s){
-  lastState=s;
-  localElapsed=s.t||0;
-  localRunning=s.running||false;
-  if(localRunning){
-    localStartedAt=performance.now()-localElapsed*1000;
-  }
-  $('offlineBanner').classList.remove('show');
-  $('clock').classList.remove('offline');
+  lastState=s; localElapsed=s.t||0; localRunning=s.running||false;
+  if(localRunning) localStartedAt=performance.now()-localElapsed*1000;
+  $('offlineBanner').classList.remove('show'); $('clock').classList.remove('offline');
   renderFull(s, localElapsed);
 }
 
-/* ══════════════════════════════════════
-   LOCAL CLOCK LOOP — runs even offline
-══════════════════════════════════════ */
+/* ══════ LOKALE KLOK-LOOP (loopt ook offline door) ══════ */
 (function loop(){
   let tm=localElapsed;
-  if(localRunning && localStartedAt!==null){
-    tm=(performance.now()-localStartedAt)/1000;
-    localElapsed=tm;
-  }
-
+  if(localRunning && localStartedAt!==null){ tm=(performance.now()-localStartedAt)/1000; localElapsed=tm; }
   $('clock').innerHTML=fmtFrames(tm);
-
-  if(lastState && lastState.nextCue){
-    const diff=lastState.nextCue.time-tm;
-    const cdEl=$('countdown');
-    if(diff>0){
-      const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
-      cdEl.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
-      cdEl.className='cc-countdown'+(diff<=5?' hot':'');
-    } else {
-      cdEl.textContent=t('countdown_now');
-      cdEl.className='cc-countdown hot';
-    }
-    const prev=lastState.prevCueTime||0;
-    const span=lastState.nextCue.time-prev;
-    const done=tm-prev;
-    const pct=Math.min(100,Math.max(0,span>0?done/span*100:0));
-    $('progressFill').style.width=pct+'%';
-    $('progressFill').style.background=diff<=10?'var(--danger)':'var(--warn)';
-  }
-
+  updateNextStrip(tm);
   if(regionViewActive) updateRegionView(tm);
-
   requestAnimationFrame(loop);
 })();
 
-/* ══════════════════════════════════════
-   RENDER
-══════════════════════════════════════ */
+/* ══════ RENDER ══════ */
 function renderFull(s, tm){
-  const clk=$('clock');
-  clk.className=s.running?'run':'pau';
-
-  const sb=$('statusBadge');
-  sb.textContent=s.running?t('status_live'):t('status_paused');
-  sb.className='status-badge'+(s.running?' live':' pau');
-  if(!s.running && tm===0 && !s.activeCue) sb.textContent=t('status_stopped');
-
-  if(s.activeCue){
-    $('activeName').textContent=s.activeCue.name;
-    $('activeDot').style.background=typeColor(s.activeCue.types);
-  } else {
-    $('activeName').textContent='—';
-    $('activeDot').style.background=TYPE_COLORS.none;
-  }
-
-  if(s.nextCue){
-    $('nextName').textContent=s.nextCue.name;
-    $('nextTime').textContent=fmt(s.nextCue.time);
-    $('nextDot').style.background=typeColor(s.nextCue.types);
-  } else {
-    $('nextName').textContent=t('ns_end_show');
-    $('nextTime').textContent='';
-    $('nextDot').style.background=TYPE_COLORS.none;
-    $('countdown').textContent='—';
-  }
-
+  const clk=$('clock'); clk.className=s.running?'run':'pau';
+  const ps=$('playStatus');
+  ps.textContent=s.running?t('status_live'):(tm>0||s.activeCue)?t('status_paused'):t('status_stopped');
+  ps.className='play-status'+(s.running?' live':(tm>0||s.activeCue)?' pau':'');
+  // Huidig deel
   const regs=s.regions||[];
   if(s.region){
-    $('rdName').textContent=s.region.name;
-    const idx=regs.findIndex(r=>r.id===s.region.id);
-    const nxt=regs[idx+1];
-    if(nxt){
-      const diff=nxt.start-tm;
-      const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
-      $('rdNext').textContent=`→ ${nxt.name}  ${mm}:${pad(ss)}`;
-    } else $('rdNext').textContent=t('lbl_last_part');
-  } else {
-    $('rdName').textContent='—';
-    $('rdNext').textContent='';
-  }
-
+    $('arnName').textContent=s.region.name;
+    const idx=regs.findIndex(r=>r.id===s.region.id); const nxt=regs[idx+1];
+    if(nxt){ const diff=nxt.start-tm; const mm=Math.floor(diff/60),ss=Math.floor(diff%60); $('arnNext').textContent=`→ ${nxt.name}  ${mm}:${pad(ss)}`; }
+    else $('arnNext').textContent=t('lbl_last_part');
+  } else { $('arnName').textContent='—'; $('arnNext').textContent=''; }
+  updateNextStrip(tm);
   renderRegions(s,tm);
   renderCues(s,tm);
 }
 
+// Volgend-strip — filter-aware: telt af naar de volgende cue die matcht.
+function updateNextStrip(tm){
+  if(!lastState){ return; }
+  const cs=lastState.cues||[];
+  const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),dE=$('nsDot');
+  const ni=nextIdxFiltered(tm);
+  if(ni===-1){ nE.textContent=t('ns_end_show'); tE.textContent='—'; cE.textContent='—'; cE.className='ns-countdown'; fE.style.width='100%'; fE.style.background='var(--muted)'; dE.style.background='var(--muted)'; return; }
+  const next=cs[ni];
+  nE.textContent=next.name; tE.textContent=fmt(next.time); dE.style.background=typeColor(next.types);
+  const diff=next.time-tm; const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
+  cE.textContent=diff>0?(mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`):t('countdown_now');
+  cE.className='ns-countdown'+(diff<=5?' hot':'');
+  const prev=ni>0?cs[ni-1].time:0; const pct=Math.min(100,Math.max(0,(tm-prev)/(next.time-prev)*100));
+  fE.style.width=pct+'%'; fE.style.background=diff<=10?'var(--danger)':'var(--warn)';
+}
+
 function renderRegions(s,tm){
-  const el=$('regionsList');
-  const regs=s.regions||[];
-  if(!regs.length){el.innerHTML=`<div class="empty-hint">${t('no_parts')}</div>`;return;}
+  const el=$('regionsList'); const regs=s.regions||[];
+  $('regionCount').textContent=regs.length?tf('region_count',{n:regs.length}):'';
+  if(!regs.length){ el.innerHTML=`<div class="empty-state" style="padding:40px 20px;font-size:12px;"><div>${t('no_parts')}</div></div>`; return; }
   el.innerHTML=regs.map(r=>{
-    const isAct=s.region&&s.region.id===r.id;
-    const isPast=tm>=r.end;
-    const bc=r.color||'var(--muted)';
-    let pct=0;
-    if(isAct) pct=Math.min(100,Math.max(0,(tm-r.start)/(r.end-r.start)*100));
-    else if(isPast) pct=100;
-    return `<div class="region-row ${isAct?'active':''} ${isPast&&!isAct?'past':''}">
-      <div class="rr-bar" style="background:${bc}"></div>
-      <div class="rr-body">
-        <div class="rr-name ${isAct?'active':''}">${r.name}</div>
-        <div class="rr-time">${fmt(r.start)} – ${fmt(r.end)}</div>
-        <div class="rr-prog"><div class="rr-prog-fill" style="width:${pct}%"></div></div>
-      </div>
+    const isAct=s.region&&s.region.id===r.id; const isPast=tm>=r.end; const bc=r.color||'var(--muted)';
+    let pct=0; if(isAct) pct=Math.min(100,Math.max(0,(tm-r.start)/(r.end-r.start)*100)); else if(isPast) pct=100;
+    return `<div class="region-item ${isAct?'active':''} ${isPast&&!isAct?'past':''}">
+      <div class="ri-bar" style="background:${bc}"></div>
+      <div class="ri-body"><div class="ri-id">${r.id}</div><div class="ri-name">${r.name}</div>
+      <div class="ri-time">${fmt(r.start)} – ${fmt(r.end)}</div>
+      <div class="ri-progress"><div class="ri-progress-fill" style="width:${pct}%"></div></div></div>
     </div>`;
   }).join('');
 }
 
 function renderCues(s,tm){
-  const el=$('cueList');
-  const cues=s.cues||[];
-  if(!cues.length){
-    el.innerHTML=`<div class="empty-hint">${t('no_cues')}</div>`;
-    updateFilterStatus(0,0);
-    return;
-  }
-  const visibleIdx=cues.map((c,i)=>i).filter(i=>{
-    const c=cues[i];
-    return activeFilter.size===0 || (c.types&&c.types.some(tp=>activeFilter.has(tp)));
-  });
+  const el=$('cueList'); const cues=s.cues||[];
+  if(!cues.length){ el.innerHTML=`<div class="empty-state"><div class="big">🎭</div><div>${t('no_cues')}</div></div>`; updateFilterStatus(0,0); return; }
+  const ni=nextIdxFiltered(tm);
+  const visibleIdx=cues.map((c,i)=>i).filter(i=>cueMatchesFilter(cues[i]));
   updateFilterStatus(visibleIdx.length,cues.length);
-  if(!visibleIdx.length){
-    el.innerHTML=`<div class="empty-hint">${t('filter_no_match')}</div>`;
-    return;
-  }
-
+  if(!visibleIdx.length){ el.innerHTML=`<div class="empty-state"><div class="big">🔍</div><div>${t('filter_no_match')}</div></div>`; return; }
   let html='',lastRid='__';
   for(const i of visibleIdx){
     const c=cues[i];
-    if(c.regionId!==lastRid){
-      lastRid=c.regionId;
-      const r=(s.regions||[]).find(x=>x.id===c.regionId);
-      if(r){
-        html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 14px;background:var(--s1);border-bottom:1px solid var(--bdr);border-left:3px solid ${r.color||'var(--muted)'};">
-          <span style="font-size:9px;color:var(--muted);font-weight:800;">${r.id}</span>
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;">${r.name}</span>
-        </div>`;
-      }
+    if(c.regionId!==lastRid){ lastRid=c.regionId; const r=(s.regions||[]).find(x=>x.id===c.regionId);
+      if(r) html+=`<div class="region-row" style="border-left-color:${r.color||'var(--muted)'}"><span class="rr-id">${r.id}</span><span class="rr-name">${r.name}</span><span class="rr-time">${fmt(r.start)} – ${fmt(r.end)}</span></div>`;
     }
     const isAct=s.activeCue&&c.name===s.activeCue.name&&c.time===s.activeCue.time;
-    const isNext=s.nextCue&&c.name===s.nextCue.name&&c.time===s.nextCue.time;
+    const isNext=i===ni;
     const isPast=c.time<tm&&!isAct&&!isNext;
-    let cls=isAct?'active':isNext?'upcoming':isPast?'past':'';
+    const cls=isAct?'active':isNext?'upcoming':isPast?'past':'';
     html+=`<div class="cue-row ${cls}" id="vcue-${i}">
       ${renderTypeBar(c.types)}
-      <div class="cr-name ${isAct?'active':''}">${c.name}</div>
-      <div class="cr-time">${fmt(c.time)}</div>
+      <span class="cue-num">Q${i+1}</span>
+      <div class="cue-name-wrap"><div class="cue-name">${c.name}</div>${c.note?`<div class="cue-note">📝 ${c.note}</div>`:''}</div>
+      <span class="cue-time">${fmt(c.time)}</span>
     </div>`;
   }
   el.innerHTML=html;
-
   const target=document.querySelector('.cue-row.upcoming,.cue-row.active');
   if(target) target.scrollIntoView({block:'nearest'});
 }
 
-/* ══════════════════════════════════════
-   REGIONS-ONLY VIEW (delen-view) — lokaal togglebaar, onafhankelijk van de master
-══════════════════════════════════════ */
-function toggleRegionView(){
-  regionViewActive=!regionViewActive;
-  $('regionView').classList.toggle('active', regionViewActive);
-  if(regionViewActive) updateRegionView(localElapsed);
-}
-
+/* ══════ DELEN-VIEW ══════ */
+function toggleRegionView(){ regionViewActive=!regionViewActive; $('regionView').classList.toggle('active', regionViewActive); if(regionViewActive) updateRegionView(localElapsed); }
 function updateRegionView(tm){
   if(!regionViewActive) return;
-  const s=lastState||{};
-  const cues=s.cues||[];
-  const regs=s.regions||[];
-
-  const clkEl=$('rvClock');
-  clkEl.innerHTML=fmtFrames(tm);
-  clkEl.className='rv-clock'+(localRunning?' run':' pau');
-
-  const r=s.region?regs.find(x=>x.id===s.region.id):null;
-  const rIdx=r?regs.indexOf(r):-1;
-  const nextR=r?regs[rIdx+1]:null;
-
-  if(r){
-    const bc=r.color||'var(--acc)';
-    $('rvRegionBar').style.background=bc;
-    $('rvRegionName').textContent=r.name;
+  const s=lastState||{}; const cues=s.cues||[]; const regs=s.regions||[];
+  const clkEl=$('rvClock'); clkEl.innerHTML=fmtFrames(tm); clkEl.className='rv-clock'+(localRunning?' run':' pau');
+  const r=s.region?regs.find(x=>x.id===s.region.id):null; const rIdx=r?regs.indexOf(r):-1; const nextR=r?regs[rIdx+1]:null;
+  if(r){ const bc=r.color||'var(--acc)'; $('rvRegionBar').style.background=bc; $('rvRegionName').textContent=r.name;
     $('rvRegionTimes').textContent=`${fmt(r.start)}  –  ${fmt(r.end)}`;
-    const inRegion=Math.max(0, tm-r.start);
-    const inMm=Math.floor(inRegion/60), inSs=Math.floor(inRegion%60);
-    $('rvRegionElapsed').textContent=`${pad(inMm)}:${pad(inSs)} ${t('rv_in_part')}`;
-    const span=r.end-r.start;
-    const done=tm-r.start;
-    const pct=Math.min(100,Math.max(0,span>0?done/span*100:0));
-    $('rvProgressFill').style.width=pct+'%';
-    $('rvProgressFill').style.background=bc;
-  } else {
-    $('rvRegionBar').style.background='var(--muted)';
-    $('rvRegionName').textContent='—';
-    $('rvRegionTimes').textContent='';
-    $('rvRegionElapsed').textContent='';
-    $('rvProgressFill').style.width='0%';
-  }
-
-  if(nextR){
-    $('rvNextName').textContent=nextR.name;
-    $('rvNoNext').style.display='none';
-    $('rvCountdown').style.display='block';
+    const inR=Math.max(0,tm-r.start); $('rvRegionElapsed').textContent=`${pad(Math.floor(inR/60))}:${pad(Math.floor(inR%60))} ${t('rv_in_part')}`;
+    const span=r.end-r.start,done=tm-r.start,pct=Math.min(100,Math.max(0,span>0?done/span*100:0));
+    $('rvProgressFill').style.width=pct+'%'; $('rvProgressFill').style.background=bc;
+  } else { $('rvRegionBar').style.background='var(--muted)'; $('rvRegionName').textContent='—'; $('rvRegionTimes').textContent=''; $('rvRegionElapsed').textContent=''; $('rvProgressFill').style.width='0%'; }
+  if(nextR){ $('rvNextName').textContent=nextR.name; $('rvNoNext').style.display='none'; $('rvCountdown').style.display='block';
     const diff=nextR.start-tm;
-    if(diff>0){
-      const mm=Math.floor(diff/60), ss=Math.floor(diff%60);
-      $('rvCountdown').textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
-      $('rvCountdown').className='rv-countdown'+(diff<=10?' hot':'');
-    } else {
-      $('rvCountdown').textContent=t('countdown_now');
-      $('rvCountdown').className='rv-countdown hot';
-    }
-  } else if(r){
-    $('rvNextName').textContent='';
-    $('rvCountdown').style.display='none';
-    $('rvNoNext').style.display='block';
-  } else {
-    $('rvNextName').textContent='—';
-    $('rvCountdown').textContent='—';
-    $('rvCountdown').style.display='block';
-    $('rvNoNext').style.display='none';
-  }
-
-  // Volgende cue: countdown + lijst van 3 aankomende cues
-  const ni=findNextCueIdx(cues,tm);
-  if(ni>=0){
-    const nc=cues[ni];
-    $('rvCueName').textContent=nc.name;
-    const cdiff=nc.time-tm;
-    const ccdEl=$('rvCueCountdown');
-    if(cdiff>0){
-      const cmm=Math.floor(cdiff/60), css_=Math.floor(cdiff%60);
-      ccdEl.textContent=cmm>0?`${cmm}:${pad(css_)}`:`${Math.ceil(cdiff)}s`;
-      ccdEl.className='rv-cue-countdown'+(cdiff<=5?' hot':'');
-    } else {
-      ccdEl.textContent=t('countdown_now');
-      ccdEl.className='rv-cue-countdown hot';
-    }
-  } else {
-    $('rvCueName').textContent=t('ns_end_show');
-    $('rvCueCountdown').textContent='—';
-    $('rvCueCountdown').className='rv-cue-countdown';
-  }
-  const upcoming=ni>=0?cues.slice(ni,ni+3):[];
-  $('rvCueList').innerHTML=upcoming.map((c,idx)=>`
-    <div class="rv-cue-item${idx===0?' now':''}">
-      <span class="dot" style="background:${typeColor(c.types)}"></span>
-      <span>${c.name}</span>
-      <span class="rv-ci-time">${fmt(c.time)}</span>
-    </div>`).join('');
+    if(diff>0){ const mm=Math.floor(diff/60),ss=Math.floor(diff%60); $('rvCountdown').textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`; $('rvCountdown').className='rv-countdown'+(diff<=10?' hot':''); }
+    else { $('rvCountdown').textContent=t('countdown_now'); $('rvCountdown').className='rv-countdown hot'; }
+  } else if(r){ $('rvNextName').textContent=''; $('rvCountdown').style.display='none'; $('rvNoNext').style.display='block'; }
+  else { $('rvNextName').textContent='—'; $('rvCountdown').textContent='—'; $('rvCountdown').style.display='block'; $('rvNoNext').style.display='none'; }
+  // Volgende cue (filter-aware) + notitie + lijst van 3 gefilterde cues
+  const ni=nextIdxFiltered(tm);
+  if(ni>=0){ const nc=cues[ni]; $('rvCueName').textContent=nc.name;
+    const cdiff=nc.time-tm; const ccdEl=$('rvCueCountdown');
+    if(cdiff>0){ const cmm=Math.floor(cdiff/60),css_=Math.floor(cdiff%60); ccdEl.textContent=cmm>0?`${cmm}:${pad(css_)}`:`${Math.ceil(cdiff)}s`; ccdEl.className='rv-cue-countdown'+(cdiff<=5?' hot':''); }
+    else { ccdEl.textContent=t('countdown_now'); ccdEl.className='rv-cue-countdown hot'; }
+    $('rvCueNote').textContent=nc.note||''; $('rvCueNote').style.display=nc.note?'block':'none';
+  } else { $('rvCueName').textContent=t('ns_end_show'); $('rvCueCountdown').textContent='—'; $('rvCueCountdown').className='rv-cue-countdown'; $('rvCueNote').style.display='none'; }
+  const upcoming=[]; for(let i=(ni>=0?ni:cues.length); i<cues.length && upcoming.length<3; i++){ if(cueMatchesFilter(cues[i])) upcoming.push(cues[i]); }
+  $('rvCueList').innerHTML=upcoming.map((c,idx)=>`<div class="rv-cue-item${idx===0?' now':''}"><span class="dot" style="background:${typeColor(c.types)}"></span><span>${c.name}</span><span class="rv-ci-time">${fmt(c.time)}</span></div>`).join('');
 }
 
 document.addEventListener('keydown',e=>{
@@ -891,11 +619,12 @@ document.addEventListener('keydown',e=>{
   if(e.code==='KeyR' && !e.shiftKey && !e.ctrlKey && !e.metaKey) toggleRegionView();
 });
 
-/* ══════════════════════════════════════
-   INIT
-══════════════════════════════════════ */
+/* ══════ INIT ══════ */
 buildFilterChips();
 applyThemeIcon();
+setSection('show');
+const _vs=$('viewSelect'); if(_vs) _vs.value=viewMode;
+applyView();
 initLang();
 connect();
 </script>

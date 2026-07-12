@@ -721,6 +721,16 @@ html,body{
   color:var(--acc);letter-spacing:1px;line-height:1;margin-top:2px;
 }
 .rv-cue-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
+.rv-cue-note{
+  margin-top:12px;max-width:min(680px,86vw);
+  background:var(--s2);border:1px solid var(--bdr);border-left:3px solid var(--warn);
+  border-radius:8px;padding:10px 14px;
+  font-size:clamp(13px,1.8vw,16px);line-height:1.5;color:var(--text);
+  white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;
+}
+.rv-cue-note::before{
+  content:'📝';margin-right:7px;opacity:.7;
+}
 .rv-cue-list{
   display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:84vw;
 }
@@ -922,6 +932,7 @@ html,body{
     <div class="rv-next-lbl" data-i18n="lbl_next_cue">Volgende cue</div>
     <div class="rv-cue-name" id="rvCueName">—</div>
     <div class="rv-cue-countdown" id="rvCueCountdown">—</div>
+    <div class="rv-cue-note" id="rvCueNote" style="display:none"></div>
     <div class="rv-cue-list" id="rvCueList"><!-- filled by JS --></div>
   </div>
 </div>
@@ -1805,6 +1816,16 @@ function nextIdx(){
   for(let i=0;i<cues.length;i++){if(elapsed<cues[i].time)return i;}
   return -1;
 }
+// Voldoet een cue aan het actieve type-filter? (leeg filter = alles matcht)
+function cueMatchesFilter(c){
+  return activeFilter.size===0 || (c.types && c.types.some(tp=>activeFilter.has(tp)));
+}
+// Volgende cue die aan het filter voldoet — zodat je alleen aftelt naar
+// cues die voor jou relevant zijn (het door jou ingestelde filter).
+function nextIdxFiltered(){
+  for(let i=0;i<cues.length;i++){ if(elapsed<cues[i].time && cueMatchesFilter(cues[i])) return i; }
+  return -1;
+}
 function skipToNext(){
   if(!requireControl())return;
   const ni=nextIdx();if(ni<0)return;
@@ -1839,7 +1860,7 @@ function updateRegionDisplay(){
 ════════════════════════════════════════════ */
 const CIRC=999;
 function updateStrip(){
-  const ni=nextIdx();
+  const ni=nextIdxFiltered();
   const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),dE=$('nsDot');
   if(ni===-1){
     nE.textContent=t('ns_end_show');tE.textContent='—';cE.textContent='—';cE.className='ns-countdown';
@@ -1903,7 +1924,7 @@ function renderTypeBar(types){
 }
 
 function renderCues(){
-  const ni=nextIdx();
+  const ni=nextIdxFiltered();
   const list=$('cueList');
   if(!cues.length){
     list.innerHTML=`<div class="empty-state"><div class="big">🎭</div><div>${t('no_cues_loaded')}</div></div>`;
@@ -2905,11 +2926,11 @@ function broadcastState(){
     t: Math.round(elapsed*1000)/1000,
     running,
     fps: clockFps(), // zodat de viewer dezelfde framerate gebruikt voor frames in de klok
-    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, time:cues[activeCueIndex].time, type:(cues[activeCueIndex].types&&cues[activeCueIndex].types[0])||'none', types:cues[activeCueIndex].types||[]} : null,
-    nextCue: ni>=0 ? {name:cues[ni].name, time:cues[ni].time, type:(cues[ni].types&&cues[ni].types[0])||'none', types:cues[ni].types||[]} : null,
+    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, time:cues[activeCueIndex].time, type:(cues[activeCueIndex].types&&cues[activeCueIndex].types[0])||'none', types:cues[activeCueIndex].types||[], note:cues[activeCueIndex].note||''} : null,
+    nextCue: ni>=0 ? {name:cues[ni].name, time:cues[ni].time, type:(cues[ni].types&&cues[ni].types[0])||'none', types:cues[ni].types||[], note:cues[ni].note||''} : null,
     prevCueTime: prevTime,
     region: activeRegionId ? (regions.find(r=>r.id===activeRegionId)||null) : null,
-    cues: cues.map(c=>({time:c.time,name:c.name,type:(c.types&&c.types[0])||'none',types:c.types||[],regionId:c.regionId||null})),
+    cues: cues.map(c=>({time:c.time,name:c.name,type:(c.types&&c.types[0])||'none',types:c.types||[],note:c.note||'',regionId:c.regionId||null})),
     regions: regions.map(r=>({id:r.id,name:r.name,start:r.start,end:r.end,color:r.color||null})),
   };
   try{ ws.send(JSON.stringify(payload)); }catch(e){}
@@ -2991,8 +3012,8 @@ function updateRegionView(){
     $('rvNoNext').style.display='none';
   }
 
-  // ── Volgende cue: countdown + lijst van 3 aankomende cues ──
-  const ni=nextIdx();
+  // ── Volgende cue: countdown + notitie + lijst van 3 aankomende (gefilterde) cues ──
+  const ni=nextIdxFiltered();
   if(ni>=0){
     const nc=cues[ni];
     $('rvCueName').textContent=nc.name;
@@ -3006,12 +3027,20 @@ function updateRegionView(){
       ccdEl.textContent=t('countdown_now');
       ccdEl.className='rv-cue-countdown hot';
     }
+    // Notitie volledig tonen; de lijst eronder schuift automatisch op.
+    $('rvCueNote').textContent=nc.note||'';
+    $('rvCueNote').style.display=nc.note?'block':'none';
   } else {
     $('rvCueName').textContent=t('ns_end_show');
     $('rvCueCountdown').textContent='—';
     $('rvCueCountdown').className='rv-cue-countdown';
+    $('rvCueNote').style.display='none';
   }
-  const upcoming=ni>=0?cues.slice(ni,ni+3):[];
+  // Volgende (max) 3 cues die aan het filter voldoen
+  const upcoming=[];
+  for(let i=(ni>=0?ni:cues.length); i<cues.length && upcoming.length<3; i++){
+    if(cueMatchesFilter(cues[i])) upcoming.push(cues[i]);
+  }
   $('rvCueList').innerHTML=upcoming.map((c,idx)=>`
     <div class="rv-cue-item${idx===0?' now':''}">
       <span class="dot" style="background:${typeColor(c.types)}"></span>
