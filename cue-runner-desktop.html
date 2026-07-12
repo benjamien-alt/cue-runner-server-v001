@@ -731,10 +731,86 @@ html,body{
 .rv-cue-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .rv-cue-item.now{color:var(--text);border-color:var(--acc);}
 .rv-cue-item .rv-ci-time{opacity:.6;font-family:'Share Tech Mono',monospace;}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — desktop / tablet / telefoon (taak 3)
+   Layout wordt gestuurd door data-view op <html>. In auto-modus houdt
+   JS data-view in sync met de schermbreedte; handmatig kan het geforceerd.
+   Desktop = het bestaande 3-koloms grid. Tablet + telefoon = gestapeld,
+   één sectie tegelijk (Show / Delen / Paneel) via een onderste navbalk.
+═══════════════════════════════════════════ */
+.mobile-nav{ display:none; }
+
+:root[data-view="tablet"] body,
+:root[data-view="phone"] body{
+  display:flex;flex-direction:column;height:100dvh;overflow:hidden;
+}
+:root[data-view="tablet"] .topbar,
+:root[data-view="phone"] .topbar{
+  height:auto;flex-wrap:wrap;gap:8px 10px;padding:8px 12px;
+}
+:root[data-view="tablet"] .layout,
+:root[data-view="phone"] .layout{
+  display:block;height:auto;flex:1;min-height:0;overflow:hidden;
+}
+/* drag-handles + desktop-only collapse-toggles hebben geen zin op mobiel */
+:root[data-view="tablet"] .drag-handle,
+:root[data-view="phone"] .drag-handle,
+:root[data-view="tablet"] #toggleLeft,
+:root[data-view="phone"] #toggleLeft,
+:root[data-view="tablet"] #toggleRight,
+:root[data-view="phone"] #toggleRight{ display:none !important; }
+
+/* alle drie panelen: vullen de vrije ruimte, verbergen standaard, scrollen zelf */
+:root[data-view="tablet"] .regions-panel,
+:root[data-view="phone"] .regions-panel,
+:root[data-view="tablet"] .center-panel,
+:root[data-view="phone"] .center-panel,
+:root[data-view="tablet"] .right-panel,
+:root[data-view="phone"] .right-panel{
+  height:100%;border:none;display:none;
+}
+/* toon enkel de sectie die in data-section staat */
+:root[data-view="tablet"][data-section="delen"] .regions-panel,
+:root[data-view="phone"][data-section="delen"] .regions-panel,
+:root[data-view="tablet"][data-section="show"] .center-panel,
+:root[data-view="phone"][data-section="show"] .center-panel,
+:root[data-view="tablet"][data-section="paneel"] .right-panel,
+:root[data-view="phone"][data-section="paneel"] .right-panel{ display:flex; }
+
+/* onderste navigatiebalk (alleen mobiel) */
+:root[data-view="tablet"] .mobile-nav,
+:root[data-view="phone"] .mobile-nav{
+  display:flex;flex-shrink:0;background:var(--s1);border-top:1px solid var(--bdr);
+}
+.mobile-nav button{
+  flex:1;background:none;border:none;color:var(--muted);
+  padding:9px 4px 8px;font-family:'DM Sans',sans-serif;font-weight:700;
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  border-top:2px solid transparent;
+}
+.mobile-nav button .mn-ic{font-size:18px;line-height:1;}
+.mobile-nav button.active{color:var(--acc);border-top-color:var(--acc);background:rgba(var(--acc-rgb),.06);}
+
+/* Telefoon-specifiek: compactere klok + soepel wikkelen van rijen */
+:root[data-view="phone"] #clock{ font-size:clamp(40px,13vw,60px); }
+:root[data-view="phone"] .clock-hero{ padding:14px 16px 12px;flex-wrap:wrap;gap:12px; }
+:root[data-view="phone"] .active-region-name{ border-left:none;padding-left:0;flex-basis:100%; }
+:root[data-view="phone"] .transport{ flex-wrap:wrap; }
+:root[data-view="phone"] .add-bar{ flex-wrap:wrap; }
 </style>
 <script>
-  // Pas opgeslagen thema toe vóór render (voorkomt flits). Standaard = donker.
-  (function(){ try{ if(localStorage.getItem('cueRunnerTheme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+  // Pas opgeslagen thema + weergavemodus toe vóór render (voorkomt flits). Standaard = donker + auto.
+  (function(){
+    try{ if(localStorage.getItem('cueRunnerTheme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){}
+    try{
+      var vm=localStorage.getItem('cueRunnerView')||'auto';
+      var v = vm!=='auto' ? vm : (window.innerWidth<=640?'phone':window.innerWidth<=1024?'tablet':'desktop');
+      document.documentElement.setAttribute('data-view', v);
+      document.documentElement.setAttribute('data-section','show');
+    }catch(e){ document.documentElement.setAttribute('data-view','desktop'); }
+  })();
 </script>
 </head>
 <body>
@@ -754,6 +830,12 @@ html,body{
     <button class="panel-toggle" id="toggleRight" onclick="togglePanel('right')" data-i18n-title="tt_toggle_right">Detail ▶</button>
     <button class="panel-toggle" id="toggleRegionView" onclick="toggleRegionView()" data-i18n-title="tt_partsview">⬛ Delen-view</button>
     <span class="midi-badge" id="midiBadge" onclick="switchTab('midi')" data-i18n-title="tt_open_midi" title="Open MIDI-paneel">MIDI</span>
+    <select class="tb-btn" id="viewSelect" onchange="setViewMode(this.value)" data-i18n-title="tt_view" title="Weergave" style="padding:6px 8px;">
+      <option value="auto" data-i18n="view_auto">Auto</option>
+      <option value="desktop" data-i18n="view_desktop">🖥 Desktop</option>
+      <option value="tablet" data-i18n="view_tablet">📋 Tablet</option>
+      <option value="phone" data-i18n="view_phone">📱 Telefoon</option>
+    </select>
     <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal" style="padding:6px 8px;">
       <option value="nl">NL</option>
       <option value="en">EN</option>
@@ -1221,6 +1303,13 @@ html,body{
 
 </div><!-- .layout -->
 
+<!-- MOBIELE NAVIGATIE (alleen zichtbaar in tablet/telefoon-weergave) -->
+<nav class="mobile-nav" id="mobileNav">
+  <button data-section="show" onclick="setSection('show')"><span class="mn-ic">🎛</span><span data-i18n="nav_show">Show</span></button>
+  <button data-section="delen" onclick="setSection('delen')"><span class="mn-ic">🗂</span><span data-i18n="nav_parts">Delen</span></button>
+  <button data-section="paneel" onclick="setSection('paneel')"><span class="mn-ic">✎</span><span data-i18n="nav_panel">Paneel</span></button>
+</nav>
+
 <script>
 /* ════════════════════════════════════════════
    SHARED HELPERS
@@ -1265,6 +1354,14 @@ const T={
   theme_to_dark:{nl:'Schakel naar donker',en:'Switch to dark',fr:'Passer en sombre',es:'Cambiar a oscuro'},
   theme_to_light:{nl:'Schakel naar licht',en:'Switch to light',fr:'Passer en clair',es:'Cambiar a claro'},
   tt_lang:{nl:'Taal',en:'Language',fr:'Langue',es:'Idioma'},
+  tt_view:{nl:'Weergave (auto / desktop / tablet / telefoon)',en:'View (auto / desktop / tablet / phone)',fr:'Affichage (auto / bureau / tablette / téléphone)',es:'Vista (auto / escritorio / tablet / teléfono)'},
+  view_auto:{nl:'Auto',en:'Auto',fr:'Auto',es:'Auto'},
+  view_desktop:{nl:'🖥 Desktop',en:'🖥 Desktop',fr:'🖥 Bureau',es:'🖥 Escritorio'},
+  view_tablet:{nl:'📋 Tablet',en:'📋 Tablet',fr:'📋 Tablette',es:'📋 Tablet'},
+  view_phone:{nl:'📱 Telefoon',en:'📱 Phone',fr:'📱 Téléphone',es:'📱 Teléfono'},
+  nav_show:{nl:'Show',en:'Show',fr:'Spectacle',es:'Show'},
+  nav_parts:{nl:'Delen',en:'Parts',fr:'Parties',es:'Partes'},
+  nav_panel:{nl:'Paneel',en:'Panel',fr:'Panneau',es:'Panel'},
 
   // ── Broadcast modal ──
   bc_title:{nl:'Live Broadcast',en:'Live Broadcast',fr:'Diffusion en direct',es:'Transmisión en vivo'},
@@ -1422,7 +1519,7 @@ const T={
   viewonly_badge:{nl:'👁 ALLEEN BEKIJKEN',en:'👁 VIEW ONLY',fr:'👁 LECTURE SEULE',es:'👁 SOLO LECTURA'},
   viewonly_tt:{nl:'Klik om besturing te activeren',en:'Click to enable control',fr:'Cliquez pour activer le contrôle',es:'Haz clic para activar el control'},
   controls_badge:{nl:'🔓 Bestuurbaar',en:'🔓 Control active',fr:'🔓 Contrôle actif',es:'🔓 Control activo'},
-  controls_tt:{nl:'Besturing is actief voor deze sessie',en:'Control is active for this session',fr:'Le contrôle est actif pour cette session',es:'El control está activo para esta sesión'},
+  controls_tt:{nl:'Klik om terug te schakelen naar alleen bekijken',en:'Click to switch back to view-only',fr:'Cliquez pour revenir en lecture seule',es:'Haz clic para volver a solo lectura'},
   cw_title:{nl:'Besturing activeren',en:'Enable control',fr:'Activer le contrôle',es:'Activar control'},
   cw_body:{nl:'Je staat op het punt de besturing van deze live show te activeren. Start/Stop, cues en delen bewerken, MIDI naar Reaper sturen en broadcast-verbinden worden dan mogelijk. Weet je zeker dat je wilt besturen?',en:'You are about to enable control of this live show. Start/Stop, editing cues and parts, sending MIDI to Reaper and connecting the broadcast will become possible. Are you sure you want to take control?',fr:'Vous êtes sur le point d\'activer le contrôle de ce spectacle en direct. Start/Stop, modifier les cues et parties, envoyer du MIDI à Reaper et connecter la diffusion deviendront possibles. Voulez-vous vraiment prendre le contrôle ?',es:'Estás a punto de activar el control de este espectáculo en vivo. Start/Stop, editar cues y partes, enviar MIDI a Reaper y conectar la transmisión serán posibles. ¿Seguro que quieres tomar el control?'},
   cw_cancel:{nl:'Annuleren',en:'Cancel',fr:'Annuler',es:'Cancelar'},
@@ -2178,6 +2275,8 @@ function switchTab(id){
     $('sendM').value=Math.floor((elapsed%3600)/60);
     $('sendS').value=Math.floor(elapsed%60);
   }
+  // Op mobiel horen alle tabs bij het rechterpaneel → toon die sectie.
+  if(typeof isMobileView==='function' && isMobileView()) setSection('paneel');
 }
 
 /* ════════════════════════════════════════════
@@ -2671,6 +2770,11 @@ const MIN_W=160, MAX_LEFT=500, MAX_RIGHT=600;
 let leftW=260, rightW=340;
 
 function applyGrid(){
+  // Op mobiel bepaalt de responsive CSS de layout; inline grid-stijl weghalen.
+  if(typeof isMobileView==='function' && isMobileView()){
+    $('layout').style.gridTemplateColumns='';
+    return;
+  }
   const lw = leftCollapsed  ? 0 : leftW;
   const rw = rightCollapsed ? 0 : rightW;
   const ld = leftCollapsed  ? 0 : 4;
@@ -2800,7 +2904,8 @@ function broadcastState(){
   const payload={
     t: Math.round(elapsed*1000)/1000,
     running,
-    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, type:(cues[activeCueIndex].types&&cues[activeCueIndex].types[0])||'none', types:cues[activeCueIndex].types||[]} : null,
+    fps: clockFps(), // zodat de viewer dezelfde framerate gebruikt voor frames in de klok
+    activeCue: activeCueIndex>=0 ? {name:cues[activeCueIndex].name, time:cues[activeCueIndex].time, type:(cues[activeCueIndex].types&&cues[activeCueIndex].types[0])||'none', types:cues[activeCueIndex].types||[]} : null,
     nextCue: ni>=0 ? {name:cues[ni].name, time:cues[ni].time, type:(cues[ni].types&&cues[ni].types[0])||'none', types:cues[ni].types||[]} : null,
     prevCueTime: prevTime,
     region: activeRegionId ? (regions.find(r=>r.id===activeRegionId)||null) : null,
@@ -2965,6 +3070,56 @@ function toggleTheme(){
 }
 
 /* ════════════════════════════════════════════
+   WEERGAVEMODUS (taak 3) — desktop / tablet / telefoon
+   viewMode 'auto' laat de layout meebewegen met de schermbreedte;
+   desktop/tablet/phone forceren de layout. Keuze onthouden.
+   De feitelijke layout leest data-view op <html> (CSS); JS houdt die bij.
+════════════════════════════════════════════ */
+let viewMode='auto';
+try{ viewMode=localStorage.getItem('cueRunnerView')||'auto'; }catch(e){}
+function resolveView(){
+  if(viewMode==='desktop'||viewMode==='tablet'||viewMode==='phone') return viewMode;
+  const w=window.innerWidth;
+  return w<=640?'phone':w<=1024?'tablet':'desktop';
+}
+function isMobileView(){ return resolveView()!=='desktop'; }
+function applyView(){
+  const v=resolveView();
+  const root=document.documentElement;
+  if(root.getAttribute('data-view')!==v){
+    root.setAttribute('data-view', v);
+    // Desktop: grid opnieuw toepassen; mobiel: applyGrid maakt de inline grid leeg (guard).
+    applyGrid();
+  }
+  refreshMobileNav();
+}
+function setViewMode(mode){
+  viewMode=(['auto','desktop','tablet','phone'].includes(mode))?mode:'auto';
+  try{ localStorage.setItem('cueRunnerView', viewMode); }catch(e){}
+  const sel=$('viewSelect'); if(sel) sel.value=viewMode;
+  applyView();
+}
+function setSection(sec){
+  if(!['show','delen','paneel'].includes(sec)) sec='show';
+  document.documentElement.setAttribute('data-section', sec);
+  refreshMobileNav();
+}
+function currentSection(){ return document.documentElement.getAttribute('data-section')||'show'; }
+function refreshMobileNav(){
+  const cur=currentSection();
+  document.querySelectorAll('#mobileNav button').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-section')===cur);
+  });
+}
+// In auto-modus de layout laten meebewegen met resize/rotatie.
+let _viewResizeTimer=null;
+window.addEventListener('resize', ()=>{
+  if(viewMode!=='auto') return;
+  clearTimeout(_viewResizeTimer);
+  _viewResizeTimer=setTimeout(applyView, 120);
+});
+
+/* ════════════════════════════════════════════
    VIEW-ONLY MODUS
    App start altijd view-only. Elke actie die de live
    show kan beïnvloeden (transport, cue/deel bewerken,
@@ -2985,7 +3140,7 @@ function applyControlBadge(){
     b.textContent=t('controls_badge');
     b.title=t('controls_tt');
     b.style.borderColor='var(--acc)';b.style.color='var(--acc)';b.style.background='rgba(var(--acc-rgb),.1)';
-    b.style.cursor='default';
+    b.style.cursor='pointer';
   } else {
     b.textContent=t('viewonly_badge');
     b.title=t('viewonly_tt');
@@ -2993,13 +3148,21 @@ function applyControlBadge(){
     b.style.cursor='pointer';
   }
 }
-function onControlBadgeClick(){ if(!controlsEnabled) openControlWarning(); }
+function onControlBadgeClick(){
+  if(controlsEnabled) disableControl();
+  else openControlWarning();
+}
 function openControlWarning(){ $('controlWarningModal').classList.add('open'); }
 function closeControlWarning(){ $('controlWarningModal').classList.remove('open'); }
 function confirmEnableControl(){
   controlsEnabled=true;
   applyControlBadge();
   closeControlWarning();
+}
+// Terug naar view-only — geen bevestiging nodig, dit is de veilige richting.
+function disableControl(){
+  controlsEnabled=false;
+  applyControlBadge();
 }
 
 /* ════════════════════════════════════════════
@@ -3008,6 +3171,9 @@ function confirmEnableControl(){
 applyThemeIcon();
 syncBtns();renderCues();renderRegions();updateStrip();updateClock();
 showDetailEmpty();initResize();
+setSection('show');
+const _vsel=$('viewSelect'); if(_vsel) _vsel.value=viewMode;
+applyView();
 window._i18nReady=true;
 initLang();
 

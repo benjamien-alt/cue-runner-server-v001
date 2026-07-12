@@ -9,10 +9,48 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@600;700;800&display=swap');
 :root{
-  --bg:#080809;--s1:#0f0f13;--s2:#15151c;--bdr:#2a2a3a;
-  --acc:#c8f53a;--warn:#f5a623;--danger:#f53a3a;
-  --text:#f0f0fa;--muted:#9090b0;--dim:#5a5a78;
-  --regie:#c4affe;--kraan:#7dd8fc;--licht:#fcd34d;--geluid:#6ee7b7;
+  /* ── DONKER (standaard) — zelfde systeem als cue-runner-desktop.html ── */
+  --bg:      #07070a;
+  --s1:      #0d0d12;
+  --s2:      #121218;
+  --s3:      #18181f;
+  --bdr:     #25252f;
+  --acc:     #bceff6;
+  --acc-rgb: 188,239,246;
+  --warn:    #f5a623;
+  --danger:  #f53a3a;
+  --text:    #f0f0fa;
+  --muted:   #9090b0;
+  --dim:     #5a5a78;
+  --clock-run: #ffffff;
+  --hover:   rgba(255,255,255,.02);
+
+  --licht:   #fcd34d;
+  --spot:    #fb7185;
+  --kraan:   #7dd8fc;
+  --kaboem:  #f97316;
+  --truss:   #94a3b8;
+  --dir:     #c4affe;
+  --sound:   #6ee7b7;
+  --video:   #818cf8;
+  --none:    #5a5a78;
+}
+:root[data-theme="light"]{
+  --bg:      #eef1f5;
+  --s1:      #ffffff;
+  --s2:      #f4f6f9;
+  --s3:      #e8ecf1;
+  --bdr:     #d3dae2;
+  --acc:     #0f8bab;
+  --acc-rgb: 15,139,171;
+  --warn:    #b56a00;
+  --danger:  #d62828;
+  --text:    #14181f;
+  --muted:   #566072;
+  --dim:     #8996a6;
+  --clock-run: #0f8bab;
+  --hover:   rgba(0,0,0,.04);
+  /* cue-type kleuren blijven identiek — semantisch */
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
@@ -22,8 +60,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
   padding:10px 16px;background:var(--s1);border-bottom:1px solid var(--bdr);
 }
-.logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--acc);}
-.conn-group{display:flex;align-items:center;gap:8px;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--acc);flex-shrink:0;}
+.conn-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .conn-dot{width:8px;height:8px;border-radius:50%;background:var(--dim);transition:background .3s;flex-shrink:0;}
 .conn-dot.live  {background:var(--acc);box-shadow:0 0 8px var(--acc);animation:blink 1s infinite;}
 .conn-dot.error {background:var(--danger);}
@@ -31,6 +69,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .conn-label{font-size:11px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;}
 .badge-viewer{font-size:9px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;padding:3px 8px;border:1px solid var(--bdr);border-radius:4px;}
+.topbar-right{display:flex;gap:8px;align-items:center;margin-left:auto;}
+.tb-btn{
+  background:transparent;border:1px solid var(--bdr);border-radius:6px;
+  color:var(--text);font-size:12px;padding:6px 9px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-weight:600;
+}
+.tb-btn:hover{background:var(--s2);}
 .offline-banner{
   display:none;background:rgba(245,166,35,.15);border-bottom:1px solid rgba(245,166,35,.3);
   padding:6px 16px;font-size:11px;color:var(--warn);letter-spacing:1px;text-align:center;
@@ -52,18 +97,19 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
 #clock{
   font-family:'Share Tech Mono',monospace;font-size:clamp(44px,7vw,76px);
   color:var(--acc);letter-spacing:3px;line-height:1;
-  text-shadow:0 0 28px rgba(200,245,58,.3);transition:color .25s;
+  text-shadow:0 0 28px rgba(var(--acc-rgb),.3);transition:color .25s;
 }
-#clock.run{color:#fff;text-shadow:0 0 36px rgba(200,245,58,.5);}
+#clock.run{color:var(--clock-run);text-shadow:0 0 36px rgba(var(--acc-rgb),.5);}
 #clock.pau{color:var(--warn);}
 #clock.offline{color:var(--warn);animation:clockPulse 1s infinite alternate;}
 @keyframes clockPulse{from{opacity:1}to{opacity:.6}}
+.clock-frames{font-size:.42em;opacity:.55;letter-spacing:1px;margin-left:2px;}
 .status-badge{
   font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:800;
   padding:5px 12px;border-radius:6px;background:var(--s2);color:var(--muted);border:1px solid var(--bdr);
   white-space:nowrap;
 }
-.status-badge.live{background:rgba(200,245,58,.12);color:var(--acc);border-color:var(--acc);}
+.status-badge.live{background:rgba(var(--acc-rgb),.12);color:var(--acc);border-color:var(--acc);}
 .status-badge.pau {background:rgba(245,166,35,.12);color:var(--warn);border-color:var(--warn);}
 .region-display{
   flex:1;min-width:180px;display:flex;flex-direction:column;gap:4px;
@@ -102,7 +148,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
   display:flex;align-items:center;gap:8px;padding:8px 14px;
   border-bottom:1px solid var(--bdr);border-left:3px solid transparent;
 }
-.region-row.active{background:rgba(200,245,58,.05);border-left-color:var(--acc);}
+.region-row.active{background:rgba(var(--acc-rgb),.05);border-left-color:var(--acc);}
 .region-row.past  {opacity:.35;}
 .rr-bar{width:4px;height:28px;border-radius:2px;flex-shrink:0;}
 .rr-body{flex:1;min-width:0;}
@@ -112,6 +158,26 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
 .rr-prog{height:2px;background:var(--bdr);border-radius:1px;margin-top:3px;overflow:hidden;}
 .rr-prog-fill{height:100%;background:var(--acc);transition:width .5s linear;}
 
+/* ── CUE-TYPE FILTER ── */
+.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:8px 14px;border-bottom:1px solid var(--bdr);}
+.filter-chip{
+  padding:4px 9px;border-radius:12px;border:1.5px solid transparent;
+  font-size:9px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .12s;
+  opacity:.5;font-family:'DM Sans',sans-serif;background:var(--s2);
+}
+.filter-chip.sel{opacity:1;border-color:currentColor;background:transparent;}
+.filter-status{
+  display:none;align-items:center;gap:8px;font-size:10px;color:var(--warn);
+  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
+  border-radius:6px;padding:4px 9px;margin-top:2px;width:100%;
+}
+.filter-clear-btn{
+  background:transparent;border:1px solid var(--warn);color:var(--warn);
+  border-radius:5px;padding:2px 8px;font-size:9px;font-weight:700;cursor:pointer;
+  font-family:'DM Sans',sans-serif;margin-left:auto;
+}
+.filter-clear-btn:hover{background:rgba(245,166,35,.15);}
+
 /* ── CUE LIST ── */
 .cuelist-col{grid-column:1/-1;background:var(--bg);}
 @media(min-width:1100px){.cuelist-col{grid-column:4/5;grid-row:2/4;border-left:1px solid var(--bdr);}}
@@ -119,13 +185,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
   display:flex;align-items:center;gap:8px;padding:8px 14px;
   border-bottom:1px solid var(--bdr);border-left:3px solid transparent;font-size:13px;
 }
-.cue-row.active  {background:rgba(200,245,58,.05);border-left-color:var(--acc);}
+.cue-row.active  {background:rgba(var(--acc-rgb),.05);border-left-color:var(--acc);}
 .cue-row.upcoming{background:rgba(245,166,35,.04);border-left-color:var(--warn);}
 .cue-row.past    {opacity:.3;}
-.cr-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.cr-bar{width:4px;flex-shrink:0;border-radius:2px;overflow:hidden;display:flex;flex-direction:column;align-self:stretch;min-height:28px;}
 .cr-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .cr-name.active{color:var(--acc);font-weight:700;}
 .cr-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+.empty-hint{padding:16px;font-size:12px;color:var(--muted);}
 
 /* ── CONNECTING OVERLAY ── */
 .overlay{
@@ -133,57 +200,158 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:16px;z-index:100;transition:opacity .4s;
 }
+:root[data-theme="light"] .overlay{background:rgba(238,241,245,.92);}
 .overlay.hidden{opacity:0;pointer-events:none;}
 .overlay-icon{font-size:44px;}
 .overlay-text{font-size:14px;color:var(--muted);text-align:center;line-height:1.8;}
 .overlay-url{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--acc);margin-top:4px;}
+
+/* ── REGIONS-ONLY VIEW (delen-view) — zelfde ontwerp als desktop-app ── */
+#regionView{
+  display:none;position:fixed;inset:0;z-index:500;background:var(--bg);
+  flex-direction:column;align-items:center;justify-content:center;gap:0;
+  font-family:'DM Sans',sans-serif;
+}
+#regionView.active{display:flex;}
+.rv-close{
+  position:absolute;top:16px;right:20px;
+  background:var(--s2);border:1px solid var(--bdr);border-radius:8px;
+  color:var(--muted);font-size:12px;font-weight:700;letter-spacing:1px;
+  padding:8px 16px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;
+}
+.rv-close:hover{color:var(--text);border-color:var(--muted);}
+.rv-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--muted);letter-spacing:1px;}
+.rv-clock-lbl{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;font-weight:800;margin-bottom:6px;}
+.rv-clock{
+  font-family:'Share Tech Mono',monospace;font-size:clamp(64px,10vw,120px);
+  color:var(--acc);letter-spacing:4px;line-height:1;text-shadow:0 0 40px rgba(var(--acc-rgb),.3);
+  transition:color .25s;margin-bottom:32px;
+}
+.rv-clock.run{color:var(--clock-run);text-shadow:0 0 50px rgba(var(--acc-rgb),.5);}
+.rv-clock.pau{color:var(--warn);}
+.rv-divider{width:60px;height:2px;background:var(--bdr);border-radius:1px;margin:0 auto 32px;}
+.rv-region-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:40px;}
+.rv-region-lbl{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+.rv-region-bar{width:50px;height:4px;border-radius:2px;background:var(--muted);margin-bottom:4px;transition:background .3s;}
+.rv-region-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,6vw,72px);letter-spacing:3px;color:var(--text);line-height:1;text-align:center;max-width:80vw;}
+.rv-region-times{font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--muted);letter-spacing:2px;}
+.rv-region-elapsed{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--dim);letter-spacing:1px;margin-top:4px;}
+.rv-progress-wrap{width:min(480px,60vw);height:4px;background:var(--bdr);border-radius:2px;margin-bottom:40px;overflow:hidden;}
+.rv-progress-fill{height:100%;background:var(--acc);border-radius:2px;transition:width .5s linear;}
+.rv-next-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;}
+.rv-next-lbl{font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;font-weight:800;}
+.rv-next-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(22px,3.5vw,40px);letter-spacing:2px;color:var(--warn);line-height:1;text-align:center;max-width:70vw;}
+.rv-countdown{font-family:'Share Tech Mono',monospace;font-size:clamp(36px,5vw,64px);color:var(--warn);letter-spacing:2px;line-height:1;margin-top:4px;}
+.rv-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
+@keyframes rvPulse{from{opacity:1}to{opacity:.25}}
+.rv-no-next{font-size:16px;font-weight:700;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
+.rv-cues-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:36px;}
+.rv-cue-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,28px);letter-spacing:1.5px;color:var(--text);line-height:1;text-align:center;max-width:70vw;}
+.rv-cue-countdown{font-family:'Share Tech Mono',monospace;font-size:clamp(20px,3vw,32px);color:var(--acc);letter-spacing:1px;line-height:1;margin-top:2px;}
+.rv-cue-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
+.rv-cue-list{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;justify-content:center;max-width:84vw;}
+.rv-cue-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--s2);border:1px solid var(--bdr);border-radius:8px;padding:6px 12px;}
+.rv-cue-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.rv-cue-item.now{color:var(--text);border-color:var(--acc);}
+.rv-cue-item .rv-ci-time{opacity:.6;font-family:'Share Tech Mono',monospace;}
 </style>
+<script>
+  // Pas opgeslagen thema toe vóór render (voorkomt flits). Standaard = donker.
+  (function(){ try{ if(localStorage.getItem('cueRunnerTheme')==='light') document.documentElement.setAttribute('data-theme','light'); }catch(e){} })();
+</script>
 </head>
 <body>
 
 <div class="overlay" id="overlay">
   <div class="overlay-icon">📡</div>
   <div class="overlay-text">
-    Verbinding maken met de Cue Runner server…<br>
+    <span data-i18n="connecting">Verbinding maken met de Cue Runner server…</span><br>
     <span id="overlayUrl" class="overlay-url"></span>
   </div>
 </div>
 
-<div class="offline-banner" id="offlineBanner">
+<div class="offline-banner" id="offlineBanner" data-i18n="offline_banner">
   ⚠ Verbinding verbroken — klok loopt lokaal door. Herverbinden…
+</div>
+
+<!-- REGIONS-ONLY VIEW (delen-view) -->
+<div id="regionView">
+  <button class="rv-close" onclick="toggleRegionView()" data-i18n="rv_close">✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span></button>
+  <div class="rv-hint" data-i18n="rv_hint">Druk ESC om terug te keren · R om te wisselen</div>
+
+  <div class="rv-clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
+  <div class="rv-clock" id="rvClock">00:00:00</div>
+
+  <div class="rv-divider"></div>
+
+  <div class="rv-region-wrap">
+    <div class="rv-region-lbl" data-i18n="lbl_current_part">Huidig deel</div>
+    <div class="rv-region-bar" id="rvRegionBar"></div>
+    <div class="rv-region-name" id="rvRegionName">—</div>
+    <div class="rv-region-times" id="rvRegionTimes"></div>
+    <div class="rv-region-elapsed" id="rvRegionElapsed"></div>
+  </div>
+
+  <div class="rv-progress-wrap">
+    <div class="rv-progress-fill" id="rvProgressFill"></div>
+  </div>
+
+  <div class="rv-next-wrap">
+    <div class="rv-next-lbl" data-i18n="lbl_next_part">Volgend deel</div>
+    <div class="rv-next-name" id="rvNextName">—</div>
+    <div class="rv-countdown" id="rvCountdown">—</div>
+    <div class="rv-no-next" id="rvNoNext" style="display:none" data-i18n="lbl_last_part">Laatste deel</div>
+  </div>
+
+  <div class="rv-cues-wrap">
+    <div class="rv-next-lbl" data-i18n="lbl_next_cue">Volgende cue</div>
+    <div class="rv-cue-name" id="rvCueName">—</div>
+    <div class="rv-cue-countdown" id="rvCueCountdown">—</div>
+    <div class="rv-cue-list" id="rvCueList"></div>
+  </div>
 </div>
 
 <div class="topbar">
   <div class="logo">CUE RUNNER</div>
   <div class="conn-group">
     <div class="conn-dot" id="connDot"></div>
-    <div class="conn-label" id="connLabel">Verbinden…</div>
-    <span class="badge-viewer">VIEWER — alleen lezen</span>
+    <div class="conn-label" id="connLabel" data-i18n="conn_connecting">Verbinden…</div>
+    <span class="badge-viewer" data-i18n="viewer_badge">VIEWER — alleen lezen</span>
+  </div>
+  <div class="topbar-right">
+    <button class="tb-btn" id="toggleRegionViewBtn" onclick="toggleRegionView()" data-i18n-title="tt_partsview" title="Regions-only weergave (R)">⬛</button>
+    <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal">
+      <option value="nl">NL</option>
+      <option value="en">EN</option>
+      <option value="fr">FR</option>
+      <option value="es">ES</option>
+    </select>
+    <button class="tb-btn" id="themeToggle" onclick="toggleTheme()" title="Licht / donker">🌙</button>
   </div>
 </div>
 
 <div class="main">
   <div class="clock-section">
     <div class="clock-group">
-      <div class="clock-lbl">Timecode</div>
+      <div class="clock-lbl" data-i18n="lbl_timecode">TIMECODE</div>
       <div id="clock">00:00:00</div>
     </div>
     <div class="status-badge" id="statusBadge">GESTOPT</div>
     <div class="region-display">
-      <div class="rd-label">Huidig deel</div>
+      <div class="rd-label" data-i18n="lbl_current_part">Huidig deel</div>
       <div class="rd-name" id="rdName">—</div>
       <div class="rd-next" id="rdNext"></div>
     </div>
   </div>
   <div class="cue-cards">
     <div class="cue-card">
-      <div class="cc-label">Nu actief</div>
+      <div class="cc-label" data-i18n="cc_active_lbl">Nu actief</div>
       <div class="cc-type"><div class="cc-dot" id="activeDot"></div></div>
       <div class="cc-name active" id="activeName">—</div>
       <div class="cc-time" id="activeTime"></div>
     </div>
     <div class="cue-card">
-      <div class="cc-label">Volgende</div>
+      <div class="cc-label" data-i18n="ns_next">Volgend</div>
       <div class="cc-type"><div class="cc-dot" id="nextDot"></div></div>
       <div class="cc-name next" id="nextName">—</div>
       <div class="cc-time" id="nextTime"></div>
@@ -192,20 +360,171 @@ html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-seri
     </div>
   </div>
   <div class="regions-col">
-    <div class="panel-hdr"><div class="panel-hdr-title">Delen</div></div>
+    <div class="panel-hdr"><div class="panel-hdr-title" data-i18n="panel_parts">Delen</div></div>
     <div id="regionsList"></div>
   </div>
   <div class="cuelist-col">
-    <div class="panel-hdr"><div class="panel-hdr-title">Cuelijst</div></div>
+    <div class="panel-hdr"><div class="panel-hdr-title" data-i18n="panel_cues">Cuelijst</div></div>
+    <div class="filter-bar">
+      <div id="filterChips" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      <div class="filter-status" id="filterStatus">
+        <span id="filterStatusText"></span>
+        <button class="filter-clear-btn" onclick="clearTypeFilter()" data-i18n="filter_clear">✕ Wissen</button>
+      </div>
+    </div>
     <div id="cueList"></div>
   </div>
 </div>
 
 <script>
-const TC={regie:'#c4affe',kraan:'#7dd8fc',licht:'#fcd34d',geluid:'#6ee7b7',none:'#5a5a78'};
+/* ══════════════════════════════════════
+   I18N — vertaalsysteem (NL/EN/FR/ES)
+   Zelfde sleutels/waarden als cue-runner-desktop.html waar het concept
+   overlapt, voor een consistente ervaring tussen master en slave.
+══════════════════════════════════════ */
+const I18N_LANGS=['nl','en','fr','es'];
+const T={
+  connecting:{nl:'Verbinding maken met de Cue Runner server…',en:'Connecting to the Cue Runner server…',fr:'Connexion au serveur Cue Runner…',es:'Conectando con el servidor Cue Runner…'},
+  offline_banner:{nl:'⚠ Verbinding verbroken — klok loopt lokaal door. Herverbinden…',en:'⚠ Connection lost — clock keeps running locally. Reconnecting…',fr:'⚠ Connexion perdue — l\'horloge continue localement. Reconnexion…',es:'⚠ Conexión perdida — el reloj sigue localmente. Reconectando…'},
+  conn_connecting:{nl:'Verbinden…',en:'Connecting…',fr:'Connexion…',es:'Conectando…'},
+  conn_connected:{nl:'Verbonden',en:'Connected',fr:'Connecté',es:'Conectado'},
+  conn_offline:{nl:'Offline — herverbinden…',en:'Offline — reconnecting…',fr:'Hors ligne — reconnexion…',es:'Sin conexión — reconectando…'},
+  conn_error:{nl:'Verbindingsfout',en:'Connection error',fr:'Erreur de connexion',es:'Error de conexión'},
+  viewer_badge:{nl:'VIEWER — alleen lezen',en:'VIEWER — read only',fr:'VIEWER — lecture seule',es:'VIEWER — solo lectura'},
+  tt_partsview:{nl:'Regions-only weergave (R)',en:'Regions-only view (R)',fr:'Affichage parties uniquement (R)',es:'Vista solo de partes (R)'},
+  tt_lang:{nl:'Taal',en:'Language',fr:'Langue',es:'Idioma'},
+  theme_to_dark:{nl:'Schakel naar donker',en:'Switch to dark',fr:'Passer en sombre',es:'Cambiar a oscuro'},
+  theme_to_light:{nl:'Schakel naar licht',en:'Switch to light',fr:'Passer en clair',es:'Cambiar a claro'},
+  lbl_timecode:{nl:'TIMECODE',en:'TIMECODE',fr:'TIMECODE',es:'TIMECODE'},
+  status_stopped:{nl:'GESTOPT',en:'STOPPED',fr:'ARRÊTÉ',es:'DETENIDO'},
+  status_live:{nl:'LIVE',en:'LIVE',fr:'EN DIRECT',es:'EN VIVO'},
+  status_paused:{nl:'GEPAUZEERD',en:'PAUSED',fr:'EN PAUSE',es:'EN PAUSA'},
+  app_offline:{nl:'APP OFFLINE',en:'APP OFFLINE',fr:'APP HORS LIGNE',es:'APP SIN CONEXIÓN'},
+  lbl_current_part:{nl:'Huidig deel',en:'Current part',fr:'Partie actuelle',es:'Parte actual'},
+  lbl_next_part:{nl:'Volgend deel',en:'Next part',fr:'Partie suivante',es:'Parte siguiente'},
+  lbl_next_cue:{nl:'Volgende cue',en:'Next cue',fr:'Cue suivant',es:'Cue siguiente'},
+  lbl_last_part:{nl:'Laatste deel',en:'Last part',fr:'Dernière partie',es:'Última parte'},
+  rv_close:{nl:'✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span>',en:'✕ Close  <span style="opacity:.4;font-size:10px">ESC</span>',fr:'✕ Fermer  <span style="opacity:.4;font-size:10px">ÉCHAP</span>',es:'✕ Cerrar  <span style="opacity:.4;font-size:10px">ESC</span>'},
+  rv_hint:{nl:'Druk ESC om terug te keren · R om te wisselen',en:'Press ESC to return · R to toggle',fr:'Appuyez sur ÉCHAP pour revenir · R pour basculer',es:'Pulsa ESC para volver · R para alternar'},
+  rv_in_part:{nl:'in dit deel',en:'in this part',fr:'dans cette partie',es:'en esta parte'},
+  countdown_now:{nl:'NU',en:'NOW',fr:'MAINT.',es:'AHORA'},
+  cc_active_lbl:{nl:'Nu actief',en:'Now active',fr:'Actif maintenant',es:'Activo ahora'},
+  ns_next:{nl:'Volgend',en:'Next',fr:'Suivant',es:'Siguiente'},
+  ns_end_show:{nl:'Einde show',en:'End of show',fr:'Fin du spectacle',es:'Fin del espectáculo'},
+  panel_parts:{nl:'Delen',en:'Parts',fr:'Parties',es:'Partes'},
+  panel_cues:{nl:'Cuelijst',en:'Cue list',fr:'Liste des cues',es:'Lista de cues'},
+  no_parts:{nl:'Geen delen',en:'No parts',fr:'Aucune partie',es:'Sin partes'},
+  no_cues:{nl:'Geen cues',en:'No cues',fr:'Aucun cue',es:'Sin cues'},
+  filter_clear:{nl:'✕ Wissen',en:'✕ Clear',fr:'✕ Effacer',es:'✕ Borrar'},
+  filter_status:{nl:'⚠ Filter actief — {shown} van {total} cues getoond',en:'⚠ Filter active — showing {shown} of {total} cues',fr:'⚠ Filtre actif — {shown} cues affichés sur {total}',es:'⚠ Filtro activo — mostrando {shown} de {total} cues'},
+  filter_no_match:{nl:'Geen cues voldoen aan het filter',en:'No cues match the filter',fr:'Aucun cue ne correspond au filtre',es:'Ningún cue coincide con el filtro'},
+  type_licht:{nl:'💡 Licht',en:'💡 Light',fr:'💡 Lumière',es:'💡 Luz'},
+  type_spot:{nl:'🔦 Spot',en:'🔦 Spot',fr:'🔦 Poursuite',es:'🔦 Seguidor'},
+  type_kraan:{nl:'🏗 Kraan',en:'🏗 Crane',fr:'🏗 Grue',es:'🏗 Grúa'},
+  type_kaboem:{nl:'💥 Kaboem',en:'💥 Boom',fr:'💥 Boum',es:'💥 Boom'},
+  type_truss:{nl:'🔩 Truss',en:'🔩 Truss',fr:'🔩 Structure',es:'🔩 Estructura'},
+  type_dir:{nl:'🎬 Dir',en:'🎬 Dir',fr:'🎬 Rég.',es:'🎬 Dir'},
+  type_sound:{nl:'🔊 Sound',en:'🔊 Sound',fr:'🔊 Son',es:'🔊 Sonido'},
+  type_video:{nl:'🎥 Video',en:'🎥 Video',fr:'🎥 Vidéo',es:'🎥 Video'},
+};
+let LANG='nl';
+function t(key){ const e=T[key]; if(!e) return key; return e[LANG]||e.nl||key; }
+function tf(key,vars){ let s=t(key); if(vars) for(const k in vars) s=s.split('{'+k+'}').join(vars[k]); return s; }
+function applyTranslations(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.innerHTML=t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title=t(el.getAttribute('data-i18n-title')); });
+}
+function setLang(lang){
+  if(!I18N_LANGS.includes(lang)) lang='nl';
+  LANG=lang;
+  document.documentElement.setAttribute('lang',lang);
+  try{ localStorage.setItem('cueRunnerLang',lang); }catch(e){}
+  applyTranslations();
+  applyThemeIcon();
+  buildFilterChips();
+  if(lastState) renderFull(lastState, localElapsed);
+  const sel=$('langSelect'); if(sel) sel.value=lang;
+}
+function initLang(){
+  let saved='nl';
+  try{ saved=localStorage.getItem('cueRunnerLang')||'nl'; }catch(e){}
+  setLang(saved);
+}
+
+/* ══════════════════════════════════════
+   THEMA (licht / donker)
+══════════════════════════════════════ */
+function currentTheme(){ return document.documentElement.getAttribute('data-theme')==='light'?'light':'dark'; }
+function applyThemeIcon(){
+  const b=$('themeToggle'); if(!b) return;
+  const light=currentTheme()==='light';
+  b.textContent=light?'☀️':'🌙';
+  b.title=light?t('theme_to_dark'):t('theme_to_light');
+}
+function toggleTheme(){
+  const next=currentTheme()==='light'?'dark':'light';
+  if(next==='light') document.documentElement.setAttribute('data-theme','light');
+  else document.documentElement.removeAttribute('data-theme');
+  try{ localStorage.setItem('cueRunnerTheme', next); }catch(e){}
+  applyThemeIcon();
+}
+
+/* ══════════════════════════════════════
+   CUE-TYPES (zelfde 8 types + kleuren als desktop-app)
+══════════════════════════════════════ */
+const TYPE_ORDER=['licht','spot','kraan','kaboem','truss','dir','sound','video'];
+const TYPE_COLORS={licht:'#fcd34d',spot:'#fb7185',kraan:'#7dd8fc',kaboem:'#f97316',truss:'#94a3b8',dir:'#c4affe',sound:'#6ee7b7',video:'#818cf8',none:'#5a5a78'};
+const typeColor=types=>TYPE_COLORS[(types&&types[0])||'none'];
+function renderTypeBar(types){
+  if(!types||!types.length) return `<div class="cr-bar" style="background:${TYPE_COLORS.none}"></div>`;
+  if(types.length===1) return `<div class="cr-bar" style="background:${TYPE_COLORS[types[0]]}"></div>`;
+  const segs=types.map(tp=>`<div style="flex:1;background:${TYPE_COLORS[tp]};"></div>`).join('');
+  return `<div class="cr-bar">${segs}</div>`;
+}
+
+/* ══════════════════════════════════════
+   CUE-TYPE FILTER — zelfde gedrag als desktop:
+   volledig verbergen bij match, wissen-knop, werkt altijd (geen "besturen"-concept in de viewer)
+══════════════════════════════════════ */
+let activeFilter=new Set();
+function buildFilterChips(){
+  const el=$('filterChips'); if(!el) return;
+  el.innerHTML=TYPE_ORDER.map(tp=>
+    `<button class="filter-chip ${activeFilter.has(tp)?'sel':''}" style="color:${TYPE_COLORS[tp]}" onclick="toggleTypeFilter('${tp}')">${t('type_'+tp)}</button>`
+  ).join('');
+}
+function toggleTypeFilter(tp){
+  if(activeFilter.has(tp)) activeFilter.delete(tp); else activeFilter.add(tp);
+  buildFilterChips();
+  if(lastState) renderCues(lastState, localElapsed);
+}
+function clearTypeFilter(){
+  activeFilter.clear();
+  buildFilterChips();
+  if(lastState) renderCues(lastState, localElapsed);
+}
+function updateFilterStatus(shown,total){
+  const bar=$('filterStatus'); if(!bar) return;
+  if(activeFilter.size===0){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  $('filterStatusText').textContent=tf('filter_status',{shown,total});
+}
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
 const pad=n=>String(n).padStart(2,'0');
 const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
+// Frames alleen op de grote klokken (hero + delen-view) — fps komt van de master via broadcast.
+const fmtFrames=s=>{
+  const fps=(lastState&&lastState.fps)||25;
+  return `${fmt(s)}<span class="clock-frames">:${pad(Math.floor((s%1)*fps))}</span>`;
+};
 const $=id=>document.getElementById(id);
+function findNextCueIdx(cues,tm){
+  for(let i=0;i<cues.length;i++){ if(tm<cues[i].time) return i; }
+  return -1;
+}
 
 /* ══════════════════════════════════════
    STATE
@@ -217,16 +536,15 @@ let localRunning=false;       // is the show playing (locally known)
 let localStartedAt=null;      // performance.now() when show started locally
 let connectedOnce=false;      // have we ever successfully connected?
 let isOnline=false;
+let regionViewActive=false;   // moet vóór de klok-loop staan (die leest deze var synchroon bij de eerste tick)
 
 /* ══════════════════════════════════════
    DETERMINE SERVER URL AUTOMATICALLY
    Priority: 1) ?server= param, 2) same host (wss://thishost), 3) manual input
 ══════════════════════════════════════ */
 function resolveServerUrl(){
-  // 1. Query parameter
   const qp=new URLSearchParams(location.search).get('server');
   if(qp) return qp;
-  // 2. Same host — viewer is served from the relay server
   const proto=location.protocol==='https:'?'wss:':'ws:';
   return `${proto}//${location.host}`;
 }
@@ -248,14 +566,12 @@ function connect(){
     isOnline=true;
     setConn('live');
     if(connectedOnce){
-      // Was offline — hide offline banner immediately
       $('offlineBanner').classList.remove('show');
       $('clock').classList.remove('offline');
     }
     connectedOnce=true;
     $('overlay').classList.add('hidden');
 
-    // Keepalive ping every 20s (Render drops idle after ~55s)
     pingIv=setInterval(()=>{
       if(ws&&ws.readyState===1) try{ws.send('__ping__');}catch(e){}
     },20000);
@@ -266,7 +582,6 @@ function connect(){
     setConn('offline');
     if(pingIv){clearInterval(pingIv);pingIv=null;}
     if(connectedOnce && localRunning){
-      // Keep clock running locally, show offline banner
       $('offlineBanner').classList.add('show');
       $('clock').classList.add('offline');
     } else if(!connectedOnce){
@@ -282,8 +597,8 @@ function connect(){
     try{
       const d=JSON.parse(e.data);
       if(d.disconnected){
-        setConn('live'); // still on server, broadcaster gone
-        $('statusBadge').textContent='APP OFFLINE';
+        setConn('live');
+        $('statusBadge').textContent=t('app_offline');
         $('statusBadge').className='status-badge';
         return;
       }
@@ -301,7 +616,7 @@ function scheduleReconnect(){
 function setConn(s){
   const dot=$('connDot'),lbl=$('connLabel');
   dot.className='conn-dot'+(s==='live'?' live':s==='offline'?' offline':s==='error'?' error':'');
-  lbl.textContent=s==='live'?'Verbonden':s==='offline'?'Offline — herverbinden…':s==='error'?'Verbindingsfout':'Verbinden…';
+  lbl.textContent=s==='live'?t('conn_connected'):s==='offline'?t('conn_offline'):s==='error'?t('conn_error'):t('conn_connecting');
 }
 
 /* ══════════════════════════════════════
@@ -309,18 +624,13 @@ function setConn(s){
 ══════════════════════════════════════ */
 function applyServerState(s){
   lastState=s;
-
-  // Sync local clock to server
   localElapsed=s.t||0;
   localRunning=s.running||false;
   if(localRunning){
     localStartedAt=performance.now()-localElapsed*1000;
   }
-
-  // Hide offline banner if we were offline
   $('offlineBanner').classList.remove('show');
   $('clock').classList.remove('offline');
-
   renderFull(s, localElapsed);
 }
 
@@ -328,35 +638,34 @@ function applyServerState(s){
    LOCAL CLOCK LOOP — runs even offline
 ══════════════════════════════════════ */
 (function loop(){
-  let t=localElapsed;
+  let tm=localElapsed;
   if(localRunning && localStartedAt!==null){
-    t=(performance.now()-localStartedAt)/1000;
-    localElapsed=t;
+    tm=(performance.now()-localStartedAt)/1000;
+    localElapsed=tm;
   }
 
-  // Update clock display
-  $('clock').textContent=fmt(t);
+  $('clock').innerHTML=fmtFrames(tm);
 
-  // Update countdown smoothly
   if(lastState && lastState.nextCue){
-    const diff=lastState.nextCue.time-t;
+    const diff=lastState.nextCue.time-tm;
     const cdEl=$('countdown');
     if(diff>0){
       const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
       cdEl.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
       cdEl.className='cc-countdown'+(diff<=5?' hot':'');
     } else {
-      cdEl.textContent='NU';
+      cdEl.textContent=t('countdown_now');
       cdEl.className='cc-countdown hot';
     }
-    // Progress bar
     const prev=lastState.prevCueTime||0;
     const span=lastState.nextCue.time-prev;
-    const done=t-prev;
+    const done=tm-prev;
     const pct=Math.min(100,Math.max(0,span>0?done/span*100:0));
     $('progressFill').style.width=pct+'%';
     $('progressFill').style.background=diff<=10?'var(--danger)':'var(--warn)';
   }
+
+  if(regionViewActive) updateRegionView(tm);
 
   requestAnimationFrame(loop);
 })();
@@ -364,67 +673,63 @@ function applyServerState(s){
 /* ══════════════════════════════════════
    RENDER
 ══════════════════════════════════════ */
-function renderFull(s, t){
-  // Clock class
+function renderFull(s, tm){
   const clk=$('clock');
   clk.className=s.running?'run':'pau';
 
-  // Status badge
   const sb=$('statusBadge');
-  sb.textContent=s.running?'LIVE':'GEPAUZEERD';
+  sb.textContent=s.running?t('status_live'):t('status_paused');
   sb.className='status-badge'+(s.running?' live':' pau');
+  if(!s.running && tm===0 && !s.activeCue) sb.textContent=t('status_stopped');
 
-  // Active cue
   if(s.activeCue){
     $('activeName').textContent=s.activeCue.name;
-    $('activeDot').style.background=TC[s.activeCue.type||'none'];
+    $('activeDot').style.background=typeColor(s.activeCue.types);
   } else {
     $('activeName').textContent='—';
-    $('activeDot').style.background=TC.none;
+    $('activeDot').style.background=TYPE_COLORS.none;
   }
 
-  // Next cue
   if(s.nextCue){
     $('nextName').textContent=s.nextCue.name;
     $('nextTime').textContent=fmt(s.nextCue.time);
-    $('nextDot').style.background=TC[s.nextCue.type||'none'];
+    $('nextDot').style.background=typeColor(s.nextCue.types);
   } else {
-    $('nextName').textContent='Einde show';
+    $('nextName').textContent=t('ns_end_show');
     $('nextTime').textContent='';
-    $('nextDot').style.background=TC.none;
+    $('nextDot').style.background=TYPE_COLORS.none;
     $('countdown').textContent='—';
   }
 
-  // Region
   const regs=s.regions||[];
   if(s.region){
     $('rdName').textContent=s.region.name;
     const idx=regs.findIndex(r=>r.id===s.region.id);
     const nxt=regs[idx+1];
     if(nxt){
-      const diff=nxt.start-t;
+      const diff=nxt.start-tm;
       const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
       $('rdNext').textContent=`→ ${nxt.name}  ${mm}:${pad(ss)}`;
-    } else $('rdNext').textContent='Laatste deel';
+    } else $('rdNext').textContent=t('lbl_last_part');
   } else {
     $('rdName').textContent='—';
     $('rdNext').textContent='';
   }
 
-  renderRegions(s,t);
-  renderCues(s,t);
+  renderRegions(s,tm);
+  renderCues(s,tm);
 }
 
-function renderRegions(s,t){
+function renderRegions(s,tm){
   const el=$('regionsList');
   const regs=s.regions||[];
-  if(!regs.length){el.innerHTML='<div style="padding:16px;font-size:12px;color:var(--muted)">Geen delen</div>';return;}
+  if(!regs.length){el.innerHTML=`<div class="empty-hint">${t('no_parts')}</div>`;return;}
   el.innerHTML=regs.map(r=>{
     const isAct=s.region&&s.region.id===r.id;
-    const isPast=t>=r.end;
+    const isPast=tm>=r.end;
     const bc=r.color||'var(--muted)';
     let pct=0;
-    if(isAct) pct=Math.min(100,Math.max(0,(t-r.start)/(r.end-r.start)*100));
+    if(isAct) pct=Math.min(100,Math.max(0,(tm-r.start)/(r.end-r.start)*100));
     else if(isPast) pct=100;
     return `<div class="region-row ${isAct?'active':''} ${isPast&&!isAct?'past':''}">
       <div class="rr-bar" style="background:${bc}"></div>
@@ -437,15 +742,27 @@ function renderRegions(s,t){
   }).join('');
 }
 
-function renderCues(s,t){
+function renderCues(s,tm){
   const el=$('cueList');
   const cues=s.cues||[];
-  if(!cues.length){el.innerHTML='<div style="padding:16px;font-size:12px;color:var(--muted)">Geen cues</div>';return;}
+  if(!cues.length){
+    el.innerHTML=`<div class="empty-hint">${t('no_cues')}</div>`;
+    updateFilterStatus(0,0);
+    return;
+  }
+  const visibleIdx=cues.map((c,i)=>i).filter(i=>{
+    const c=cues[i];
+    return activeFilter.size===0 || (c.types&&c.types.some(tp=>activeFilter.has(tp)));
+  });
+  updateFilterStatus(visibleIdx.length,cues.length);
+  if(!visibleIdx.length){
+    el.innerHTML=`<div class="empty-hint">${t('filter_no_match')}</div>`;
+    return;
+  }
 
   let html='',lastRid='__';
-  for(let i=0;i<cues.length;i++){
+  for(const i of visibleIdx){
     const c=cues[i];
-    // Region separator
     if(c.regionId!==lastRid){
       lastRid=c.regionId;
       const r=(s.regions||[]).find(x=>x.id===c.regionId);
@@ -456,26 +773,130 @@ function renderCues(s,t){
         </div>`;
       }
     }
-    const isAct=s.activeCue&&c.name===s.activeCue.name;
-    const isNext=s.nextCue&&c.name===s.nextCue.name;
-    const isPast=c.time<t&&!isAct&&!isNext;
+    const isAct=s.activeCue&&c.name===s.activeCue.name&&c.time===s.activeCue.time;
+    const isNext=s.nextCue&&c.name===s.nextCue.name&&c.time===s.nextCue.time;
+    const isPast=c.time<tm&&!isAct&&!isNext;
     let cls=isAct?'active':isNext?'upcoming':isPast?'past':'';
     html+=`<div class="cue-row ${cls}" id="vcue-${i}">
-      <div class="cr-dot" style="background:${TC[c.type||'none']}"></div>
+      ${renderTypeBar(c.types)}
       <div class="cr-name ${isAct?'active':''}">${c.name}</div>
       <div class="cr-time">${fmt(c.time)}</div>
     </div>`;
   }
   el.innerHTML=html;
 
-  // Auto-scroll
   const target=document.querySelector('.cue-row.upcoming,.cue-row.active');
   if(target) target.scrollIntoView({block:'nearest'});
 }
 
 /* ══════════════════════════════════════
-   START
+   REGIONS-ONLY VIEW (delen-view) — lokaal togglebaar, onafhankelijk van de master
 ══════════════════════════════════════ */
+function toggleRegionView(){
+  regionViewActive=!regionViewActive;
+  $('regionView').classList.toggle('active', regionViewActive);
+  if(regionViewActive) updateRegionView(localElapsed);
+}
+
+function updateRegionView(tm){
+  if(!regionViewActive) return;
+  const s=lastState||{};
+  const cues=s.cues||[];
+  const regs=s.regions||[];
+
+  const clkEl=$('rvClock');
+  clkEl.innerHTML=fmtFrames(tm);
+  clkEl.className='rv-clock'+(localRunning?' run':' pau');
+
+  const r=s.region?regs.find(x=>x.id===s.region.id):null;
+  const rIdx=r?regs.indexOf(r):-1;
+  const nextR=r?regs[rIdx+1]:null;
+
+  if(r){
+    const bc=r.color||'var(--acc)';
+    $('rvRegionBar').style.background=bc;
+    $('rvRegionName').textContent=r.name;
+    $('rvRegionTimes').textContent=`${fmt(r.start)}  –  ${fmt(r.end)}`;
+    const inRegion=Math.max(0, tm-r.start);
+    const inMm=Math.floor(inRegion/60), inSs=Math.floor(inRegion%60);
+    $('rvRegionElapsed').textContent=`${pad(inMm)}:${pad(inSs)} ${t('rv_in_part')}`;
+    const span=r.end-r.start;
+    const done=tm-r.start;
+    const pct=Math.min(100,Math.max(0,span>0?done/span*100:0));
+    $('rvProgressFill').style.width=pct+'%';
+    $('rvProgressFill').style.background=bc;
+  } else {
+    $('rvRegionBar').style.background='var(--muted)';
+    $('rvRegionName').textContent='—';
+    $('rvRegionTimes').textContent='';
+    $('rvRegionElapsed').textContent='';
+    $('rvProgressFill').style.width='0%';
+  }
+
+  if(nextR){
+    $('rvNextName').textContent=nextR.name;
+    $('rvNoNext').style.display='none';
+    $('rvCountdown').style.display='block';
+    const diff=nextR.start-tm;
+    if(diff>0){
+      const mm=Math.floor(diff/60), ss=Math.floor(diff%60);
+      $('rvCountdown').textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
+      $('rvCountdown').className='rv-countdown'+(diff<=10?' hot':'');
+    } else {
+      $('rvCountdown').textContent=t('countdown_now');
+      $('rvCountdown').className='rv-countdown hot';
+    }
+  } else if(r){
+    $('rvNextName').textContent='';
+    $('rvCountdown').style.display='none';
+    $('rvNoNext').style.display='block';
+  } else {
+    $('rvNextName').textContent='—';
+    $('rvCountdown').textContent='—';
+    $('rvCountdown').style.display='block';
+    $('rvNoNext').style.display='none';
+  }
+
+  // Volgende cue: countdown + lijst van 3 aankomende cues
+  const ni=findNextCueIdx(cues,tm);
+  if(ni>=0){
+    const nc=cues[ni];
+    $('rvCueName').textContent=nc.name;
+    const cdiff=nc.time-tm;
+    const ccdEl=$('rvCueCountdown');
+    if(cdiff>0){
+      const cmm=Math.floor(cdiff/60), css_=Math.floor(cdiff%60);
+      ccdEl.textContent=cmm>0?`${cmm}:${pad(css_)}`:`${Math.ceil(cdiff)}s`;
+      ccdEl.className='rv-cue-countdown'+(cdiff<=5?' hot':'');
+    } else {
+      ccdEl.textContent=t('countdown_now');
+      ccdEl.className='rv-cue-countdown hot';
+    }
+  } else {
+    $('rvCueName').textContent=t('ns_end_show');
+    $('rvCueCountdown').textContent='—';
+    $('rvCueCountdown').className='rv-cue-countdown';
+  }
+  const upcoming=ni>=0?cues.slice(ni,ni+3):[];
+  $('rvCueList').innerHTML=upcoming.map((c,idx)=>`
+    <div class="rv-cue-item${idx===0?' now':''}">
+      <span class="dot" style="background:${typeColor(c.types)}"></span>
+      <span>${c.name}</span>
+      <span class="rv-ci-time">${fmt(c.time)}</span>
+    </div>`).join('');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Escape' && regionViewActive){ toggleRegionView(); return; }
+  if(e.code==='KeyR' && !e.shiftKey && !e.ctrlKey && !e.metaKey) toggleRegionView();
+});
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+buildFilterChips();
+applyThemeIcon();
+initLang();
 connect();
 </script>
 </body>
