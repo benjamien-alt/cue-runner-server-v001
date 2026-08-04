@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<!--
+  ⚠ VEROUDERD / DEPRECATED — niet meer gebruiken.
+
+  Deze aparte smartphone-versie is vervangen door de responsive
+  cue-runner-desktop.html, die zichzelf aanpast aan telefoon/tablet/desktop
+  (zie de weergavekeuze in de topbar: Auto / Desktop / Tablet / Telefoon).
+
+  Deze file mist alle nieuwere functies (licht/donker-thema, NL/EN/FR/ES
+  vertaling, view-only modus, de 8 cue-types, het cue-type filter, frames in
+  de klok, en de uitgebreide delen-view). Gebruik cue-runner-desktop.html.
+
+  Bewaard als referentie; niet verder onderhouden.
+-->
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>CUE RUNNER — VEROUDERD (gebruik cue-runner-desktop.html)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:        #080809;
+  --surface:   #0f0f13;
+  --surface2:  #15151c;
+  --border:    #2a2a3a;
+  --accent:    #c8f53a;
+  --warn:      #f5a623;
+  --danger:    #f53a3a;
+  --text:      #f0f0fa;
+  --muted:     #9090b0;   /* was #42425a — much lighter */
+  --active-bg: #141a05;
+
+  /* Cue type colours */
+  --col-regie:  #c4affe;
+  --col-kraan:  #7dd8fc;
+  --col-licht:  #fcd34d;
+  --col-geluid: #6ee7b7;
+  --col-none:   #8080a0;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;}
+
+/* ═══════════════════════════════════════
+   SHELL
+═══════════════════════════════════════ */
+.shell{display:flex;flex-direction:column;height:100%;height:100dvh;}
+
+/* ═══════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);
+  flex-shrink:0;gap:8px;
+}
+.app-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--accent);flex-shrink:0;}
+.status-pill{display:flex;align-items:center;gap:5px;font-size:11px;letter-spacing:1.5px;color:var(--text);text-transform:uppercase;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .2s;}
+.dot.live  {background:var(--accent);box-shadow:0 0 8px var(--accent);animation:blink 1s infinite;}
+.dot.paused{background:var(--warn);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.topbar-btns{display:flex;gap:6px;align-items:center;}
+.btn-sm{
+  background:transparent;border:1px solid var(--border);border-radius:6px;
+  color:var(--text);font-size:12px;padding:6px 11px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;white-space:nowrap;
+}
+.btn-sm:active{background:var(--surface2);}
+.btn-sm.accent{border-color:var(--accent);color:var(--accent);}
+
+/* MIDI indicator */
+.midi-badge{
+  font-size:11px;letter-spacing:1px;padding:4px 9px;border-radius:4px;
+  border:1px solid var(--border);color:var(--text);background:transparent;
+  transition:all .2s;cursor:pointer;
+}
+.midi-badge.connected{border-color:#c4affe;color:#c4affe;box-shadow:0 0 8px rgba(196,175,254,.3);}
+
+/* ═══════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════ */
+.clock-section{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:12px 16px 8px;flex-shrink:0;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.clock-label{font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+.clock{
+  font-family:'Share Tech Mono',monospace;font-size:clamp(48px,13vw,72px);
+  color:var(--accent);letter-spacing:4px;line-height:1;
+  text-shadow:0 0 28px rgba(200,245,58,.35);transition:color .3s,text-shadow .3s;
+}
+.clock.running{color:#fff;text-shadow:0 0 36px rgba(200,245,58,.55);}
+.clock.paused {color:var(--warn);text-shadow:0 0 20px rgba(245,166,35,.3);}
+.sync-source{font-size:11px;letter-spacing:2px;color:var(--muted);margin-top:2px;}
+.sync-source.active{color:#c4affe;}
+
+/* ═══════════════════════════════════════
+   TRANSPORT
+═══════════════════════════════════════ */
+.transport{
+  display:flex;gap:7px;padding:9px 14px;
+  background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.btn-t{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:13px 4px;border-radius:10px;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  transition:transform .1s,filter .1s,opacity .15s;
+  -webkit-user-select:none;user-select:none;
+}
+.btn-t:active{transform:scale(.94);filter:brightness(1.2);}
+.btn-t:disabled{opacity:.25;pointer-events:none;}
+.btn-t .ic{font-size:20px;line-height:1;}
+.btn-start{background:var(--accent);color:#080809;}
+.btn-pause{background:var(--warn);color:#080809;}
+.btn-stop {background:var(--surface2);color:var(--danger);border:1px solid var(--border);}
+.btn-skip {background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-from {background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+
+/* ═══════════════════════════════════════
+   NEXT STRIP
+═══════════════════════════════════════ */
+.progress-strip{height:2px;background:var(--border);flex-shrink:0;}
+.progress-fill{height:100%;background:var(--warn);transition:width .4s linear;}
+
+.next-strip{
+  display:flex;align-items:center;gap:10px;padding:8px 14px;
+  background:var(--surface2);border-bottom:1px solid var(--border);
+  flex-shrink:0;min-height:52px;
+}
+.next-strip-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;flex-shrink:0;width:36px;}
+.next-type-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.next-strip-info{flex:1;overflow:hidden;}
+.next-strip-name{
+  font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;
+  color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.1;
+}
+.next-strip-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);margin-top:1px;}
+.next-countdown{
+  font-family:'Share Tech Mono',monospace;font-size:22px;
+  color:var(--warn);flex-shrink:0;text-align:right;min-width:54px;
+}
+.next-countdown.imminent{color:var(--danger);animation:pulse .5s infinite alternate;}
+@keyframes pulse{from{opacity:1}to{opacity:.25}}
+
+/* ═══════════════════════════════════════
+   CUE LIST
+═══════════════════════════════════════ */
+.cue-list-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.cue-list-wrap::-webkit-scrollbar{display:none;}
+
+.list-header{
+  display:grid;grid-template-columns:10px 32px 1fr 80px 32px;
+  padding:7px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg);position:sticky;top:0;z-index:5;gap:8px;align-items:center;
+}
+.list-header span{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.list-header span:nth-child(4){text-align:right;}
+
+/* CUE ROW */
+.cue-row{
+  display:grid;grid-template-columns:10px 32px 1fr 80px 32px;
+  align-items:center;padding:0 14px;min-height:54px;gap:8px;
+  border-bottom:1px solid var(--border);border-left:3px solid transparent;
+  transition:background .2s,border-color .2s;position:relative;cursor:pointer;
+}
+.cue-row:hover{background:rgba(255,255,255,.025);}
+.cue-row.active  {background:var(--active-bg);border-left-color:var(--accent);}
+.cue-row.active .cue-name{color:var(--accent);font-weight:600;}
+.cue-row.upcoming{background:rgba(245,166,35,.04);border-left-color:var(--warn);}
+.cue-row.past .cue-num,
+.cue-row.past .cue-name,
+.cue-row.past .cue-time{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(144,144,176,.4);}
+
+.cue-type-bar{width:100%;height:100%;border-radius:1px;}
+.cue-num{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+.cue-name-wrap{overflow:hidden;}
+.cue-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cue-note-preview{
+  font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;margin-top:1px;display:none;
+}
+.cue-row:hover .cue-note-preview{display:block;}
+.cue-time{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);text-align:right;}
+.cue-del{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border:none;background:transparent;
+  color:var(--muted);font-size:15px;cursor:pointer;border-radius:5px;opacity:.6;
+}
+.cue-del:active{opacity:1;color:var(--danger);background:rgba(245,58,58,.1);}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;color:var(--muted);gap:8px;text-align:center;font-size:14px;
+}
+.empty-big{font-size:38px;margin-bottom:4px;}
+
+/* Region header rows in cue list */
+.region-header{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;background:var(--surface);
+  border-bottom:1px solid var(--border);border-left:4px solid var(--muted);
+  position:sticky;top:33px;z-index:4;
+}
+.rh-id{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1px;flex-shrink:0;}
+.rh-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--text);flex:1;}
+.rh-time{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--muted);flex-shrink:0;}
+
+/* ═══════════════════════════════════════
+   ADD CUE BAR (sticky bottom of list)
+═══════════════════════════════════════ */
+.add-cue-bar{
+  display:flex;align-items:center;gap:8px;padding:8px 14px;
+  background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;
+}
+.add-cue-bar input[type=text]{
+  flex:1;background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;
+  outline:none;
+}
+.add-cue-bar input[type=text]:focus{border-color:var(--accent);}
+.add-cue-bar input[type=text]::placeholder{color:var(--muted);}
+.add-cue-bar input[type=time]{
+  background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 6px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;
+  outline:none;width:90px;
+}
+.add-cue-bar input[type=time]:focus{border-color:var(--accent);}
+.add-cue-type{
+  background:var(--bg);border:1px solid var(--border);border-radius:7px;
+  padding:8px 6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;
+  outline:none;cursor:pointer;
+}
+.btn-add{
+  background:var(--accent);color:#080809;border:none;border-radius:8px;
+  padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap;
+}
+.btn-add:active{filter:brightness(1.15);}
+
+/* ═══════════════════════════════════════
+   MODALS (shared base)
+═══════════════════════════════════════ */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;
+  align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px 16px 0 0;padding:14px 18px 32px;
+  width:100%;max-height:90vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:12px;
+  animation:slideUp .22s ease;
+}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto;}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:3px;color:var(--accent);}
+.modal p{font-size:13px;color:var(--text);line-height:1.7;}
+.modal p code{color:var(--accent);font-family:'Share Tech Mono',monospace;background:rgba(200,245,58,.08);padding:1px 5px;border-radius:3px;}
+.modal textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:11px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;
+  resize:vertical;min-height:180px;outline:none;line-height:1.9;-webkit-appearance:none;
+}
+.modal textarea:focus{border-color:var(--accent);}
+.modal-actions{display:flex;gap:10px;}
+.btn-save{
+  flex:1;background:var(--accent);color:#080809;border:none;border-radius:10px;
+  padding:13px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+}
+.btn-cancel{
+  background:var(--surface2);color:var(--text);border:1px solid var(--border);
+  border-radius:10px;padding:13px 16px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;
+}
+
+/* ── CUE DETAIL MODAL ── */
+.field-label{font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.field-input{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;
+}
+.field-input:focus{border-color:var(--accent);}
+.type-picker{display:flex;gap:8px;flex-wrap:wrap;}
+.type-chip{
+  padding:8px 15px;border-radius:20px;border:2px solid transparent;
+  font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;
+  font-family:'DM Sans',sans-serif;opacity:.6;
+}
+.type-chip.sel{opacity:1;border-color:currentColor;}
+.type-chip.regie {color:var(--col-regie);}
+.type-chip.kraan {color:var(--col-kraan);}
+.type-chip.licht {color:var(--col-licht);}
+.type-chip.geluid{color:var(--col-geluid);}
+.type-chip.none  {color:var(--col-none);}
+.note-area{
+  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;
+  outline:none;resize:vertical;min-height:80px;line-height:1.6;
+}
+.note-area:focus{border-color:var(--accent);}
+
+/* ── MIDI MODAL ── */
+.midi-status-box{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.midi-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.midi-row label{font-size:13px;color:var(--text);}
+.midi-row select,
+.midi-row input[type=number]{
+  background:var(--surface2);border:1px solid var(--border);border-radius:6px;
+  padding:7px 9px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;outline:none;
+}
+.midi-info{font-size:12px;color:var(--text);line-height:1.7;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border);}
+.badge{display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;}
+.badge.ok  {background:rgba(200,245,58,.15);color:var(--accent);}
+.badge.err {background:rgba(245,58,58,.15);color:var(--danger);}
+.badge.warn{background:rgba(245,166,35,.15);color:var(--warn);}
+/* MIDI debug log */
+.midi-log{
+  font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:8px 10px;height:72px;overflow-y:auto;line-height:1.7;
+}
+.midi-log .ok  {color:var(--accent);}
+.midi-log .warn{color:var(--warn);}
+.midi-log .err {color:var(--danger);}
+
+/* ── IMPORT/EXPORT MODAL ── */
+.file-drop{
+  border:2px dashed var(--border);border-radius:10px;padding:24px;
+  text-align:center;color:var(--text);font-size:14px;cursor:pointer;
+  transition:border-color .2s;
+}
+.file-drop:hover,.file-drop.drag{border-color:var(--accent);color:var(--text);}
+.file-drop input{display:none;}
+
+/* ═══════════════════════════════════════
+   TOOLTIP for notes (desktop hover)
+═══════════════════════════════════════ */
+.tooltip{
+  position:fixed;z-index:500;background:#1e1e2e;border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;max-width:260px;font-size:12px;
+  color:var(--text);line-height:1.6;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.6);display:none;
+}
+
+/* ═══════════════════════════════════════
+   REGION BADGE
+═══════════════════════════════════════ */
+.region-badge{
+  display:none;flex-direction:column;gap:2px;
+  padding:6px 14px;background:var(--surface2);
+  border-bottom:2px solid var(--border);border-left:4px solid var(--muted);
+  flex-shrink:0;
+}
+.rb-label{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.rb-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--text);}
+.rb-next{font-size:10px;color:var(--muted);}
+
+/* ═══════════════════════════════════════
+   START-FROM button in cue row
+═══════════════════════════════════════ */
+.cue-row{position:relative;}
+.cue-start-from{
+  display:none;
+  position:absolute;right:38px;top:50%;transform:translateY(-50%);
+  background:var(--accent);color:#080809;border:none;border-radius:6px;
+  padding:4px 9px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.5px;cursor:pointer;white-space:nowrap;z-index:2;
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.cue-row:hover .cue-start-from,
+.cue-row.show-action .cue-start-from{display:block;}
+.cue-start-from:active{filter:brightness(1.15);}
+
+/* adjust time column when action visible */
+.cue-row:hover .cue-time,
+.cue-row.show-action .cue-time{opacity:0;}
+
+/* ── TIME PICKER MODAL ── */
+.time-picker-grid{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  margin:8px 0;
+}
+.time-seg-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.time-seg-lbl{font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.time-seg{
+  background:var(--bg);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:26px;
+  width:72px;text-align:center;padding:10px 4px;outline:none;
+  -moz-appearance:textfield;appearance:textfield;
+}
+.time-seg::-webkit-inner-spin-button,.time-seg::-webkit-outer-spin-button{-webkit-appearance:none;}
+.time-seg:focus{border-color:var(--accent);}
+.time-colon{font-family:'Share Tech Mono',monospace;font-size:28px;color:var(--muted);padding-bottom:16px;}
+.time-cues-list{
+  display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;
+  padding:2px 0;
+}
+.time-cues-list::-webkit-scrollbar{display:none;}
+.time-cue-option{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;
+  transition:background .12s,border-color .12s;
+}
+.time-cue-option:active,.time-cue-option:hover{background:var(--surface2);border-color:var(--muted);}
+.time-cue-option.sel{border-color:var(--accent);background:rgba(200,245,58,.06);}
+.tco-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tco-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tco-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+
+/* btn-t variant: neutral "start from" */
+.btn-from{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.btn-from:not(:disabled){color:var(--text);}
+
+/* ═══════════════════════════════════════
+   DESKTOP OVERRIDES
+═══════════════════════════════════════ */
+@media(min-width:640px){
+  .shell{max-width:560px;margin:0 auto;border-left:1px solid var(--border);border-right:1px solid var(--border);}
+  .modal{border-radius:16px;max-width:520px;margin:auto;}
+  .modal-overlay{align-items:center;}
+  .modal-handle{display:none;}
+  .cue-note-preview{display:block !important;}
+  .tooltip{display:block;}
+}
+</style>
+</head>
+<body>
+<div style="background:#f5a623;color:#0b0b0b;font-family:sans-serif;font-size:12px;font-weight:700;padding:8px 12px;text-align:center;line-height:1.4;">
+  ⚠ Verouderde versie — gebruik <span style="text-decoration:underline;">cue-runner-desktop.html</span> (past zich aan telefoon/tablet/desktop aan).
+</div>
+<div class="shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="app-title">CUE RUNNER</div>
+    <div class="status-pill">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">GESTOPT</span>
+    </div>
+    <div class="topbar-btns">
+      <span class="midi-badge" id="midiBadge" onclick="openMidi()">MIDI</span>
+      <button class="btn-sm" onclick="openImEx()">CSV</button>
+      <button class="btn-sm accent" onclick="openEditModal()">+ Cue</button>
+    </div>
+  </div>
+
+  <!-- CLOCK -->
+  <div class="clock-section">
+    <div class="clock-label">Timecode</div>
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="sync-source" id="syncSource">INTERN</div>
+  </div>
+
+  <!-- REGION BADGE -->
+  <div class="region-badge" id="regionBadge">
+    <div class="rb-label">Deel</div>
+    <div class="rb-name"></div>
+    <div class="rb-next"></div>
+  </div>
+
+  <!-- TRANSPORT -->
+  <div class="transport">
+    <button class="btn-t btn-start" id="btnStart" onclick="startTimer()">
+      <span class="ic">▶</span><span>Start</span>
+    </button>
+    <button class="btn-t btn-pause" id="btnPause" onclick="pauseTimer()" disabled>
+      <span class="ic">⏸</span><span>Pauze</span>
+    </button>
+    <button class="btn-t btn-stop" id="btnStop" onclick="stopTimer()" disabled>
+      <span class="ic">⏹</span><span>Stop</span>
+    </button>
+    <button class="btn-t btn-skip" onclick="skipToNext()">
+      <span class="ic">⏭</span><span>Volgende</span>
+    </button>
+    <button class="btn-t btn-from" onclick="openStartFrom()">
+      <span class="ic">↩</span><span>Vanaf</span>
+    </button>
+  </div>
+
+  <!-- PROGRESS + NEXT -->
+  <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <div class="next-strip">
+    <div class="next-strip-label">Volgend</div>
+    <div class="next-type-dot" id="nextTypeDot"></div>
+    <div class="next-strip-info">
+      <div class="next-strip-name" id="nextCueName">—</div>
+      <div class="next-strip-time" id="nextCueTime">—</div>
+    </div>
+    <div class="next-countdown" id="countdown">—</div>
+  </div>
+
+  <!-- CUE LIST -->
+  <div class="cue-list-wrap" id="cueListWrap">
+    <div class="list-header">
+      <span></span><span>#</span><span>Cue</span><span>Tijd</span><span></span>
+    </div>
+    <div id="cueList"></div>
+  </div>
+
+  <!-- ADD CUE BAR -->
+  <div class="add-cue-bar">
+    <input type="time" id="addTime" step="1" value="00:00:00">
+    <select class="add-cue-type" id="addType">
+      <option value="none">—</option>
+      <option value="regie">Regie</option>
+      <option value="kraan">Kraan</option>
+      <option value="licht">Licht</option>
+      <option value="geluid">Geluid</option>
+    </select>
+    <input type="text" id="addName" placeholder="Naam cue…">
+    <button class="btn-add" onclick="quickAddCue()">＋</button>
+  </div>
+
+</div><!-- .shell -->
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- ═══ START VANAF MODAL ═══ -->
+<div class="modal-overlay" id="startFromModal" onclick="handleOverlay(event,'startFromModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Start vanaf tijdstip</h2>
+
+    <!-- Manual time picker -->
+    <div class="time-picker-grid">
+      <div class="time-seg-wrap">
+        <div class="time-seg-lbl">UUR</div>
+        <input class="time-seg" id="sfH" type="number" min="0" max="23" value="0" oninput="syncPickerFromManual()">
+      </div>
+      <div class="time-colon">:</div>
+      <div class="time-seg-wrap">
+        <div class="time-seg-lbl">MIN</div>
+        <input class="time-seg" id="sfM" type="number" min="0" max="59" value="0" oninput="syncPickerFromManual()">
+      </div>
+      <div class="time-colon">:</div>
+      <div class="time-seg-wrap">
+        <div class="time-seg-lbl">SEC</div>
+        <input class="time-seg" id="sfS" type="number" min="0" max="59" value="0" oninput="syncPickerFromManual()">
+      </div>
+    </div>
+
+    <!-- Quick-pick: cue list -->
+    <div style="font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;">Of kies een cue</div>
+    <div class="time-cues-list" id="sfCueList"></div>
+
+    <div class="modal-actions" style="margin-top:8px;">
+      <button class="btn-cancel" onclick="closeStartFrom()">Annuleer</button>
+      <button class="btn-save" onclick="confirmStartFrom()">▶ Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CUE DETAIL MODAL ═══ -->
+<div class="modal-overlay" id="detailModal" onclick="handleOverlay(event,'detailModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="detailTitle">Cue bewerken</h2>
+
+    <div><div class="field-label">Naam</div>
+    <input class="field-input" id="dName" type="text" placeholder="Naam van de cue"></div>
+
+    <div><div class="field-label">Tijd (HH:MM:SS)</div>
+    <input class="field-input" id="dTime" type="text" placeholder="00:01:30"></div>
+
+    <div><div class="field-label">Type</div>
+    <div class="type-picker">
+      <button class="type-chip none  sel" data-type="none"  onclick="pickType(this)">Geen</button>
+      <button class="type-chip regie"     data-type="regie" onclick="pickType(this)">🎬 Regie</button>
+      <button class="type-chip kraan"     data-type="kraan" onclick="pickType(this)">🏗 Kraan</button>
+      <button class="type-chip licht"     data-type="licht" onclick="pickType(this)">💡 Licht</button>
+      <button class="type-chip geluid"    data-type="geluid" onclick="pickType(this)">🔊 Geluid</button>
+    </div></div>
+
+    <div><div class="field-label">Notitie</div>
+    <textarea class="note-area" id="dNote" placeholder="Optionele aantekeningen…"></textarea></div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDetail()">Annuleer</button>
+      <button class="btn-save" onclick="saveDetail()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MIDI MODAL ═══ -->
+<div class="modal-overlay" id="midiModal" onclick="handleOverlay(event,'midiModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>MIDI / Timecode Sync</h2>
+
+    <div class="midi-status-box">
+      <div class="midi-row">
+        <label>WebMIDI status</label>
+        <span class="badge" id="midiStatusBadge">—</span>
+      </div>
+      <div class="midi-row">
+        <label>Input (van Reaper)</label>
+        <select id="midiInputSel" onchange="selectMidiInput()">
+          <option value="">— kies poort —</option>
+        </select>
+      </div>
+      <div class="midi-row">
+        <label>Output (naar Reaper)</label>
+        <select id="midiOutputSel" onchange="selectMidiOutput()">
+          <option value="">— kies poort —</option>
+        </select>
+      </div>
+      <div class="midi-row">
+        <label>Sync modus</label>
+        <select id="midiMode" onchange="applyMidiMode()">
+          <option value="off">Uit (intern)</option>
+          <option value="auto" selected>Auto (aanbevolen)</option>
+          <option value="mtc">MTC alleen</option>
+          <option value="clock">MIDI Clock alleen</option>
+        </select>
+      </div>
+      <div class="midi-row" id="mtcOffsetRow" style="display:none">
+        <label>Offset (seconden)</label>
+        <input type="number" id="mtcOffset" value="0" step="0.1" style="width:80px">
+      </div>
+    </div>
+
+    <!-- SEND TRANSPORT -->
+    <div id="midiSendSection" style="display:none;margin-top:10px;">
+      <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;font-weight:700;margin-bottom:8px;">Stuur naar Reaper</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="btn-cancel" style="flex:1;padding:10px;" onclick="sendMidiStart()">▶ Start</button>
+        <button class="btn-cancel" style="flex:1;padding:10px;" onclick="sendMidiStop()">■ Stop</button>
+        <button class="btn-cancel" style="flex:1;padding:10px;" onclick="sendMidiContinue()">⏸ Cont.</button>
+      </div>
+      <div style="font-size:10px;letter-spacing:1px;color:var(--muted);margin-bottom:6px;">Speel vanaf:</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+        <input type="number" id="sendH" min="0" max="23" value="0" style="width:52px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 4px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+        <span style="color:var(--muted);font-size:18px;">:</span>
+        <input type="number" id="sendM" min="0" max="59" value="0" style="width:52px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 4px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+        <span style="color:var(--muted);font-size:18px;">:</span>
+        <input type="number" id="sendS" min="0" max="59" value="0" style="width:52px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 4px;color:var(--text);font-size:16px;text-align:center;outline:none;">
+        <button class="btn-save" style="flex:1;padding:10px;font-size:11px;" onclick="sendMidiGoto()">↩ Ga</button>
+      </div>
+      <button class="btn-cancel" style="width:100%;padding:10px;font-size:11px;" onclick="sendCurrentPosition()">⟳ Stuur huidige positie ({{pos}})</button>
+    </div>
+
+    <div class="midi-info" id="midiInfo" style="font-size:11px;">
+      <strong style="color:var(--text)">Setup voor bidirectioneel:</strong><br>
+      Maak 2 LoopMIDI poorten:<br>
+      Poort 1: Reaper → App (MTC ingang)<br>
+      Poort 2: App → Reaper (transport uitgang)
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeMidi()">Sluiten</button>
+      <button class="btn-save" onclick="testMidi()">Test</button>
+    </div>
+
+    <div style="font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-top:4px;margin-bottom:4px;">MIDI log</div>
+    <div class="midi-log" id="midiLog">Wacht op MIDI data…</div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT / EXPORT MODAL ═══ -->
+<div class="modal-overlay" id="imexModal" onclick="handleOverlay(event,'imexModal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Import / Export</h2>
+
+    <p>Import Reaper markers CSV of exporteer je cues. Reaper-formaat:<br>
+    <code>#,Name,Start,End,Length,Color</code><br>
+    De kolom <em>Start</em> (in seconden) wordt gebruikt als cue-tijdstip.</p>
+
+    <div class="file-drop" id="fileDrop" onclick="document.getElementById('csvFile').click()">
+      <input type="file" id="csvFile" accept=".csv,.txt" onchange="importCSV(event)">
+      📂 Tik hier of sleep een CSV-bestand
+    </div>
+
+    <div><div class="field-label">Of plak CSV-tekst</div>
+    <textarea class="modal" id="csvPaste" style="min-height:100px;gap:0;border-radius:8px;padding:10px;font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.8;"
+      placeholder="#,Name,Start,End,Length,Color&#10;1,Lichten aan,60,60,0,0&#10;2,Muziek start,150,150,0,0"></textarea></div>
+
+    <div class="modal-actions" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn-cancel" onclick="closeImEx()">Sluiten</button>
+      <button class="btn-save" style="flex:0 0 auto;background:var(--surface2);color:var(--muted);border:1px solid var(--border);" onclick="importFromPaste()">Importeer tekst</button>
+      <button class="btn-save" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════ */
+const TYPE_COLORS = {
+  regie:'#a78bfa', kraan:'#38bdf8', licht:'#fbbf24', geluid:'#34d399', none:'#4a4a60'
+};
+
+let cues = [
+  { time:60,   name:'Lichten aan — scene 1',        type:'licht',  note:'Dimmer op 80%, warm wit' },
+  { time:150,  name:'Muziek fade in',                type:'geluid', note:'Track 3, fade 4 sec' },
+  { time:300,  name:'Acteur A betreedt het podium',  type:'regie',  note:'Komt op vanuit links' },
+  { time:495,  name:'Blackout',                      type:'licht',  note:'' },
+  { time:600,  name:'Scene 2 — lichten op',          type:'licht',  note:'Blauw wash + spot C4' },
+  { time:780,  name:'Geluidseffect: regen',          type:'geluid', note:'' },
+  { time:900,  name:'Muziek stopt',                  type:'geluid', note:'Hard cut' },
+  { time:1020, name:'Acteur B monoloog',             type:'regie',  note:'' },
+  { time:1200, name:'Einde act 1 — pauze',           type:'regie',  note:'Huis open na 30s' },
+];
+
+let elapsed=0, running=false, startedAt=null, rafId=null, activeCueIndex=-1;
+let detailIdx = -1;
+let selectedType = 'none';
+let regions = [];       // [{id, name, start, end, color}]
+let activeRegionId = null;
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+const pad  = n => String(n).padStart(2,'0');
+const fmt  = s => `${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(Math.floor(s%60))}`;
+const parseTime = str => {
+  let m = str.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if(m) return +m[1]*3600 + +m[2]*60 + +m[3];
+  m = str.match(/^(\d{1,2}):(\d{2})$/);
+  if(m) return +m[1]*60 + +m[2];
+  return null;
+};
+
+/* ═══════════════════════════════════════════════════════
+   TRANSPORT
+═══════════════════════════════════════════════════════ */
+function startTimer(){
+  if(running) return;
+  running=true; startedAt=performance.now()-elapsed*1000;
+  rafId=requestAnimationFrame(tick);
+  setStatus('live'); syncBtns();
+}
+function pauseTimer(){
+  if(!running) return;
+  running=false; cancelAnimationFrame(rafId);
+  setStatus('paused'); syncBtns();
+}
+function stopTimer(){
+  pauseTimer(); elapsed=0; activeCueIndex=-1; activeRegionId=null;
+  setStatus('stopped'); updateClock(); renderCues(); updateStrip(); renderRegionBadge(); syncBtns();
+}
+function syncBtns(){
+  document.getElementById('btnStart').disabled = running;
+  document.getElementById('btnPause').disabled = !running;
+  document.getElementById('btnStop').disabled  = !running && elapsed===0;
+}
+function setStatus(s){
+  const dot=document.getElementById('statusDot'),
+        txt=document.getElementById('statusText'),
+        clk=document.getElementById('clock');
+  dot.className='dot'; clk.className='clock';
+  if(s==='live')   {dot.classList.add('live');   clk.classList.add('running'); txt.textContent='LIVE';}
+  if(s==='paused') {dot.classList.add('paused'); clk.classList.add('paused');  txt.textContent='GEPAUZEERD';}
+  if(s==='stopped'){txt.textContent='GESTOPT';}
+}
+
+function tick(){
+  elapsed=(performance.now()-startedAt)/1000;
+  updateClock(); checkCues(); updateStrip();
+  broadcastState();
+  rafId=requestAnimationFrame(tick);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════════════════════ */
+function updateClock(){ document.getElementById('clock').textContent=fmt(elapsed); }
+
+/* ═══════════════════════════════════════════════════════
+   CUE LOGIC
+═══════════════════════════════════════════════════════ */
+function checkCues(){
+  let na=-1;
+  for(let i=cues.length-1;i>=0;i--){if(elapsed>=cues[i].time){na=i;break;}}
+  if(na!==activeCueIndex){activeCueIndex=na;renderCues();autoScroll();}
+  // Track active region
+  const ar=regions.find(r=>elapsed>=r.start&&elapsed<r.end)||null;
+  const newId=ar?ar.id:null;
+  if(newId!==activeRegionId){activeRegionId=newId;}
+  // Always update the badge so countdown runs live every tick
+  renderRegionBadge();
+}
+
+function renderRegionBadge(){
+  const el=document.getElementById('regionBadge');
+  if(!el) return;
+  if(!activeRegionId||!regions.length){el.style.display='none';return;}
+  const r=regions.find(x=>x.id===activeRegionId);
+  if(!r){el.style.display='none';return;}
+  el.style.display='flex';
+  el.querySelector('.rb-name').textContent=r.name;
+  if(r.color) el.style.borderColor=r.color;
+  // next region
+  const idx=regions.indexOf(r);
+  const nextR=regions[idx+1];
+  const nextEl=el.querySelector('.rb-next');
+  if(nextR){
+    const diff=nextR.start-elapsed;
+    const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
+    nextEl.textContent=`→ ${nextR.name}  ${mm}:${pad(ss)}`;
+  } else {
+    nextEl.textContent='Laatste deel';
+  }
+}
+function getNextIdx(){
+  for(let i=0;i<cues.length;i++){if(elapsed<cues[i].time)return i;}
+  return -1;
+}
+function skipToNext(){
+  const ni=getNextIdx(); if(ni<0)return;
+  elapsed=cues[ni].time+0.05;
+  if(running) startedAt=performance.now()-elapsed*1000;
+  checkCues(); updateStrip(); updateClock();
+}
+
+function updateStrip(){
+  const ni=getNextIdx();
+  const cE=document.getElementById('countdown'),
+        fE=document.getElementById('progressFill'),
+        nE=document.getElementById('nextCueName'),
+        tE=document.getElementById('nextCueTime'),
+        dE=document.getElementById('nextTypeDot');
+
+  if(ni===-1){
+    nE.textContent='Einde show'; tE.textContent='—'; cE.textContent='—';
+    cE.className='next-countdown'; fE.style.width='100%'; fE.style.background='var(--muted)';
+    dE.style.background='var(--muted)'; return;
+  }
+  const next=cues[ni];
+  nE.textContent=next.name; tE.textContent=fmt(next.time);
+  dE.style.background=TYPE_COLORS[next.type||'none'];
+  const diff=next.time-elapsed;
+  const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
+  cE.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`;
+  cE.className=diff<=5?'next-countdown imminent':'next-countdown';
+  const prevTime=ni>0?cues[ni-1].time:0;
+  const pct=Math.min(100,Math.max(0,(elapsed-prevTime)/(next.time-prevTime)*100));
+  fE.style.width=pct+'%';
+  fE.style.background=diff<=10?'var(--danger)':'var(--warn)';
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER CUE LIST
+═══════════════════════════════════════════════════════ */
+function renderCues(){
+  const ni=getNextIdx();
+  const list=document.getElementById('cueList');
+  if(!cues.length){
+    list.innerHTML=`<div class="empty-state"><div class="empty-big">🎭</div>
+      <div>Geen cues geladen</div>
+      <div style="font-size:12px;margin-top:4px">Voeg een cue toe onderaan</div></div>`;
+    return;
+  }
+  let html='';
+  let lastRegionId='__none__';
+  for(let i=0;i<cues.length;i++){
+    const c=cues[i];
+    // Region header row
+    if(c.regionId!==lastRegionId){
+      lastRegionId=c.regionId;
+      const r=regions.find(x=>x.id===c.regionId);
+      if(r){
+        const bc=r.color||'var(--muted)';
+        html+=`<div class="region-header" style="border-left-color:${bc}">
+          <span class="rh-id">${r.id}</span>
+          <span class="rh-name">${r.name}</span>
+          <span class="rh-time">${fmt(r.start)} – ${fmt(r.end)}</span>
+        </div>`;
+      } else if(!c.regionId && lastRegionId!==null){
+        html+=`<div class="region-header" style="border-left-color:var(--muted)">
+          <span class="rh-name" style="color:var(--muted)">Geen deel</span>
+        </div>`;
+      }
+    }
+    let cls='';
+    if(i===activeCueIndex) cls='active';
+    else if(i===ni) cls='upcoming';
+    else if(i<activeCueIndex||(activeCueIndex===-1&&elapsed>c.time)) cls='past';
+    const col=TYPE_COLORS[c.type||'none'];
+    const noteHtml=c.note?`<div class="cue-note-preview">📝 ${c.note}</div>`:'';
+    html+=`<div class="cue-row ${cls}" id="cue-${i}"
+        onmouseenter="showTooltip(event,${i})" onmouseleave="hideTooltip()"
+        ontouchstart="toggleCueAction(event,${i})"
+        onclick="openDetailExisting(${i})">
+      <div class="cue-type-bar" style="background:${col};border-radius:2px;width:4px;height:36px;"></div>
+      <span class="cue-num">Q${i+1}</span>
+      <div class="cue-name-wrap">
+        <div class="cue-name">${c.name}</div>
+        ${noteHtml}
+      </div>
+      <span class="cue-time">${fmt(c.time)}</span>
+      <button class="cue-start-from" onclick="event.stopPropagation();startFromCue(${i})" title="Start vanaf deze cue">▶ Vanaf hier</button>
+      <button class="cue-del" onclick="event.stopPropagation();deleteCue(${i})" aria-label="Verwijder">✕</button>
+    </div>`;
+  }
+  list.innerHTML=html;
+}
+
+function autoScroll(){
+  if(activeCueIndex<0)return;
+  const el=document.getElementById(`cue-${activeCueIndex}`);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function deleteCue(i){
+  cues.splice(i,1);
+  if(activeCueIndex>=cues.length) activeCueIndex=cues.length-1;
+  renderCues(); updateStrip();
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOOLTIP (desktop)
+═══════════════════════════════════════════════════════ */
+function showTooltip(e,i){
+  const c=cues[i];
+  if(!c.note) return;
+  const t=document.getElementById('tooltip');
+  t.innerHTML=`<strong style="color:var(--text)">${c.name}</strong><br>${c.note}`;
+  t.style.display='block';
+  const x=Math.min(e.clientX+14, window.innerWidth-280);
+  t.style.left=x+'px'; t.style.top=(e.clientY-10)+'px';
+}
+function hideTooltip(){ document.getElementById('tooltip').style.display='none'; }
+
+/* ═══════════════════════════════════════════════════════
+   ADD CUE (quick bar)
+═══════════════════════════════════════════════════════ */
+function quickAddCue(){
+  const tRaw=document.getElementById('addTime').value||'00:00:00';
+  const parts=tRaw.split(':').map(Number);
+  const sec = parts.length===3 ? parts[0]*3600+parts[1]*60+parts[2]
+                                : parts[0]*60+(parts[1]||0);
+  const name=document.getElementById('addName').value.trim();
+  const type=document.getElementById('addType').value;
+  if(!name){document.getElementById('addName').focus();return;}
+  cues.push({time:sec,name,type,note:''});
+  cues.sort((a,b)=>a.time-b.time);
+  document.getElementById('addName').value='';
+  renderCues(); updateStrip();
+}
+document.getElementById('addName').addEventListener('keydown',e=>{
+  if(e.key==='Enter') quickAddCue();
+});
+
+/* ═══════════════════════════════════════════════════════
+   CUE DETAIL MODAL
+═══════════════════════════════════════════════════════ */
+function pickType(btn){
+  document.querySelectorAll('.type-chip').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  selectedType=btn.dataset.type;
+}
+
+function openEditModal(){
+  detailIdx=-1; selectedType='none';
+  document.getElementById('dName').value='';
+  document.getElementById('dTime').value='00:00:00';
+  document.getElementById('dNote').value='';
+  document.querySelectorAll('.type-chip').forEach(b=>b.classList.remove('sel'));
+  document.querySelector('.type-chip.none').classList.add('sel');
+  document.getElementById('detailTitle').textContent='Nieuwe cue';
+  document.getElementById('detailModal').classList.add('open');
+  setTimeout(()=>document.getElementById('dName').focus(),80);
+}
+
+function openDetailExisting(i){
+  detailIdx=i;
+  const c=cues[i];
+  document.getElementById('dName').value=c.name;
+  document.getElementById('dTime').value=fmt(c.time);
+  document.getElementById('dNote').value=c.note||'';
+  selectedType=c.type||'none';
+  document.querySelectorAll('.type-chip').forEach(b=>{
+    b.classList.toggle('sel', b.dataset.type===selectedType);
+  });
+  document.getElementById('detailTitle').textContent=`Q${i+1} bewerken`;
+  document.getElementById('detailModal').classList.add('open');
+}
+
+function closeDetail(){ document.getElementById('detailModal').classList.remove('open'); }
+
+function saveDetail(){
+  const name=document.getElementById('dName').value.trim();
+  const timeStr=document.getElementById('dTime').value.trim();
+  const note=document.getElementById('dNote').value.trim();
+  const time=parseTime(timeStr);
+  if(!name){document.getElementById('dName').style.borderColor='var(--danger)';document.getElementById('dName').focus();return;}
+  if(time===null){document.getElementById('dTime').style.borderColor='var(--danger)';return;}
+  document.getElementById('dName').style.borderColor='';
+  document.getElementById('dTime').style.borderColor='';
+  // Recalculate regionId based on time
+  let regionId=null;
+  if(regions.length){
+    const r=regions.find(r=>time>=r.start&&time<r.end);
+    regionId=r?r.id:null;
+  }
+  const entry={time,name,type:selectedType,note,regionId};
+  if(detailIdx===-1) cues.push(entry);
+  else cues[detailIdx]=entry;
+  cues.sort((a,b)=>a.time-b.time);
+  // Re-find the saved cue after sort
+  detailIdx=cues.findIndex(c=>c.time===time&&c.name===name);
+  activeCueIndex=-1;
+  renderCues(); updateStrip();
+  // Flash confirmation
+  const titleEl=document.getElementById('detailTitle');
+  const prev=titleEl.textContent;
+  titleEl.textContent='✓ Opgeslagen';
+  setTimeout(()=>{titleEl.textContent=detailIdx>=0?`Q${detailIdx+1} bewerken`:prev;},1200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   IMPORT / EXPORT
+═══════════════════════════════════════════════════════ */
+function openImEx(){ document.getElementById('imexModal').classList.add('open'); }
+function closeImEx(){ document.getElementById('imexModal').classList.remove('open'); }
+
+// Drag & drop
+const fileDrop=document.getElementById('fileDrop');
+fileDrop.addEventListener('dragover',e=>{e.preventDefault();fileDrop.classList.add('drag');});
+fileDrop.addEventListener('dragleave',()=>fileDrop.classList.remove('drag'));
+fileDrop.addEventListener('drop',e=>{
+  e.preventDefault(); fileDrop.classList.remove('drag');
+  const f=e.dataTransfer.files[0]; if(f) readCSVFile(f);
+});
+
+function importCSV(e){ readCSVFile(e.target.files[0]); }
+function readCSVFile(file){
+  const r=new FileReader();
+  r.onload=ev=>parseAndImport(ev.target.result);
+  r.readAsText(file);
+}
+function importFromPaste(){
+  parseAndImport(document.getElementById('csvPaste').value);
+}
+
+// Parse Reaper M:SS.mmm or HH:MM:SS or MM:SS or plain seconds
+function parseReaperTime(s){
+  if(!s) return null; s=s.trim();
+  let m;
+  m=s.match(/^(\d+):(\d{2}):(\d{2})\.(\d+)$/); if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +('0.'+m[4]);
+  m=s.match(/^(\d+):(\d{2}):(\d{2})$/);           if(m) return +m[1]*3600 + +m[2]*60 + +m[3];
+  m=s.match(/^(\d+):(\d{2})\.(\d+)$/);           if(m) return +m[1]*60  + +m[2]    + +('0.'+m[3]);
+  m=s.match(/^(\d+):(\d{2})$/);                    if(m) return +m[1]*60  + +m[2];
+
+  // HH:MM:SS:FF (Hours:Minutes:Seconds:Frames — Reaper transport display)
+  m=s.match(/^(\d+):(\d{2}):(\d{2}):(\d{2})$/);
+  if(m) return +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/25; // default 25fps
+  // Reaper bars/beats: SS.B.TT  e.g. "248.3.35" = 248 + 3*0.25 + 35*0.0025 seconds
+  m=s.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if(m) return +m[1] + (+m[2]) * 0.25 + (+m[3]) * 0.0025;
+  const f=parseFloat(s); return isNaN(f)?null:f;
+}
+
+function parseAndImport(text){
+  // Strip BOM
+  text=text.replace(/^\uFEFF/,'');
+  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
+
+  // Check if first line is the Reaper header
+  const isReaper=lines[0]&&lines[0].startsWith('#,Name,Start');
+
+  if(isReaper){
+    // Parse both regions (R*) and markers (M*)
+    const newRegions=[], newCues=[];
+    for(const line of lines){
+      if(!line || line.startsWith('#,Name')) continue; // skip header
+      // Handle quoted fields (e.g. "name with, comma")
+      const cols=parseCSVLine(line);
+      if(cols.length<2) continue;
+      const id=cols[0].trim();
+      const name=(cols[1]||'').trim();
+      const startRaw=cols[2]||'';
+      const endRaw  =cols[3]||'';
+      const colorHex=cols[5]||'';
+
+      const startSec=parseReaperTime(startRaw);
+      if(startSec===null) continue;
+
+      if(id.startsWith('R')){
+        // Region
+        const endSec=parseReaperTime(endRaw);
+        newRegions.push({
+          id, name,
+          start: startSec,
+          end:   endSec||startSec,
+          color: colorHex ? '#'+colorHex.replace('#','') : null
+        });
+      } else if(id.startsWith('M')){
+        // Marker = cue
+        const type=guessType(name);
+        newCues.push({time:startSec, name, type, note:'', regionId:null});
+      }
+    }
+
+    // Sort
+    newRegions.sort((a,b)=>a.start-b.start);
+    newCues.sort((a,b)=>a.time-b.time);
+
+    // Assign each cue to a region
+    for(const c of newCues){
+      const r=newRegions.find(r=>c.time>=r.start&&c.time<r.end);
+      if(r) c.regionId=r.id;
+    }
+
+    regions=newRegions;
+    cues=newCues;
+    activeCueIndex=-1; activeRegionId=null;
+    renderCues(); updateStrip(); renderRegionBadge(); closeImEx();
+    alert(`✓ ${newCues.length} cues en ${newRegions.length} regions geïmporteerd.`);
+    return;
+  }
+
+  // Fallback: generic tab/space separated
+  const parsed=[];
+  for(const line of lines){
+    const cols=line.split(/\t/);
+    if(cols.length>=2){
+      const t=parseReaperTime(cols[0]);
+      if(t!==null){parsed.push({time:t,name:cols[1].trim(),type:'none',note:'',regionId:null});continue;}
+    }
+    const m=line.match(/^(\S+)\s+(.+)$/);
+    if(m){const t=parseReaperTime(m[1]);if(t!==null)parsed.push({time:t,name:m[2].trim(),type:'none',note:'',regionId:null});}
+  }
+  if(!parsed.length){alert('Geen cues gevonden. Controleer het CSV-formaat.');return;}
+  parsed.sort((a,b)=>a.time-b.time);
+  cues=parsed; activeCueIndex=-1;
+  renderCues(); updateStrip(); closeImEx();
+  alert(`✓ ${parsed.length} cues geïmporteerd.`);
+}
+
+// Proper CSV line parser (handles quoted fields)
+function parseCSVLine(line){
+  const result=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ inQ=!inQ; }
+    else if(c===','&&!inQ){ result.push(cur); cur=''; }
+    else { cur+=c; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function guessType(name){
+  const u=name.toUpperCase();
+  if(/\bKRAAN\b/.test(u)) return 'kraan';
+  if(/\bSPOT\b|\bLICHT\b|\bDIM\b|\bWASH\b/.test(u)) return 'licht';
+  if(/\bGELUID\b|\bAUDIO\b|\bMUSIC\b/.test(u)) return 'geluid';
+  if(/\bENGEL\b|\bDAME\b|\bBRUID\b|\bREGIE\b|\bACTEUR\b|\bKABOEM\b|\bVUURWERK\b/.test(u)) return 'regie';
+  const l=name.toLowerCase();
+  if(/kraan|fly|rigg|aerial/.test(l)) return 'kraan';
+  if(/licht|light|dim|spot|wash/.test(l)) return 'licht';
+  if(/geluid|sound|audio|music/.test(l)) return 'geluid';
+  if(/regie|actor|scene|engel|dame|bruid/.test(l)) return 'regie';
+  return 'none';
+}
+
+function exportCSV(){
+  const header='#,Name,Start,End,Length,Color';
+  // Export regions
+  const regionRows=regions.map((r,i)=>{
+    const len=r.end-r.start;
+    return `R${i+1},"${r.name}",${fmtReaper(r.start)},${fmtReaper(r.end)},${fmtReaper(len)},`;
+  });
+  // Export markers
+  const markerRows=cues.map((c,i)=>`M${i+1},"${c.name}",${fmtReaper(c.time)},,,`);
+  const csv=[header,...regionRows,...markerRows].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='cue-runner-markers.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Format seconds back to Reaper M:SS.mmm
+function fmtReaper(s){
+  const m=Math.floor(s/60);
+  const sec=(s%60).toFixed(3);
+  return `${m}:${sec.padStart(6,'0')}`;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MIDI ENGINE — auto-detect Reaper/LoopMIDI
+═══════════════════════════════════════════════════════ */
+let midiAccess=null, midiInput=null, midiOutput=null, midiMode='auto';
+let mtcNibs=[0,0,0,0,0,0,0,0], mtcReceived=0;
+let mtcLastElapsed=-1, mtcStopTimeout=null;
+let seenMTC=false, seenClock=false;
+let midiLogLines=[];
+
+function midiLog(cls, msg){
+  const ts=fmt(elapsed);
+  midiLogLines.unshift(`<span class="${cls}">[${ts}] ${msg}</span>`);
+  if(midiLogLines.length>20)midiLogLines.length=20;
+  const el=document.getElementById('midiLog');
+  if(el)el.innerHTML=midiLogLines.join('<br>');
+}
+
+function openMidi(){
+  document.getElementById('midiModal').classList.add('open');
+  initMidi();
+}
+function closeMidi(){ document.getElementById('midiModal').classList.remove('open'); }
+
+async function initMidi(){
+  const badge=document.getElementById('midiStatusBadge');
+  if(!navigator.requestMIDIAccess){
+    badge.textContent='Niet ondersteund'; badge.className='badge err';
+    midiLog('err','WebMIDI niet beschikbaar — gebruik Chrome/Edge'); return;
+  }
+  try{
+    midiAccess=await navigator.requestMIDIAccess({sysex:false});
+    badge.textContent='Verbonden'; badge.className='badge ok';
+    midiLog('ok','WebMIDI verbonden — kies poort');
+    populateMidiInputs();
+    midiAccess.onstatechange=e=>{ populateMidiInputs(); midiLog('warn',`Poort ${e.port.name}: ${e.port.state}`); };
+  }catch(err){
+    badge.textContent='Geblokkeerd'; badge.className='badge err';
+    midiLog('err','Toegang geweigerd: '+err.message);
+  }
+}
+
+function populateMidiInputs(){
+  const inSel=document.getElementById('midiInputSel'), prevIn=inSel.value;
+  const outSel=document.getElementById('midiOutputSel'), prevOut=outSel.value;
+  inSel.innerHTML='<option value="">— kies poort —</option>';
+  outSel.innerHTML='<option value="">— kies poort —</option>';
+  if(!midiAccess)return;
+  for(const [id,port] of midiAccess.inputs){
+    const opt=document.createElement('option');
+    opt.value=id; opt.textContent=port.name+(port.state==='connected'?' ✓':'');
+    if(id===prevIn) opt.selected=true;
+    inSel.appendChild(opt);
+  }
+  for(const [id,port] of midiAccess.outputs){
+    const opt=document.createElement('option');
+    opt.value=id; opt.textContent=port.name+(port.state==='connected'?' ✓':'');
+    if(id===prevOut) opt.selected=true;
+    outSel.appendChild(opt);
+  }
+}
+
+function selectMidiOutput(){
+  const id=document.getElementById('midiOutputSel').value;
+  midiOutput=midiAccess?.outputs.get(id)||null;
+  document.getElementById('midiSendSection').style.display=midiOutput?'block':'none';
+  if(midiOutput) midiLog('ok','Output: '+midiOutput.name);
+}
+
+/* MIDI SEND */
+function midiSend(bytes){
+  if(!midiOutput){midiLog('err','Geen output poort');return false;}
+  try{midiOutput.send(bytes);return true;}
+  catch(e){midiLog('err','Send fout: '+e.message);return false;}
+}
+function sendMidiStart(){ if(midiSend([0xFA])) midiLog('ok','→ MIDI Start (Reaper → 0:00:00)'); }
+function sendMidiStop(){ if(midiSend([0xFC])) midiLog('warn','→ MIDI Stop'); }
+function sendMidiContinue(){ if(midiSend([0xFB])) midiLog('ok','→ MIDI Continue @ '+fmt(elapsed)); }
+function sendMTCFullFrame(s){
+  const fps=30,h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=Math.floor(s%60),f=Math.floor((s%1)*fps);
+  return midiSend([0xF0,0x7F,0x7F,0x01,0x01,(3<<5)|h,m,sec,f,0xF7]);
+}
+function sendMidiGoto(){
+  const h=parseInt(document.getElementById('sendH').value)||0;
+  const m=parseInt(document.getElementById('sendM').value)||0;
+  const s=parseInt(document.getElementById('sendS').value)||0;
+  const t=h*3600+m*60+s;
+  if(sendMTCFullFrame(t)){
+    setTimeout(()=>{ midiSend([0xFB]); midiLog('ok',`→ Ga naar ${pad(h)}:${pad(m)}:${pad(s)} + Continue`); },50);
+  }
+}
+function sendCurrentPosition(){
+  if(sendMTCFullFrame(elapsed)) midiLog('ok','→ Positie gestuurd: '+fmt(elapsed));
+}
+
+function selectMidiInput(){
+  if(midiInput){ midiInput.onmidimessage=null; }
+  const id=document.getElementById('midiInputSel').value;
+  midiInput=midiAccess?.inputs.get(id)||null;
+  if(midiInput){
+    midiInput.onmidimessage=onMidiMessage;
+    midiLog('ok','▶ Luistert op: '+midiInput.name+' — druk Play in Reaper');
+    mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;mtcLastElapsed=-1;
+  }
+  applyMidiMode();
+}
+
+function applyMidiMode(){
+  midiMode=document.getElementById('midiMode').value;
+  document.getElementById('mtcOffsetRow').style.display=(midiMode==='mtc'||midiMode==='auto')?'flex':'none';
+  const src=document.getElementById('syncSource');
+  const on=midiMode!=='off'&&midiInput;
+  if(midiMode==='auto'&&on){src.textContent='AUTO';src.classList.add('active');}
+  else if(midiMode==='mtc'&&on){src.textContent='MTC';src.classList.add('active');}
+  else if(midiMode==='clock'&&on){src.textContent='MIDI CLK';src.classList.add('active');}
+  else{src.textContent='INTERN';src.classList.remove('active');}
+  document.getElementById('midiBadge').className='midi-badge'+(on?' connected':'');
+  mtcNibs=[0,0,0,0,0,0,0,0];mtcReceived=0;
+  if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+  midiLog('warn','Modus: '+(midiMode==='auto'?'AUTO':midiMode.toUpperCase()));
+}
+
+function onMidiMessage(msg){
+  const data=msg.data, st=data[0], d1=data.length>1?data[1]:0;
+  if(st===0xF8||st===0xFE) return;
+  const wantMTC  = midiMode==='mtc'  || midiMode==='auto';
+  const wantClock= midiMode==='clock'|| midiMode==='auto';
+
+  if(st===0xF1 && wantMTC){
+    seenMTC=true;
+    const nt=(d1>>4)&0x07;
+    mtcNibs[nt]=d1&0x0F;
+    if(nt===7){
+      const frames=(mtcNibs[0]&0x0F)|((mtcNibs[1]&0x01)<<4);
+      const secs  =(mtcNibs[2]&0x0F)|((mtcNibs[3]&0x03)<<4);
+      const mins  =(mtcNibs[4]&0x0F)|((mtcNibs[5]&0x03)<<4);
+      const hours =(mtcNibs[6]&0x0F)|((mtcNibs[7]&0x01)<<4);
+      const fps   =[24,25,29.97,30][(mtcNibs[7]>>1)&0x03];
+      const off   =parseFloat(document.getElementById('mtcOffset').value)||0;
+      const newPos=hours*3600+mins*60+secs+(frames/fps)+off;
+      if(Math.abs(newPos-mtcLastElapsed)>0.5)
+        midiLog('ok','MTC '+pad(hours)+':'+pad(mins)+':'+pad(secs)+':'+pad(frames)+' @'+fps+'fps');
+      mtcLastElapsed=newPos;
+      if(running){ startedAt=performance.now()-newPos*1000; elapsed=newPos; }
+      else{ elapsed=newPos; updateClock(); }
+    }
+    if(mtcStopTimeout) clearTimeout(mtcStopTimeout);
+    mtcStopTimeout=setTimeout(()=>{
+      if(running&&seenMTC){ pauseTimer(); midiLog('warn','MTC gestopt'); seenMTC=false; }
+    },2000);
+  }
+
+  if(st===0xF0&&wantMTC&&data.length>=9&&data[1]===0x7F&&data[3]===0x01&&data[4]===0x01){
+    seenMTC=true;
+    const hh=data[5]&0x1F, fps=[24,25,29.97,30][(data[5]>>5)&0x03];
+    const off=parseFloat(document.getElementById('mtcOffset').value)||0;
+    const newPos=hh*3600+data[6]*60+data[7]+(data[8]/fps)+off;
+    elapsed=newPos; mtcLastElapsed=newPos; mtcNibs=[0,0,0,0,0,0,0,0];
+    midiLog('ok','Locate -> '+pad(hh)+':'+pad(data[6])+':'+pad(data[7]));
+    if(running) startedAt=performance.now()-newPos*1000; else updateClock();
+  }
+
+  if(wantClock){
+    if(st===0xFA){
+      seenClock=true;
+      if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}
+      if(!seenMTC){elapsed=0; midiLog('ok','Start -> 0:00:00');}
+      else midiLog('ok','Start @ '+fmt(elapsed));
+      startTimer();
+    }
+    if(st===0xFB){seenClock=true;if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}startTimer();midiLog('ok','Continue @ '+fmt(elapsed));}
+    if(st===0xFC){seenClock=true;if(mtcStopTimeout){clearTimeout(mtcStopTimeout);mtcStopTimeout=null;}pauseTimer();seenMTC=false;midiLog('warn','Stop @ '+fmt(elapsed));}
+  }
+}
+
+function testMidi(){
+  if(!midiInput){
+    midiLog('err','Geen poort geselecteerd');
+    alert('Selecteer eerst een MIDI-poort.'); return;
+  }
+  midiLog('ok',`Test OK — ${midiInput.name} | ${midiMode==='auto'?'AUTO':midiMode.toUpperCase()}`);
+  alert(`✓ Poort: ${midiInput.name}\nModus: ${midiMode==='auto'?'AUTO (MTC + Clock)':midiMode.toUpperCase()}\n\nDruk Play in Reaper en check het MIDI log.`);
+}
+
+function midiLog(cls, msg){
+  const time=fmt(elapsed);
+  midiLogLines.unshift(`<span class="${cls}">[${time}] ${msg}</span>`);
+  if(midiLogLines.length>20) midiLogLines.length=20;
+  const el=document.getElementById('midiLog');
+  if(el) el.innerHTML=midiLogLines.join('<br>');
+}
+
+function openMidi(){
+  document.getElementById('midiModal').classList.add('open');
+  initMidi();
+}
+function closeMidi(){ document.getElementById('midiModal').classList.remove('open'); }
+
+async function initMidi(){
+  const badge=document.getElementById('midiStatusBadge');
+  if(!navigator.requestMIDIAccess){
+    badge.textContent='Niet ondersteund'; badge.className='badge err';
+    midiLog('err','WebMIDI niet beschikbaar in deze browser'); return;
+  }
+  try{
+    midiAccess=await navigator.requestMIDIAccess({sysex:false});
+    badge.textContent='Verbonden'; badge.className='badge ok';
+    midiLog('ok','WebMIDI verbonden');
+    populateMidiInputs();
+    midiAccess.onstatechange=()=>{ populateMidiInputs(); midiLog('warn','MIDI staat gewijzigd'); };
+  }catch(err){
+    badge.textContent='Geblokkeerd'; badge.className='badge err';
+    midiLog('err','Toegang geweigerd: '+err.message);
+  }
+}
+
+function populateMidiInputs(){
+  const sel=document.getElementById('midiInputSel');
+  const prev=sel.value;
+  sel.innerHTML='<option value="">— kies poort —</option>';
+  if(!midiAccess)return;
+  for(const [id,port] of midiAccess.inputs){
+    const opt=document.createElement('option');
+    opt.value=id; opt.textContent=port.name;
+    if(id===prev) opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
+function selectMidiInput(){
+  if(midiInput){ midiInput.onmidimessage=null; }
+  const id=document.getElementById('midiInputSel').value;
+  midiInput=midiAccess?.inputs.get(id)||null;
+  if(midiInput){
+    midiInput.onmidimessage=onMidiMessage;
+    midiLog('ok','Luistert op: '+midiInput.name);
+  }
+  applyMidiMode();
+}
+
+function applyMidiMode(){
+  midiMode=document.getElementById('midiMode').value;
+  document.getElementById('mtcOffsetRow').style.display=midiMode==='mtc'?'flex':'none';
+  const src=document.getElementById('syncSource');
+  if(midiMode==='mtc'){src.textContent='MTC SYNC';src.classList.add('active');}
+  else if(midiMode==='clock'){src.textContent='MIDI CLOCK';src.classList.add('active');}
+  else{src.textContent='INTERN';src.classList.remove('active');}
+  document.getElementById('midiBadge').className='midi-badge'+(midiMode!=='off'&&midiInput?' connected':'');
+  mtcNibs=[0,0,0,0,0,0,0,0]; mtcReceived=0;
+  midiLog('warn','Modus: '+midiMode.toUpperCase());
+}
+
+function onMidiMessage(msg){
+  const data=msg.data;
+  const status=data[0], d1=data[1];
+
+  // ── MTC Quarter Frame (0xF1) ──
+  // Each message carries one nibble. We need all 8 to reconstruct a full timecode.
+  // Nibble type = bits 6-4 of d1 (0..7), value = bits 3-0
+  if(status===0xF1 && midiMode==='mtc'){
+    const nibType=(d1>>4)&0x07;
+    const nibVal =d1&0x0F;
+    mtcNibs[nibType]=nibVal;
+    mtcReceived|=(1<<nibType);
+
+    // Once we have all 8 nibble types, reconstruct
+    if(mtcReceived===0xFF){
+      // frames:   nibs 0 (low 4) | nibs 1 (high 4, only bit 0 valid = bit 4)
+      const frames  = mtcNibs[0] | ((mtcNibs[1]&0x01)<<4);
+      // seconds:  nibs 2 (low 4) | nibs 3 (high 4, bits 0-2 valid)
+      const seconds = mtcNibs[2] | ((mtcNibs[3]&0x03)<<4);
+      // minutes:  nibs 4 (low 4) | nibs 5 (high 4, bits 0-2 valid)
+      const minutes = mtcNibs[4] | ((mtcNibs[5]&0x03)<<4);
+      // hours:    nibs 6 (low 4) | nibs 7 (high nibble: bit 0 = h4, bits 1-2 = frame-rate type)
+      const hours   = mtcNibs[6] | ((mtcNibs[7]&0x01)<<4);
+      // frame-rate from nibs[7] bits 1-2: 0=24, 1=25, 2=29.97, 3=30
+      const rateIdx =(mtcNibs[7]>>1)&0x03;
+      const fps     =[24,25,29.97,30][rateIdx];
+
+      const offset  =parseFloat(document.getElementById('mtcOffset').value)||0;
+      const totalSec=hours*3600+minutes*60+seconds+(frames/fps)+offset;
+
+      elapsed=totalSec;
+      if(!running) startTimer(); // autostart when MTC arrives
+      else startedAt=performance.now()-elapsed*1000;
+
+      // reset for next cycle (keep nibbles, just reset bitmask to re-sync continuously)
+      mtcReceived=0;
+      midiLog('ok',`MTC ${pad(hours)}:${pad(minutes)}:${pad(seconds)}:${pad(frames)} @${fps}fps`);
+    }
+  }
+
+  // ── MTC Full Frame SysEx (0xF0 7F 7F 01 01 hh mm ss ff F7) ──
+  if(status===0xF0 && midiMode==='mtc'){
+    if(data.length>=9 && data[1]===0x7F && data[3]===0x01 && data[4]===0x01){
+      const hh  =data[5]&0x1F;
+      const rIdx=(data[5]>>5)&0x03;
+      const fps =[24,25,29.97,30][rIdx];
+      const mm2 =data[6], ss=data[7], ff=data[8];
+      const offset=parseFloat(document.getElementById('mtcOffset').value)||0;
+      elapsed=hh*3600+mm2*60+ss+(ff/fps)+offset;
+      if(!running) startTimer();
+      else startedAt=performance.now()-elapsed*1000;
+      midiLog('ok',`Full-frame MTC ${pad(hh)}:${pad(mm2)}:${pad(ss)}:${pad(ff)}`);
+    }
+  }
+
+  // ── MIDI Clock (0xFA start, 0xFB continue, 0xFC stop) ──
+  if(midiMode==='clock'){
+    if(status===0xFA){ elapsed=0; startTimer(); midiLog('ok','MIDI Start ontvangen'); }
+    if(status===0xFB){ startTimer();            midiLog('ok','MIDI Continue ontvangen'); }
+    if(status===0xFC){ pauseTimer();            midiLog('warn','MIDI Stop ontvangen'); }
+  }
+
+  // Log any MIDI message in debug (truncated to status byte)
+  if(midiMode!=='off'){
+    const hex=Array.from(data).map(b=>b.toString(16).padStart(2,'0')).join(' ');
+    // Only log non-repetitive messages to avoid flooding
+    if(status!==0xF8 && status!==0xFE) { /* skip clock ticks and active sensing */ }
+  }
+}
+
+function testMidi(){
+  if(!midiInput){
+    midiLog('err','Geen MIDI-poort geselecteerd');
+    alert('Geen MIDI-poort geselecteerd.'); return;
+  }
+  midiLog('ok',`Test OK — poort: ${midiInput.name} | modus: ${midiMode.toUpperCase()}`);
+  alert(`✓ Poort: ${midiInput.name}\nModus: ${midiMode.toUpperCase()}\n\nCheck het MIDI log in het venster.`);
+}
+
+/* ═══════════════════════════════════════════════════════
+   OVERLAY CLOSE
+═══════════════════════════════════════════════════════ */
+function handleOverlay(e,id){
+  if(e.target===document.getElementById(id))
+    document.getElementById(id).classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════
+   START VANAF
+═══════════════════════════════════════════════════════ */
+let sfSelectedTime = 0;
+
+function toggleCueAction(e, i){
+  // On touch: first tap reveals button, second tap opens detail
+  const row = document.getElementById(`cue-${i}`);
+  if(!row.classList.contains('show-action')){
+    document.querySelectorAll('.cue-row.show-action').forEach(r=>r.classList.remove('show-action'));
+    row.classList.add('show-action');
+    e.preventDefault(); // prevent click-through on first tap
+  }
+  // second tap (no prevent) → click fires normally → openDetailExisting
+}
+
+function startFromCue(i){
+  // Jump to cue time and start immediately
+  const t = cues[i].time;
+  jumpToTime(t);
+  startTimer();
+}
+
+function jumpToTime(t){
+  pauseTimer();
+  elapsed = t;
+  activeCueIndex = -1;
+  checkCues(); updateClock(); renderCues(); updateStrip(); syncBtns();
+}
+
+function openStartFrom(presetTime){
+  sfSelectedTime = (typeof presetTime === 'number') ? presetTime : elapsed;
+  setPickerFromSeconds(sfSelectedTime);
+  buildSfCueList();
+  document.getElementById('startFromModal').classList.add('open');
+}
+
+function closeStartFrom(){
+  document.getElementById('startFromModal').classList.remove('open');
+}
+
+function setPickerFromSeconds(t){
+  document.getElementById('sfH').value = Math.floor(t/3600);
+  document.getElementById('sfM').value = Math.floor((t%3600)/60);
+  document.getElementById('sfS').value = Math.floor(t%60);
+  sfSelectedTime = t;
+  highlightSfCue();
+}
+
+function syncPickerFromManual(){
+  const h = parseInt(document.getElementById('sfH').value)||0;
+  const m = parseInt(document.getElementById('sfM').value)||0;
+  const s = parseInt(document.getElementById('sfS').value)||0;
+  sfSelectedTime = Math.max(0, h*3600 + m*60 + s);
+  highlightSfCue();
+}
+
+function buildSfCueList(){
+  const el = document.getElementById('sfCueList');
+  el.innerHTML = cues.map((c,i)=>{
+    const col = TYPE_COLORS[c.type||'none'];
+    return `<div class="time-cue-option" id="sfopt-${i}" onclick="selectSfCue(${i})">
+      <div class="tco-dot" style="background:${col}"></div>
+      <div class="tco-name">Q${i+1} — ${c.name}</div>
+      <div class="tco-time">${fmt(c.time)}</div>
+    </div>`;
+  }).join('');
+  highlightSfCue();
+}
+
+function selectSfCue(i){
+  setPickerFromSeconds(cues[i].time);
+}
+
+function highlightSfCue(){
+  document.querySelectorAll('.time-cue-option').forEach(el=>el.classList.remove('sel'));
+  // highlight cue whose time exactly matches
+  cues.forEach((c,i)=>{
+    if(Math.floor(c.time) === Math.floor(sfSelectedTime)){
+      const el = document.getElementById(`sfopt-${i}`);
+      if(el){ el.classList.add('sel'); el.scrollIntoView({block:'nearest'}); }
+    }
+  });
+}
+
+function confirmStartFrom(){
+  jumpToTime(sfSelectedTime);
+  closeStartFrom();
+  startTimer();
+}
+
+let ws=null, wsUrl='', wsBroadcast=false;
+function wsConnect(url){
+  if(ws)ws.close(); wsUrl=url;
+  try{
+    ws=new WebSocket(url);
+    ws.onopen=()=>{wsBroadcast=true;};
+    ws.onclose=()=>{wsBroadcast=false;setTimeout(()=>{if(wsUrl)wsConnect(wsUrl);},3000);};
+    ws.onerror=()=>{wsBroadcast=false;};
+  }catch(e){wsBroadcast=false;}
+}
+function broadcastState(){
+  if(!wsBroadcast||!ws||ws.readyState!==1)return;
+  const ni=getNextIdx();
+  try{ws.send(JSON.stringify({
+    t:Math.round(elapsed*1000)/1000, running,
+    activeCue:activeCueIndex>=0?{name:cues[activeCueIndex].name,type:cues[activeCueIndex].type||'none'}:null,
+    nextCue:ni>=0?{name:cues[ni].name,time:cues[ni].time,type:cues[ni].type||'none'}:null,
+    region:activeRegionId?(regions.find(r=>r.id===activeRegionId)||null):null,
+    cues:cues.map(c=>({time:c.time,name:c.name,type:c.type||'none',regionId:c.regionId||null})),
+    regions:regions.map(r=>({id:r.id,name:r.name,start:r.start,end:r.end,color:r.color||null})),
+  }));}catch(e){}
+}
+
+/* ═══════════════════════════════════════════════════════
+   KEYBOARD
+═══════════════════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if(['TEXTAREA','INPUT','SELECT'].includes(e.target.tagName))return;
+  if(e.code==='Space'){e.preventDefault(); running?pauseTimer():startTimer();}
+  if(e.code==='Escape'){ running?pauseTimer():stopTimer(); }
+  if(e.code==='ArrowRight'||e.code==='KeyN') skipToNext();
+});
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+syncBtns(); renderCues(); updateStrip(); updateClock();
+</script>
+</body>
+</html>

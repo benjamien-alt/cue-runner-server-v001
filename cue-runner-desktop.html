@@ -239,21 +239,37 @@ html,body{
 .btn-skip {background:var(--s2);color:var(--text);border:1px solid var(--bdr);}
 .btn-from {background:var(--s2);color:var(--text);border:1px solid var(--bdr);}
 
-/* Next cue strip */
+/* Active + next cue strips — duidelijk visueel onderscheiden:
+   "Nu actief" in accentkleur (het gebeurt al), "Volgend" in oranje (moet nog komen). */
+.active-strip{
+  display:flex;align-items:flex-start;gap:12px;padding:9px 16px;
+  background:var(--active);border-bottom:1px solid var(--bdr);flex-shrink:0;
+}
+.as-label{font-size:9px;letter-spacing:2px;color:var(--acc);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;padding-top:2px;}
+.as-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.as-info{flex:1;overflow:hidden;min-width:0;}
+.as-name{
+  font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;
+  color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.as-note{font-size:12px;color:var(--text);opacity:.85;margin-top:2px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;}
+.as-empty{font-size:13px;color:var(--dim);font-style:italic;}
+
 .progress-strip{height:2px;background:var(--bdr);flex-shrink:0;}
 .progress-fill{height:100%;background:var(--warn);transition:width .4s linear;}
 .next-strip{
-  display:flex;align-items:center;gap:12px;padding:9px 16px;
+  display:flex;align-items:flex-start;gap:12px;padding:9px 16px;
   background:var(--s2);border-bottom:1px solid var(--bdr);flex-shrink:0;
 }
-.ns-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;}
-.ns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ns-info{flex:1;overflow:hidden;}
+.ns-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;padding-top:2px;}
+.ns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.ns-info{flex:1;overflow:hidden;min-width:0;}
 .ns-name{
   font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;
   color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .ns-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-top:1px;}
+.ns-note{font-size:12px;color:var(--text);opacity:.85;margin-top:2px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;}
 .ns-countdown{
   font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--warn);
   flex-shrink:0;min-width:80px;text-align:right;
@@ -708,17 +724,19 @@ html,body{
   font-size:16px;font-weight:700;color:var(--dim);letter-spacing:2px;text-transform:uppercase;
 }
 
-/* Next cue + upcoming list (taak 9) */
+/* Huidige + volgende cue — accent = nu actief, oranje = moet nog komen (taak 9 + feedback) */
 .rv-cues-wrap{
   display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:36px;
 }
+.rv-next-lbl.active-lbl{color:var(--acc);}
 .rv-cue-name{
   font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,28px);
-  letter-spacing:1.5px;color:var(--text);line-height:1;text-align:center;max-width:70vw;
+  letter-spacing:1.5px;color:var(--warn);line-height:1;text-align:center;max-width:70vw;
 }
+.rv-cue-name.active{color:var(--acc);}
 .rv-cue-countdown{
   font-family:'Share Tech Mono',monospace;font-size:clamp(20px,3vw,32px);
-  color:var(--acc);letter-spacing:1px;line-height:1;margin-top:2px;
+  color:var(--warn);letter-spacing:1px;line-height:1;margin-top:2px;
 }
 .rv-cue-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
 .rv-cue-note{
@@ -741,6 +759,93 @@ html,body{
 .rv-cue-item .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .rv-cue-item.now{color:var(--text);border-color:var(--acc);}
 .rv-cue-item .rv-ci-time{opacity:.6;font-family:'Share Tech Mono',monospace;}
+
+/* ═══════════════════════════════════════════
+   HANDLEIDING (taak 10) — full-screen overlay met sidebar-navigatie.
+   UI-chrome (titel, sluiten, sectienamen) is vertaald via data-i18n;
+   de instructietekst zelf is bewust alleen Nederlands.
+═══════════════════════════════════════════ */
+.help-overlay{
+  display:none;position:fixed;inset:0;z-index:600;
+  background:rgba(0,0,0,.75);backdrop-filter:blur(3px);
+  align-items:center;justify-content:center;
+}
+.help-overlay.open{display:flex;}
+.help-panel{
+  background:var(--s1);border:1px solid var(--bdr);border-radius:14px;
+  width:min(980px,94vw);height:min(760px,90vh);
+  display:flex;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.help-nav{
+  width:220px;flex-shrink:0;background:var(--s2);border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;padding:16px 0;
+}
+.help-nav-title{
+  font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--acc);
+  padding:0 18px 16px;border-bottom:1px solid var(--bdr);margin-bottom:8px;
+}
+.help-nav button{
+  background:none;border:none;text-align:left;padding:11px 18px;cursor:pointer;
+  color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  border-left:3px solid transparent;transition:all .12s;
+}
+.help-nav button:hover{color:var(--text);background:var(--hover);}
+.help-nav button.active{color:var(--acc);border-left-color:var(--acc);background:rgba(var(--acc-rgb),.06);}
+.help-close{
+  margin-top:auto;margin-left:18px;margin-right:18px;padding:8px 12px;
+  background:transparent;border:1px solid var(--bdr);border-radius:6px;color:var(--muted);
+  font-size:12px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;
+}
+.help-close:hover{color:var(--text);border-color:var(--muted);}
+.help-content{flex:1;overflow-y:auto;padding:28px 34px;}
+.help-content::-webkit-scrollbar{width:6px;}
+.help-content::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px;}
+.help-section{display:none;}
+.help-section.active{display:block;}
+.help-section h2{
+  font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--text);
+  margin-bottom:4px;
+}
+.help-section .help-sub{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6;}
+.help-step{
+  display:flex;gap:14px;margin-bottom:16px;padding:16px 18px;
+  background:var(--s2);border:1px solid var(--bdr);border-radius:10px;
+}
+.help-step-num{
+  flex-shrink:0;width:28px;height:28px;border-radius:50%;
+  background:var(--acc);color:#07070a;font-weight:800;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+}
+.help-step-body{flex:1;min-width:0;}
+.help-step-body h3{font-size:14px;font-weight:800;color:var(--text);margin-bottom:5px;}
+.help-step-body p{font-size:13px;color:var(--muted);line-height:1.6;margin-top:4px;}
+.help-step-body ul{margin:6px 0 0 18px;font-size:13px;color:var(--muted);line-height:1.7;}
+.help-step-body li{margin-bottom:2px;}
+.help-code{
+  background:var(--bg);border:1px solid var(--bdr);border-radius:6px;
+  padding:9px 12px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--acc);
+  margin:8px 0;word-break:break-all;
+}
+.help-note{
+  background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:8px;
+  padding:12px 16px;font-size:13px;color:var(--warn);margin:14px 0;line-height:1.6;
+}
+.help-result{
+  background:rgba(var(--acc-rgb),.08);border:1px solid rgba(var(--acc-rgb),.3);border-radius:8px;
+  padding:11px 16px;font-size:13px;color:var(--acc);margin:10px 0;
+}
+.help-divider{border:none;border-top:1px solid var(--bdr);margin:26px 0;}
+.help-table{width:100%;border-collapse:collapse;font-size:12px;margin:10px 0;}
+.help-table th,.help-table td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--bdr);}
+.help-table th{color:var(--muted);font-weight:800;text-transform:uppercase;font-size:10px;letter-spacing:1px;}
+.help-table td{color:var(--text);}
+:root[data-view="phone"] .help-panel{width:100vw;height:100vh;border-radius:0;flex-direction:column;}
+:root[data-view="phone"] .help-nav{width:100%;flex-direction:row;overflow-x:auto;padding:8px;border-right:none;border-bottom:1px solid var(--bdr);}
+:root[data-view="phone"] .help-nav-title{display:none;}
+:root[data-view="phone"] .help-nav button{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;}
+:root[data-view="phone"] .help-nav button.active{border-left-color:transparent;border-bottom-color:var(--acc);}
+:root[data-view="phone"] .help-close{margin:0 0 0 8px;}
+:root[data-view="phone"] .help-content{padding:18px 16px;}
 
 /* ═══════════════════════════════════════════
    RESPONSIVE — desktop / tablet / telefoon (taak 3)
@@ -809,6 +914,47 @@ html,body{
 :root[data-view="phone"] .active-region-name{ border-left:none;padding-left:0;flex-basis:100%; }
 :root[data-view="phone"] .transport{ flex-wrap:wrap; }
 :root[data-view="phone"] .add-bar{ flex-wrap:wrap; }
+
+/* ═══════════════════════════════════════════
+   WATCH-WEERGAVE — 5e modus, rond scherm.
+   Alleen handmatig kiesbaar (niet via auto-detectie op breedte — een
+   ronde smartwatch-viewport is niet betrouwbaar te onderscheiden van
+   een kleine telefoon). Vervangt de volledige normale UI door één
+   cirkelvormige "wijzerplaat" met de twee aftellingen + filter-cyclusknop.
+═══════════════════════════════════════════ */
+#watchView{ display:none; position:fixed; inset:0; z-index:550; background:var(--bg); align-items:center; justify-content:center; }
+:root[data-view="watch"] #watchView{ display:flex; }
+:root[data-view="watch"] .topbar,
+:root[data-view="watch"] .layout,
+:root[data-view="watch"] .mobile-nav{ display:none !important; }
+
+.watch-face{
+  width:min(300px,92vw,92vh); height:min(300px,92vw,92vh);
+  border-radius:50%; background:var(--s1); border:2px solid var(--bdr);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:15% 17%; text-align:center; overflow:hidden; box-sizing:border-box;
+  box-shadow:0 0 0 6px var(--bg), 0 8px 30px rgba(0,0,0,.4);
+}
+.watch-status{ display:flex; align-items:center; gap:5px; font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; font-weight:800; margin-bottom:6px; }
+.watch-dot{ width:6px;height:6px;border-radius:50%; background:var(--dim); flex-shrink:0; }
+.watch-dot.live{ background:var(--acc); box-shadow:0 0 6px var(--acc); animation:blink 1s infinite; }
+.watch-dot.pau{ background:var(--warn); }
+.watch-block{ margin-bottom:7px; max-width:100%; width:100%; }
+.watch-lbl{ font-size:7px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; font-weight:800; }
+.watch-name{ font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; line-height:1.3; }
+.watch-block-region .watch-name{ color:var(--warn); }
+.watch-block-region .watch-countdown{ font-family:'Share Tech Mono',monospace; font-size:19px; color:var(--warn); line-height:1.1; }
+.watch-block-cue .watch-name{ color:var(--acc); }
+.watch-countdown-sm{ font-family:'Share Tech Mono',monospace; font-size:14px; color:var(--acc); }
+.watch-clock{ font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--dim); margin-top:2px; letter-spacing:1px; }
+.watch-filter-btn{
+  margin-top:7px; background:var(--s2); border:1px solid var(--bdr); border-radius:20px;
+  padding:3px 11px; font-size:8px; letter-spacing:1px; color:var(--muted); cursor:pointer;
+  display:flex; align-items:center; gap:4px; font-family:'DM Sans',sans-serif; font-weight:700;
+  text-transform:uppercase; max-width:90%;
+}
+.watch-filter-btn span:last-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.watch-filter-btn.active{ border-color:var(--acc); color:var(--acc); }
 </style>
 <script>
   // Pas opgeslagen thema + weergavemodus toe vóór render (voorkomt flits). Standaard = donker + auto.
@@ -845,6 +991,7 @@ html,body{
       <option value="desktop" data-i18n="view_desktop">🖥 Desktop</option>
       <option value="tablet" data-i18n="view_tablet">📋 Tablet</option>
       <option value="phone" data-i18n="view_phone">📱 Telefoon</option>
+      <option value="watch" data-i18n="view_watch">⌚ Watch</option>
     </select>
     <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal" style="padding:6px 8px;">
       <option value="nl">NL</option>
@@ -855,6 +1002,7 @@ html,body{
     <button class="tb-btn" id="themeToggle" onclick="toggleTheme()" data-i18n-title="tt_theme" title="Licht / donker">🌙</button>
     <button class="tb-btn" onclick="switchTab('csv')" data-i18n-title="tt_open_csv" title="Open CSV-paneel (import/export)">CSV</button>
     <button class="tb-btn acc" onclick="newCuePanel()" data-i18n-title="tt_open_newcue" title="Nieuwe cue toevoegen">+ Cue</button>
+    <button class="tb-btn" onclick="openHelp()" data-i18n-title="tt_help" title="Handleiding">❓</button>
   </div>
 </div>
 
@@ -881,6 +1029,322 @@ html,body{
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeControlWarning()" data-i18n="cw_cancel">Annuleren</button>
       <button class="btn-modal-save" onclick="confirmEnableControl()" data-i18n="cw_confirm">🔓 Activeer besturing</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANDLEIDING OVERLAY (taak 10) -->
+<div class="help-overlay" id="helpOverlay" onclick="if(event.target===this)closeHelp()">
+  <div class="help-panel">
+    <div class="help-nav">
+      <div class="help-nav-title" data-i18n="help_title">HANDLEIDING</div>
+      <button data-sec="reaper" onclick="switchHelpSection('reaper')" data-i18n="help_nav_reaper">Reaper-setup</button>
+      <button data-sec="markers" onclick="switchHelpSection('markers')" data-i18n="help_nav_markers">Markers &amp; Regions</button>
+      <button data-sec="hosting" onclick="switchHelpSection('hosting')" data-i18n="help_nav_hosting">Online hosting</button>
+      <button class="help-close" onclick="closeHelp()" data-i18n="help_close">✕ Sluiten</button>
+    </div>
+    <div class="help-content">
+
+      <!-- ══════ SECTIE 1: REAPER-SETUP ══════ -->
+      <div class="help-section" id="help-reaper" data-i18n="help_reaper_body">
+        <h2>Reaper koppelen via MIDI</h2>
+        <p class="help-sub">Zo synchroniseer je de klok van Cue Runner met de timecode van Reaper, en stuur je transport-commando's terug naar Reaper.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Installeer LoopMIDI en maak 2 virtuele poorten</h3>
+            <p>LoopMIDI is een gratis Windows-programma dat virtuele MIDI-kabels maakt tussen twee programma's op dezelfde computer (Reaper ↔ browser).</p>
+            <ul>
+              <li>Download LoopMIDI (zoek "Tobias Erichsen loopMIDI")</li>
+              <li>Maak <strong>2 poorten</strong> aan, bijvoorbeeld genaamd:</li>
+              <li><strong>Poort 1</strong> — Reaper stuurt MTC hierheen, Cue Runner luistert hier (ontvangen)</li>
+              <li><strong>Poort 2</strong> — Cue Runner stuurt transport-commando's hierheen, Reaper luistert hier (versturen)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Reaper instellen: Preferences → MIDI Devices</h3>
+            <ul>
+              <li><strong>Poort 1</strong> (uitgang in Reaper): rechtsklik → <em>Enable output</em>, en zet "Send timecode" of "Send MTC" aan in Reaper's transport-instellingen</li>
+              <li><strong>Poort 2</strong> (ingang in Reaper): rechtsklik → <em>Enable input</em>, zodat Reaper Start/Stop/Continue-commando's van Cue Runner ontvangt</li>
+            </ul>
+            <div class="help-note">Belangrijk: selecteer eerst de juiste poort in Cue Runner (stap 3), <strong>daarna pas</strong> op Play drukken in Reaper. Anders mist de app de eerste MTC-berichten.</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Cue Runner: MIDI-paneel</h3>
+            <ul>
+              <li>Open het <strong>MIDI</strong>-tabblad rechts</li>
+              <li><strong>MIDI Ingang</strong>: kies Poort 1 (ontvangt MTC van Reaper)</li>
+              <li><strong>MIDI Uitgang</strong>: kies Poort 2 (verstuurt commando's naar Reaper)</li>
+              <li><strong>Sync modus</strong>: laat op <strong>Auto</strong> staan — detecteert automatisch MTC én MIDI Clock</li>
+              <li>Klik <strong>Test verbinding</strong> en druk Play in Reaper — je moet inkomende data zien in het MIDI Log</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>MTC-offset (als Reaper niet bij 0 begint)</h3>
+            <p>Reaper's projecttimeline start bij broadcast-producties vaak op <strong>01:00:00:00</strong> in plaats van 0 — een gangbare conventie. Zonder correctie loopt de klok in Cue Runner dan 1 uur voor.</p>
+            <ul>
+              <li>Gebruik de preset <strong>−1u</strong> als je project op 01:00:00:00 begint</li>
+              <li>Of klik <strong>⚡ Auto</strong> ná de eerste ontvangen MTC-data — de app berekent de offset dan zelf op basis van de start van je eerste geïmporteerde deel (region)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Tijdcode altijd laten lopen — een Timecode Generator instellen</h3>
+            <p>Reaper stuurt standaard alleen MTC uit terwijl de transport écht afspeelt. Wil je dat de tijdcode blijft doorlopen — bijvoorbeeld om Cue Runner al warm te draaien vóór de show echt begint, of als een vaste doorlopende klok los van je muziekbestand — dan heb je een aparte "generator" nodig die blijft versturen ongeacht wat er in je project gebeurt.</p>
+            <ul>
+              <li><strong>Eenvoudige aanpak:</strong> selecteer een leeg/stil stuk van je project, zet <strong>Repeat</strong> aan in de transportbalk en druk Play. Zolang de transport loopt (ook al is er geen geluid), blijft Reaper MTC versturen.</li>
+              <li><strong>Met de gratis SWS-extensie:</strong> deze veelgebruikte Reaper-uitbreiding maakt het makkelijker om zo'n doorlopende loop-regio snel in te stellen en te herstarten, handig als je dit elke show opnieuw doet.</li>
+            </ul>
+            <div class="help-note">Controleer ook dat de <strong>framerate van je Reaper-project</strong> (Project Settings → Project Timebase) overeenkomt met de FPS die je in het CSV-paneel van Cue Runner instelt — anders lopen de frames niet synchroon.</div>
+            <p>En zorg dat bij <strong>Preferences → MIDI Devices</strong> de MTC/tijdcode-verzending voor je uitgangspoort (Poort 1) écht aanstaat — zonder dat vertrekt er niets, ook niet met een generator-loop.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Volledige positionering (alleen nodig voor "Ga naar tijdstip")</h3>
+            <p>Start/Stop/Continue naar Reaper werken meteen. Maar om Reaper naar een <em>specifiek tijdstip</em> te laten springen ("Ga naar tijdstip" / "Stuur huidige positie") heeft de browser extra toestemming (SysEx) nodig.</p>
+            <ul>
+              <li>Klik in het MIDI-paneel op <strong>⚙ Activeer volledige positionering</strong></li>
+              <li>Bevestig de browserprompt die verschijnt</li>
+              <li>Dit hoeft maar <strong>eenmalig per sessie</strong> — Start/Stop/Continue werken ook zonder deze stap</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ SECTIE 2: MARKERS & REGIONS ══════ -->
+      <div class="help-section" id="help-markers" data-i18n="help_markers_body">
+        <h2>Markers &amp; Regions workflow</h2>
+        <p class="help-sub">Hoe je een showbestand uit Reaper exporteert en importeert in Cue Runner, en hoe namen automatisch worden herkend.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Regions = delen, Markers = cues</h3>
+            <ul>
+              <li><strong>Regions</strong> (<code>R*</code> in de CSV) worden <strong>delen</strong> in Cue Runner — grote stukken van de voorstelling (bv. "WALS", "FINALE")</li>
+              <li><strong>Markers</strong> (<code>M*</code> in de CSV) worden <strong>cues</strong> — losse momenten die je afvinkt tijdens de show</li>
+              <li>Elke cue krijgt automatisch het deel toegewezen waar zijn tijdstip in valt</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>CSV exporteren uit Reaper</h3>
+            <p>In Reaper: <strong>File → Export → Region/Marker Manager → Export CSV</strong></p>
+            <div class="help-note">Wil je notities meegeven per cue? Zet die dan in het Notes-veld van de marker in Reaper — Cue Runner haalt ze er bij import automatisch uit (zie stap 4).</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>CSV importeren + tijdformaat</h3>
+            <p>Open het <strong>CSV</strong>-tabblad → sleep het bestand in het vak (of plak de tekst) → <strong>Importeer</strong>.</p>
+            <p>Reaper exporteert tijden in verschillende formaten, afhankelijk van je projectinstellingen. Cue Runner herkent ze automatisch (<strong>Auto</strong>-stand), of je kiest handmatig:</p>
+            <table class="help-table">
+              <tr><th>Formaat</th><th>Reaper-instelling</th><th>Voorbeeld</th></tr>
+              <tr><td>M:SS.mmm</td><td>Tijdsweergave: Minuten:Seconden</td><td>11:59.966</td></tr>
+              <tr><td>SS.B.TT</td><td>Tijdsweergave: Maten+Beats</td><td>248.3.35</td></tr>
+              <tr><td>HH:MM:SS:FF</td><td>Transport: Hours:Minutes:Seconds:Frames</td><td>1:05:23:12</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Cue-notities via "Note:" in de naam</h3>
+            <p>Als je in Reaper een notitie aan een marker toevoegt, zet Reaper die er bij CSV-export achteraan de naam bij als <code>... Note: &lt;tekst&gt;</code>. Cue Runner herkent dit automatisch bij import:</p>
+            <div class="help-code">START show: intro Note: dimmer op 80%, warm wit</div>
+            <p>wordt automatisch:</p>
+            <div class="help-result"><strong>Naam:</strong> START show: intro &nbsp;·&nbsp; <strong>Notitie:</strong> dimmer op 80%, warm wit</div>
+            <p>De notitie verschijnt daarna volledig bij "Nu actief" en "Volgend" — ook in de delen-view.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Automatische type-detectie</h3>
+            <p>Bij import scant Cue Runner de cue-naam op trefwoorden en wijst automatisch een type toe:</p>
+            <table class="help-table">
+              <tr><th>Type</th><th>Herkende trefwoorden</th></tr>
+              <tr><td>💡 Licht</td><td>licht, light, dim, wash</td></tr>
+              <tr><td>🔦 Spot</td><td>spot</td></tr>
+              <tr><td>🏗 Kraan</td><td>kraan, fly, rigging, aerial</td></tr>
+              <tr><td>💥 Kaboem</td><td>kaboem, vuurwerk, pyro</td></tr>
+              <tr><td>🔩 Truss</td><td>truss, rigging</td></tr>
+              <tr><td>🎬 Dir</td><td>regie, actor, scene, engel, dame, bruid</td></tr>
+              <tr><td>🔊 Sound</td><td>geluid, sound, audio, music</td></tr>
+              <tr><td>🎥 Video</td><td>video, scherm, screen, project</td></tr>
+            </table>
+            <p>Klopt het type niet, of wil je er een tweede type bij (bijv. Spot + Kraan)? Open de cue via de lijst → klik de gewenste type-chips aan/uit (meerdere tegelijk mogelijk) → <strong>Opslaan</strong>.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Filteren op cue-type</h3>
+            <p>Gebruik de filterchips boven de cuelijst om alleen bepaalde types te tonen (bv. enkel Licht + Spot). De cuelijst, de "Volgend"-teller én de delen-view tellen dan alleen af naar cues die matchen. De <strong>huidige</strong> cue blijft altijd zichtbaar, ongeacht het filter. Klik <strong>✕ Wissen</strong> om het filter meteen weer uit te zetten.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ SECTIE 3: ONLINE HOSTING ══════ -->
+      <div class="help-section" id="help-hosting" data-i18n="help_hosting_body">
+        <h2>Online viewers instellen</h2>
+        <p class="help-sub">Stap voor stap: van nul naar live meekijken via internet. Andere mensen zien de klok, actieve cue, volgende cue en de cuelijst — ze kunnen niets bedienen.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">📋</div>
+          <div class="help-step-body">
+            <h3>Wat je nodig hebt — 3 bestanden</h3>
+            <ul>
+              <li><strong>server.js</strong> — de relay-server</li>
+              <li><strong>package.json</strong> — zegt Render wat het moet installeren</li>
+              <li><strong>cue-runner-viewer.html</strong> — de viewer-pagina</li>
+            </ul>
+            <p>Bewaar ze samen in één map, bijvoorbeeld <code>cue-runner-server</code>.</p>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Deel 1 — GitHub (eenmalig, ~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Maak een gratis GitHub-account</h3>
+            <p>GitHub is een gratis opslagplaats voor code — Render leest je server-bestanden van daaruit.</p>
+            <ul><li>Ga naar github.com → <strong>Sign up</strong> → bevestig je e-mail</li></ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Maak een nieuwe repository</h3>
+            <ul>
+              <li>Klik rechtsboven op <strong>+</strong> → <strong>New repository</strong></li>
+              <li>Naam: <code>cue-runner-server</code> — zet op <strong>Public</strong></li>
+              <li>Vink <strong>Add a README file</strong> aan → <strong>Create repository</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Upload je 3 bestanden</h3>
+            <ul>
+              <li><strong>Add file → Upload files</strong></li>
+              <li>Sleep <code>server.js</code>, <code>package.json</code> en <code>cue-runner-viewer.html</code> in het vak</li>
+              <li>Scroll naar beneden → <strong>Commit changes</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Deel 2 — Render (~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Maak een gratis Render-account</h3>
+            <ul>
+              <li>Ga naar render.com → <strong>Get Started for Free</strong></li>
+              <li>Kies <strong>Sign up with GitHub</strong> (koppelt automatisch)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Nieuwe Web Service</h3>
+            <ul>
+              <li><strong>New +</strong> → <strong>Web Service</strong> → <strong>Build and deploy from a Git repository</strong></li>
+              <li>Zoek je repository <code>cue-runner-server</code> → <strong>Connect</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Configureer de service</h3>
+            <ul>
+              <li><strong>Name:</strong> <code>cue-runner-server</code> (of eigen naam — komt terug in je URL)</li>
+              <li><strong>Region:</strong> bv. Frankfurt (EU Central) voor lage latency in West-Europa</li>
+              <li><strong>Branch:</strong> <code>main</code> · <strong>Runtime:</strong> Node</li>
+              <li><strong>Build Command:</strong> <code>npm install</code> · <strong>Start Command:</strong> <code>node server.js</code></li>
+              <li><strong>Instance Type:</strong> Free → <strong>Create Web Service</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">7</div>
+          <div class="help-step-body">
+            <h3>Wacht op de deploy (~2 min)</h3>
+            <p>Wacht tot bovenaan <strong style="color:var(--acc)">Live</strong> verschijnt (groen bolletje).</p>
+            <div class="help-result">Je server-URL staat bovenaan, bijv. <code>https://cue-runner-server.onrender.com</code> — noteer 'm.</div>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Deel 3 — Verbinden en uitnodigen</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">8</div>
+          <div class="help-step-body">
+            <h3>Broadcast starten</h3>
+            <ul>
+              <li>Zorg dat de app <strong>bestuurbaar</strong> staat (badge linksboven, niet "Alleen bekijken")</li>
+              <li>Klik op <strong>● Uit</strong> rechtsboven bij het topbar-statusje</li>
+              <li>Vul in: <code>wss://cue-runner-server.onrender.com</code> — let op <strong>wss://</strong> (met s), niet ws://</li>
+              <li><strong>Verbinden</strong> → status wordt <strong style="color:var(--acc)">● LIVE</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">9</div>
+          <div class="help-step-body">
+            <h3>Viewers uitnodigen</h3>
+            <p>Stuur deze link naar iedereen die mee wil kijken:</p>
+            <div class="help-code">https://cue-runner-server.onrender.com/viewer?server=wss://cue-runner-server.onrender.com</div>
+            <p>Werkt op telefoon, tablet en laptop, in elke browser, zonder installatie. Alleen-lezen.</p>
+          </div>
+        </div>
+
+        <div class="help-note">
+          <strong>⚠ Gratis tier slaapt na 15 minuten zonder gebruik.</strong> Open de viewer-link minstens 5 minuten vóór de show — de server ontwaakt dan (~60s) en blijft actief zolang er viewers verbonden zijn of er data binnenkomt.
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -927,8 +1391,15 @@ html,body{
     <div class="rv-no-next" id="rvNoNext" style="display:none" data-i18n="lbl_last_part">Laatste deel</div>
   </div>
 
-  <!-- NEXT CUE + UPCOMING LIST -->
+  <!-- HUIDIGE CUE (accent = nu actief) -->
   <div class="rv-cues-wrap">
+    <div class="rv-next-lbl active-lbl" data-i18n="ns_active">Nu actief</div>
+    <div class="rv-cue-name active" id="rvActiveCueName">—</div>
+    <div class="rv-cue-note" id="rvActiveCueNote" style="display:none"></div>
+  </div>
+
+  <!-- VOLGENDE CUE + UPCOMING LIST (warn/oranje = moet nog komen) -->
+  <div class="rv-cues-wrap" style="margin-top:20px;">
     <div class="rv-next-lbl" data-i18n="lbl_next_cue">Volgende cue</div>
     <div class="rv-cue-name" id="rvCueName">—</div>
     <div class="rv-cue-countdown" id="rvCueCountdown">—</div>
@@ -996,7 +1467,15 @@ html,body{
       </button>
     </div>
 
-    <!-- Progress + next strip -->
+    <!-- Nu actief + Volgend strip — duidelijk visueel onderscheiden -->
+    <div class="active-strip">
+      <div class="as-label" data-i18n="ns_active">Nu actief</div>
+      <div class="as-dot" id="asDot"></div>
+      <div class="as-info">
+        <div class="as-name" id="asName">—</div>
+        <div class="as-note" id="asNote"></div>
+      </div>
+    </div>
     <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     <div class="next-strip">
       <div class="ns-label" data-i18n="ns_next">Volgend</div>
@@ -1004,6 +1483,7 @@ html,body{
       <div class="ns-info">
         <div class="ns-name" id="nsName">—</div>
         <div class="ns-time" id="nsTime">—</div>
+        <div class="ns-note" id="nsNote"></div>
       </div>
       <div class="ns-countdown" id="nsCountdown">—</div>
     </div>
@@ -1321,6 +1801,31 @@ html,body{
   <button data-section="paneel" onclick="setSection('paneel')"><span class="mn-ic">✎</span><span data-i18n="nav_panel">Paneel</span></button>
 </nav>
 
+<!-- WATCH-WEERGAVE (5e modus, rond scherm) -->
+<div id="watchView">
+  <div class="watch-face">
+    <div class="watch-status">
+      <span class="watch-dot" id="watchDot"></span>
+      <span id="watchStatusText">GESTOPT</span>
+    </div>
+    <div class="watch-block watch-block-region">
+      <div class="watch-lbl" data-i18n="watch_next_part">Volgend deel</div>
+      <div class="watch-name" id="watchRegionName">—</div>
+      <div class="watch-countdown" id="watchRegionCountdown">—</div>
+    </div>
+    <div class="watch-block watch-block-cue">
+      <div class="watch-lbl" data-i18n="watch_next_cue">Volgende cue</div>
+      <div class="watch-name" id="watchCueName">—</div>
+      <div class="watch-countdown-sm" id="watchCueCountdown">—</div>
+    </div>
+    <div class="watch-clock" id="watchClock">00:00:00</div>
+    <button class="watch-filter-btn" id="watchFilterBtn" onclick="cycleWatchFilter()" data-i18n-title="tt_watch_filter" title="Tik om te filteren op type">
+      <span id="watchFilterIcon">⬤</span>
+      <span id="watchFilterLabel" data-i18n="watch_filter_all">Alle</span>
+    </button>
+  </div>
+</div>
+
 <script>
 /* ════════════════════════════════════════════
    SHARED HELPERS
@@ -1370,6 +1875,11 @@ const T={
   view_desktop:{nl:'🖥 Desktop',en:'🖥 Desktop',fr:'🖥 Bureau',es:'🖥 Escritorio'},
   view_tablet:{nl:'📋 Tablet',en:'📋 Tablet',fr:'📋 Tablette',es:'📋 Tablet'},
   view_phone:{nl:'📱 Telefoon',en:'📱 Phone',fr:'📱 Téléphone',es:'📱 Teléfono'},
+  view_watch:{nl:'⌚ Watch',en:'⌚ Watch',fr:'⌚ Montre',es:'⌚ Reloj'},
+  watch_next_part:{nl:'Volgend deel',en:'Next part',fr:'Partie suivante',es:'Parte siguiente'},
+  watch_next_cue:{nl:'Volgende cue',en:'Next cue',fr:'Cue suivant',es:'Cue siguiente'},
+  watch_filter_all:{nl:'Alle',en:'All',fr:'Tous',es:'Todos'},
+  tt_watch_filter:{nl:'Tik om te filteren op type',en:'Tap to filter by type',fr:'Toucher pour filtrer par type',es:'Toca para filtrar por tipo'},
   nav_show:{nl:'Show',en:'Show',fr:'Spectacle',es:'Show'},
   nav_parts:{nl:'Delen',en:'Parts',fr:'Parties',es:'Partes'},
   nav_panel:{nl:'Paneel',en:'Panel',fr:'Panneau',es:'Panel'},
@@ -1404,6 +1914,8 @@ const T={
   t_next:{nl:'Volgende',en:'Next',fr:'Suivant',es:'Siguiente'},
   t_from:{nl:'Vanaf',en:'From',fr:'À partir de',es:'Desde'},
   ns_next:{nl:'Volgend',en:'Next',fr:'Suivant',es:'Siguiente'},
+  ns_active:{nl:'Nu actief',en:'Now active',fr:'Actif maintenant',es:'Activo ahora'},
+  as_none:{nl:'Nog geen cue actief',en:'No cue active yet',fr:'Aucun cue actif',es:'Ningún cue activo aún'},
   list_cue:{nl:'Cue',en:'Cue',fr:'Cue',es:'Cue'},
   list_time:{nl:'Tijd',en:'Time',fr:'Temps',es:'Tiempo'},
 
@@ -1539,6 +2051,1172 @@ const T={
   // ── Tooltips (taak 5) ──
   tt_open_csv:{nl:'Open CSV-paneel (import/export)',en:'Open CSV panel (import/export)',fr:'Ouvrir le panneau CSV (import/export)',es:'Abrir panel CSV (importar/exportar)'},
   tt_open_newcue:{nl:'Nieuwe cue toevoegen',en:'Add a new cue',fr:'Ajouter un nouveau cue',es:'Añadir un nuevo cue'},
+  tt_help:{nl:'Handleiding',en:'Manual',fr:'Manuel',es:'Manual'},
+  help_title:{nl:'HANDLEIDING',en:'MANUAL',fr:'MANUEL',es:'MANUAL'},
+  help_nav_reaper:{nl:'Reaper-setup',en:'Reaper setup',fr:'Configuration Reaper',es:'Configuración Reaper'},
+  help_nav_markers:{nl:'Markers & Regions',en:'Markers & Regions',fr:'Markers & Regions',es:'Markers & Regions'},
+  help_nav_hosting:{nl:'Online hosting',en:'Online hosting',fr:'Hébergement en ligne',es:'Alojamiento en línea'},
+  help_close:{nl:'✕ Sluiten',en:'✕ Close',fr:'✕ Fermer',es:'✕ Cerrar'},
+  // Handleiding-secties: volledige HTML-blob per taal (i.p.v. losse sleutels per zin —
+  // dit is documentatie-proza, geen herbruikbare UI-labels).
+  help_reaper_body:{
+nl:`<h2>Reaper koppelen via MIDI</h2>
+        <p class="help-sub">Zo synchroniseer je de klok van Cue Runner met de timecode van Reaper, en stuur je transport-commando's terug naar Reaper.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Installeer LoopMIDI en maak 2 virtuele poorten</h3>
+            <p>LoopMIDI is een gratis Windows-programma dat virtuele MIDI-kabels maakt tussen twee programma's op dezelfde computer (Reaper ↔ browser).</p>
+            <ul>
+              <li>Download LoopMIDI (zoek "Tobias Erichsen loopMIDI")</li>
+              <li>Maak <strong>2 poorten</strong> aan, bijvoorbeeld genaamd:</li>
+              <li><strong>Poort 1</strong> — Reaper stuurt MTC hierheen, Cue Runner luistert hier (ontvangen)</li>
+              <li><strong>Poort 2</strong> — Cue Runner stuurt transport-commando's hierheen, Reaper luistert hier (versturen)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Reaper instellen: Preferences → MIDI Devices</h3>
+            <ul>
+              <li><strong>Poort 1</strong> (uitgang in Reaper): rechtsklik → <em>Enable output</em>, en zet "Send timecode" of "Send MTC" aan in Reaper's transport-instellingen</li>
+              <li><strong>Poort 2</strong> (ingang in Reaper): rechtsklik → <em>Enable input</em>, zodat Reaper Start/Stop/Continue-commando's van Cue Runner ontvangt</li>
+            </ul>
+            <div class="help-note">Belangrijk: selecteer eerst de juiste poort in Cue Runner (stap 3), <strong>daarna pas</strong> op Play drukken in Reaper. Anders mist de app de eerste MTC-berichten.</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Cue Runner: MIDI-paneel</h3>
+            <ul>
+              <li>Open het <strong>MIDI</strong>-tabblad rechts</li>
+              <li><strong>MIDI Ingang</strong>: kies Poort 1 (ontvangt MTC van Reaper)</li>
+              <li><strong>MIDI Uitgang</strong>: kies Poort 2 (verstuurt commando's naar Reaper)</li>
+              <li><strong>Sync modus</strong>: laat op <strong>Auto</strong> staan — detecteert automatisch MTC én MIDI Clock</li>
+              <li>Klik <strong>Test verbinding</strong> en druk Play in Reaper — je moet inkomende data zien in het MIDI Log</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>MTC-offset (als Reaper niet bij 0 begint)</h3>
+            <p>Reaper's projecttimeline start bij broadcast-producties vaak op <strong>01:00:00:00</strong> in plaats van 0 — een gangbare conventie. Zonder correctie loopt de klok in Cue Runner dan 1 uur voor.</p>
+            <ul>
+              <li>Gebruik de preset <strong>−1u</strong> als je project op 01:00:00:00 begint</li>
+              <li>Of klik <strong>⚡ Auto</strong> ná de eerste ontvangen MTC-data — de app berekent de offset dan zelf op basis van de start van je eerste geïmporteerde deel (region)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Tijdcode altijd laten lopen — een Timecode Generator instellen</h3>
+            <p>Reaper stuurt standaard alleen MTC uit terwijl de transport écht afspeelt. Wil je dat de tijdcode blijft doorlopen — bijvoorbeeld om Cue Runner al warm te draaien vóór de show echt begint, of als een vaste doorlopende klok los van je muziekbestand — dan heb je een aparte "generator" nodig die blijft versturen ongeacht wat er in je project gebeurt.</p>
+            <ul>
+              <li><strong>Eenvoudige aanpak:</strong> selecteer een leeg/stil stuk van je project, zet <strong>Repeat</strong> aan in de transportbalk en druk Play. Zolang de transport loopt (ook al is er geen geluid), blijft Reaper MTC versturen.</li>
+              <li><strong>Met de gratis SWS-extensie:</strong> deze veelgebruikte Reaper-uitbreiding maakt het makkelijker om zo'n doorlopende loop-regio snel in te stellen en te herstarten, handig als je dit elke show opnieuw doet.</li>
+            </ul>
+            <div class="help-note">Controleer ook dat de <strong>framerate van je Reaper-project</strong> (Project Settings → Project Timebase) overeenkomt met de FPS die je in het CSV-paneel van Cue Runner instelt — anders lopen de frames niet synchroon.</div>
+            <p>En zorg dat bij <strong>Preferences → MIDI Devices</strong> de MTC/tijdcode-verzending voor je uitgangspoort (Poort 1) écht aanstaat — zonder dat vertrekt er niets, ook niet met een generator-loop.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Volledige positionering (alleen nodig voor "Ga naar tijdstip")</h3>
+            <p>Start/Stop/Continue naar Reaper werken meteen. Maar om Reaper naar een <em>specifiek tijdstip</em> te laten springen ("Ga naar tijdstip" / "Stuur huidige positie") heeft de browser extra toestemming (SysEx) nodig.</p>
+            <ul>
+              <li>Klik in het MIDI-paneel op <strong>⚙ Activeer volledige positionering</strong></li>
+              <li>Bevestig de browserprompt die verschijnt</li>
+              <li>Dit hoeft maar <strong>eenmalig per sessie</strong> — Start/Stop/Continue werken ook zonder deze stap</li>
+            </ul>
+          </div>
+        </div>`,
+en:`<h2>Connecting Reaper via MIDI</h2>
+        <p class="help-sub">This is how you sync Cue Runner's clock with Reaper's timecode, and send transport commands back to Reaper.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Install LoopMIDI and create 2 virtual ports</h3>
+            <p>LoopMIDI is a free Windows program that creates virtual MIDI cables between two programs on the same computer (Reaper ↔ browser).</p>
+            <ul>
+              <li>Download LoopMIDI (search "Tobias Erichsen loopMIDI")</li>
+              <li>Create <strong>2 ports</strong>, for example named:</li>
+              <li><strong>Port 1</strong> — Reaper sends MTC here, Cue Runner listens here (receiving)</li>
+              <li><strong>Port 2</strong> — Cue Runner sends transport commands here, Reaper listens here (sending)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Configure Reaper: Preferences → MIDI Devices</h3>
+            <ul>
+              <li><strong>Port 1</strong> (output in Reaper): right-click → <em>Enable output</em>, and turn on "Send timecode" or "Send MTC" in Reaper's transport settings</li>
+              <li><strong>Port 2</strong> (input in Reaper): right-click → <em>Enable input</em>, so Reaper receives Start/Stop/Continue commands from Cue Runner</li>
+            </ul>
+            <div class="help-note">Important: first select the correct port in Cue Runner (step 3), <strong>only then</strong> press Play in Reaper. Otherwise the app misses the first MTC messages.</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Cue Runner: MIDI panel</h3>
+            <ul>
+              <li>Open the <strong>MIDI</strong> tab on the right</li>
+              <li><strong>MIDI Input</strong>: choose Port 1 (receives MTC from Reaper)</li>
+              <li><strong>MIDI Output</strong>: choose Port 2 (sends commands to Reaper)</li>
+              <li><strong>Sync mode</strong>: leave on <strong>Auto</strong> — automatically detects both MTC and MIDI Clock</li>
+              <li>Click <strong>Test connection</strong> and press Play in Reaper — you should see incoming data in the MIDI Log</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>MTC offset (if Reaper doesn't start at 0)</h3>
+            <p>In broadcast productions, Reaper's project timeline often starts at <strong>01:00:00:00</strong> instead of 0 — a common convention. Without correction, Cue Runner's clock will then run 1 hour ahead.</p>
+            <ul>
+              <li>Use the <strong>−1h</strong> preset if your project starts at 01:00:00:00</li>
+              <li>Or click <strong>⚡ Auto</strong> after the first received MTC data — the app then calculates the offset itself based on the start of your first imported part (region)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Keeping timecode running continuously — setting up a Timecode Generator</h3>
+            <p>By default, Reaper only sends MTC while transport is actually playing. If you want the timecode to keep running continuously — for example to warm up Cue Runner before the show really starts, or as a fixed running clock independent of your music file — you need a separate "generator" that keeps sending regardless of what's happening in your project.</p>
+            <ul>
+              <li><strong>Simple approach:</strong> select an empty/silent part of your project, turn on <strong>Repeat</strong> in the transport bar and press Play. As long as transport is running (even without sound), Reaper keeps sending MTC.</li>
+              <li><strong>With the free SWS extension:</strong> this widely-used Reaper extension makes it easier to quickly set up and restart such a continuous loop region — handy if you do this before every show.</li>
+            </ul>
+            <div class="help-note">Also check that your <strong>Reaper project's frame rate</strong> (Project Settings → Project Timebase) matches the FPS you set in Cue Runner's CSV panel — otherwise the frames won't stay in sync.</div>
+            <p>And make sure that under <strong>Preferences → MIDI Devices</strong> timecode/MTC sending is actually enabled for your output port (Port 1) — without that, nothing goes out, even with a generator loop.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Full positioning (only needed for "Go to time")</h3>
+            <p>Start/Stop/Continue to Reaper work right away. But to make Reaper jump to a <em>specific time</em> ("Go to time" / "Send current position"), the browser needs extra permission (SysEx).</p>
+            <ul>
+              <li>Click <strong>⚙ Enable full positioning</strong> in the MIDI panel</li>
+              <li>Confirm the browser prompt that appears</li>
+              <li>This is only needed <strong>once per session</strong> — Start/Stop/Continue also work without this step</li>
+            </ul>
+          </div>
+        </div>`,
+fr:`<h2>Connecter Reaper via MIDI</h2>
+        <p class="help-sub">Voici comment synchroniser l'horloge de Cue Runner avec le timecode de Reaper, et renvoyer des commandes de transport vers Reaper.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Installer LoopMIDI et créer 2 ports virtuels</h3>
+            <p>LoopMIDI est un programme Windows gratuit qui crée des câbles MIDI virtuels entre deux programmes sur le même ordinateur (Reaper ↔ navigateur).</p>
+            <ul>
+              <li>Téléchargez LoopMIDI (cherchez "Tobias Erichsen loopMIDI")</li>
+              <li>Créez <strong>2 ports</strong>, par exemple nommés :</li>
+              <li><strong>Port 1</strong> — Reaper envoie le MTC ici, Cue Runner écoute ici (réception)</li>
+              <li><strong>Port 2</strong> — Cue Runner envoie les commandes de transport ici, Reaper écoute ici (envoi)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Configurer Reaper : Preferences → MIDI Devices</h3>
+            <ul>
+              <li><strong>Port 1</strong> (sortie dans Reaper) : clic droit → <em>Enable output</em>, et activez "Send timecode" ou "Send MTC" dans les réglages de transport de Reaper</li>
+              <li><strong>Port 2</strong> (entrée dans Reaper) : clic droit → <em>Enable input</em>, pour que Reaper reçoive les commandes Start/Stop/Continue de Cue Runner</li>
+            </ul>
+            <div class="help-note">Important : sélectionnez d'abord le bon port dans Cue Runner (étape 3), <strong>et seulement ensuite</strong> appuyez sur Play dans Reaper. Sinon l'application rate les premiers messages MTC.</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Cue Runner : panneau MIDI</h3>
+            <ul>
+              <li>Ouvrez l'onglet <strong>MIDI</strong> à droite</li>
+              <li><strong>Entrée MIDI</strong> : choisissez le Port 1 (reçoit le MTC de Reaper)</li>
+              <li><strong>Sortie MIDI</strong> : choisissez le Port 2 (envoie les commandes à Reaper)</li>
+              <li><strong>Mode sync</strong> : laissez sur <strong>Auto</strong> — détecte automatiquement le MTC et le MIDI Clock</li>
+              <li>Cliquez sur <strong>Tester la connexion</strong> et appuyez sur Play dans Reaper — vous devez voir les données entrantes dans le journal MIDI</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Décalage MTC (si Reaper ne commence pas à 0)</h3>
+            <p>Dans les productions broadcast, la timeline du projet Reaper commence souvent à <strong>01:00:00:00</strong> au lieu de 0 — une convention courante. Sans correction, l'horloge de Cue Runner avancera alors d'1 heure.</p>
+            <ul>
+              <li>Utilisez le préréglage <strong>−1h</strong> si votre projet commence à 01:00:00:00</li>
+              <li>Ou cliquez sur <strong>⚡ Auto</strong> après avoir reçu les premières données MTC — l'application calcule alors elle-même le décalage à partir du début de votre première partie importée (region)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Faire tourner le timecode en continu — configurer un Timecode Generator</h3>
+            <p>Par défaut, Reaper n'envoie du MTC que lorsque le transport est réellement en lecture. Si vous voulez que le timecode continue de tourner en continu — par exemple pour faire chauffer Cue Runner avant le vrai début du spectacle, ou comme horloge fixe indépendante de votre fichier musical — il vous faut un "générateur" séparé qui continue d'envoyer quoi qu'il se passe dans votre projet.</p>
+            <ul>
+              <li><strong>Approche simple :</strong> sélectionnez une partie vide/silencieuse de votre projet, activez <strong>Repeat</strong> dans la barre de transport et appuyez sur Play. Tant que le transport tourne (même sans son), Reaper continue d'envoyer du MTC.</li>
+              <li><strong>Avec l'extension gratuite SWS :</strong> cette extension Reaper très utilisée facilite la mise en place et le redémarrage rapide d'une telle boucle continue — pratique si vous le faites avant chaque spectacle.</li>
+            </ul>
+            <div class="help-note">Vérifiez aussi que la <strong>fréquence d'images de votre projet Reaper</strong> (Project Settings → Project Timebase) correspond aux FPS que vous réglez dans le panneau CSV de Cue Runner — sinon les frames ne resteront pas synchronisées.</div>
+            <p>Et assurez-vous que dans <strong>Preferences → MIDI Devices</strong>, l'envoi du timecode/MTC est bien activé pour votre port de sortie (Port 1) — sans cela, rien ne part, même avec une boucle génératrice.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Positionnement complet (nécessaire seulement pour "Aller au temps")</h3>
+            <p>Start/Stop/Continue vers Reaper fonctionnent immédiatement. Mais pour faire sauter Reaper à un <em>moment précis</em> ("Aller au temps" / "Envoyer la position actuelle"), le navigateur a besoin d'une permission supplémentaire (SysEx).</p>
+            <ul>
+              <li>Cliquez sur <strong>⚙ Activer le positionnement complet</strong> dans le panneau MIDI</li>
+              <li>Confirmez l'invite du navigateur qui apparaît</li>
+              <li>Ceci n'est nécessaire qu'<strong>une fois par session</strong> — Start/Stop/Continue fonctionnent aussi sans cette étape</li>
+            </ul>
+          </div>
+        </div>`,
+es:`<h2>Conectar Reaper vía MIDI</h2>
+        <p class="help-sub">Así sincronizas el reloj de Cue Runner con el timecode de Reaper, y envías comandos de transporte de vuelta a Reaper.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Instala LoopMIDI y crea 2 puertos virtuales</h3>
+            <p>LoopMIDI es un programa gratuito de Windows que crea cables MIDI virtuales entre dos programas en el mismo ordenador (Reaper ↔ navegador).</p>
+            <ul>
+              <li>Descarga LoopMIDI (busca "Tobias Erichsen loopMIDI")</li>
+              <li>Crea <strong>2 puertos</strong>, por ejemplo llamados:</li>
+              <li><strong>Puerto 1</strong> — Reaper envía MTC aquí, Cue Runner escucha aquí (recepción)</li>
+              <li><strong>Puerto 2</strong> — Cue Runner envía comandos de transporte aquí, Reaper escucha aquí (envío)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Configura Reaper: Preferences → MIDI Devices</h3>
+            <ul>
+              <li><strong>Puerto 1</strong> (salida en Reaper): clic derecho → <em>Enable output</em>, y activa "Send timecode" o "Send MTC" en los ajustes de transporte de Reaper</li>
+              <li><strong>Puerto 2</strong> (entrada en Reaper): clic derecho → <em>Enable input</em>, para que Reaper reciba los comandos Start/Stop/Continue de Cue Runner</li>
+            </ul>
+            <div class="help-note">Importante: selecciona primero el puerto correcto en Cue Runner (paso 3), <strong>y solo después</strong> pulsa Play en Reaper. De lo contrario la app se pierde los primeros mensajes MTC.</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Cue Runner: panel MIDI</h3>
+            <ul>
+              <li>Abre la pestaña <strong>MIDI</strong> a la derecha</li>
+              <li><strong>Entrada MIDI</strong>: elige el Puerto 1 (recibe MTC de Reaper)</li>
+              <li><strong>Salida MIDI</strong>: elige el Puerto 2 (envía comandos a Reaper)</li>
+              <li><strong>Modo sync</strong>: déjalo en <strong>Auto</strong> — detecta automáticamente MTC y MIDI Clock</li>
+              <li>Haz clic en <strong>Probar conexión</strong> y pulsa Play en Reaper — deberías ver datos entrantes en el registro MIDI</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Desfase MTC (si Reaper no empieza en 0)</h3>
+            <p>En producciones de broadcast, la línea de tiempo del proyecto de Reaper suele empezar en <strong>01:00:00:00</strong> en lugar de 0 — una convención habitual. Sin corrección, el reloj de Cue Runner irá entonces 1 hora adelantado.</p>
+            <ul>
+              <li>Usa el ajuste predefinido <strong>−1h</strong> si tu proyecto empieza en 01:00:00:00</li>
+              <li>O haz clic en <strong>⚡ Auto</strong> después de recibir los primeros datos MTC — la app calcula entonces el desfase por sí misma según el inicio de tu primera parte importada (region)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Mantener el timecode corriendo siempre — configurar un Timecode Generator</h3>
+            <p>Por defecto, Reaper solo envía MTC mientras el transporte está realmente reproduciendo. Si quieres que el timecode siga corriendo de forma continua — por ejemplo para calentar Cue Runner antes de que empiece realmente el espectáculo, o como reloj fijo independiente de tu archivo de música — necesitas un "generador" aparte que siga enviando pase lo que pase en tu proyecto.</p>
+            <ul>
+              <li><strong>Enfoque sencillo:</strong> selecciona una parte vacía/silenciosa de tu proyecto, activa <strong>Repeat</strong> en la barra de transporte y pulsa Play. Mientras el transporte esté corriendo (aunque no haya sonido), Reaper sigue enviando MTC.</li>
+              <li><strong>Con la extensión gratuita SWS:</strong> esta extensión de Reaper muy utilizada facilita configurar y reiniciar rápidamente ese bucle continuo — útil si lo haces antes de cada función.</li>
+            </ul>
+            <div class="help-note">Comprueba también que la <strong>tasa de fotogramas de tu proyecto de Reaper</strong> (Project Settings → Project Timebase) coincide con los FPS que ajustas en el panel CSV de Cue Runner — si no, los fotogramas no quedarán sincronizados.</div>
+            <p>Y asegúrate de que en <strong>Preferences → MIDI Devices</strong> el envío de timecode/MTC esté realmente activado para tu puerto de salida (Puerto 1) — sin eso no sale nada, ni siquiera con un bucle generador.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Posicionamiento completo (solo necesario para "Ir al tiempo")</h3>
+            <p>Start/Stop/Continue hacia Reaper funcionan de inmediato. Pero para que Reaper salte a un <em>momento específico</em> ("Ir al tiempo" / "Enviar posición actual"), el navegador necesita un permiso adicional (SysEx).</p>
+            <ul>
+              <li>Haz clic en <strong>⚙ Activar posicionamiento completo</strong> en el panel MIDI</li>
+              <li>Confirma el aviso del navegador que aparece</li>
+              <li>Esto solo hace falta <strong>una vez por sesión</strong> — Start/Stop/Continue también funcionan sin este paso</li>
+            </ul>
+          </div>
+        </div>`,
+  },
+  help_markers_body:{
+nl:`<h2>Markers &amp; Regions workflow</h2>
+        <p class="help-sub">Hoe je een showbestand uit Reaper exporteert en importeert in Cue Runner, en hoe namen automatisch worden herkend.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Regions = delen, Markers = cues</h3>
+            <ul>
+              <li><strong>Regions</strong> (<code>R*</code> in de CSV) worden <strong>delen</strong> in Cue Runner — grote stukken van de voorstelling (bv. "WALS", "FINALE")</li>
+              <li><strong>Markers</strong> (<code>M*</code> in de CSV) worden <strong>cues</strong> — losse momenten die je afvinkt tijdens de show</li>
+              <li>Elke cue krijgt automatisch het deel toegewezen waar zijn tijdstip in valt</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>CSV exporteren uit Reaper</h3>
+            <p>In Reaper: <strong>File → Export → Region/Marker Manager → Export CSV</strong></p>
+            <div class="help-note">Wil je notities meegeven per cue? Zet die dan in het Notes-veld van de marker in Reaper — Cue Runner haalt ze er bij import automatisch uit (zie stap 4).</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>CSV importeren + tijdformaat</h3>
+            <p>Open het <strong>CSV</strong>-tabblad → sleep het bestand in het vak (of plak de tekst) → <strong>Importeer</strong>.</p>
+            <p>Reaper exporteert tijden in verschillende formaten, afhankelijk van je projectinstellingen. Cue Runner herkent ze automatisch (<strong>Auto</strong>-stand), of je kiest handmatig:</p>
+            <table class="help-table">
+              <tr><th>Formaat</th><th>Reaper-instelling</th><th>Voorbeeld</th></tr>
+              <tr><td>M:SS.mmm</td><td>Tijdsweergave: Minuten:Seconden</td><td>11:59.966</td></tr>
+              <tr><td>SS.B.TT</td><td>Tijdsweergave: Maten+Beats</td><td>248.3.35</td></tr>
+              <tr><td>HH:MM:SS:FF</td><td>Transport: Hours:Minutes:Seconds:Frames</td><td>1:05:23:12</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Cue-notities via "Note:" in de naam</h3>
+            <p>Als je in Reaper een notitie aan een marker toevoegt, zet Reaper die er bij CSV-export achteraan de naam bij als <code>... Note: &lt;tekst&gt;</code>. Cue Runner herkent dit automatisch bij import:</p>
+            <div class="help-code">START show: intro Note: dimmer op 80%, warm wit</div>
+            <p>wordt automatisch:</p>
+            <div class="help-result"><strong>Naam:</strong> START show: intro &nbsp;·&nbsp; <strong>Notitie:</strong> dimmer op 80%, warm wit</div>
+            <p>De notitie verschijnt daarna volledig bij "Nu actief" en "Volgend" — ook in de delen-view.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Automatische type-detectie</h3>
+            <p>Bij import scant Cue Runner de cue-naam op trefwoorden en wijst automatisch een type toe:</p>
+            <table class="help-table">
+              <tr><th>Type</th><th>Herkende trefwoorden</th></tr>
+              <tr><td>💡 Licht</td><td>licht, light, dim, wash</td></tr>
+              <tr><td>🔦 Spot</td><td>spot</td></tr>
+              <tr><td>🏗 Kraan</td><td>kraan, fly, rigging, aerial</td></tr>
+              <tr><td>💥 Kaboem</td><td>kaboem, vuurwerk, pyro</td></tr>
+              <tr><td>🔩 Truss</td><td>truss, rigging</td></tr>
+              <tr><td>🎬 Dir</td><td>regie, actor, scene, engel, dame, bruid</td></tr>
+              <tr><td>🔊 Sound</td><td>geluid, sound, audio, music</td></tr>
+              <tr><td>🎥 Video</td><td>video, scherm, screen, project</td></tr>
+            </table>
+            <p>Klopt het type niet, of wil je er een tweede type bij (bijv. Spot + Kraan)? Open de cue via de lijst → klik de gewenste type-chips aan/uit (meerdere tegelijk mogelijk) → <strong>Opslaan</strong>.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Filteren op cue-type</h3>
+            <p>Gebruik de filterchips boven de cuelijst om alleen bepaalde types te tonen (bv. enkel Licht + Spot). De cuelijst, de "Volgend"-teller én de delen-view tellen dan alleen af naar cues die matchen. De <strong>huidige</strong> cue blijft altijd zichtbaar, ongeacht het filter. Klik <strong>✕ Wissen</strong> om het filter meteen weer uit te zetten.</p>
+          </div>
+        </div>`,
+en:`<h2>Markers &amp; Regions workflow</h2>
+        <p class="help-sub">How to export a show file from Reaper and import it into Cue Runner, and how names are automatically recognized.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Regions = parts, Markers = cues</h3>
+            <ul>
+              <li><strong>Regions</strong> (<code>R*</code> in the CSV) become <strong>parts</strong> in Cue Runner — large chunks of the show (e.g. "WALTZ", "FINALE")</li>
+              <li><strong>Markers</strong> (<code>M*</code> in the CSV) become <strong>cues</strong> — individual moments you check off during the show</li>
+              <li>Each cue is automatically assigned the part whose time range it falls into</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Exporting CSV from Reaper</h3>
+            <p>In Reaper: <strong>File → Export → Region/Marker Manager → Export CSV</strong></p>
+            <div class="help-note">Want to add notes per cue? Put them in the marker's Notes field in Reaper — Cue Runner extracts them automatically on import (see step 4).</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Importing CSV + time format</h3>
+            <p>Open the <strong>CSV</strong> tab → drag the file into the box (or paste the text) → <strong>Import</strong>.</p>
+            <p>Reaper exports times in different formats depending on your project settings. Cue Runner recognizes them automatically (<strong>Auto</strong> mode), or you can choose manually:</p>
+            <table class="help-table">
+              <tr><th>Format</th><th>Reaper setting</th><th>Example</th></tr>
+              <tr><td>M:SS.mmm</td><td>Time display: Minutes:Seconds</td><td>11:59.966</td></tr>
+              <tr><td>SS.B.TT</td><td>Time display: Bars+Beats</td><td>248.3.35</td></tr>
+              <tr><td>HH:MM:SS:FF</td><td>Transport: Hours:Minutes:Seconds:Frames</td><td>1:05:23:12</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Cue notes via "Note:" in the name</h3>
+            <p>If you add a note to a marker in Reaper, Reaper appends it to the name on CSV export as <code>... Note: &lt;text&gt;</code>. Cue Runner recognizes this automatically on import:</p>
+            <div class="help-code">START show: intro Note: dimmer at 80%, warm white</div>
+            <p>automatically becomes:</p>
+            <div class="help-result"><strong>Name:</strong> START show: intro &nbsp;·&nbsp; <strong>Note:</strong> dimmer at 80%, warm white</div>
+            <p>The note then appears in full under "Now active" and "Next" — also in the parts-only view.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Automatic type detection</h3>
+            <p>On import, Cue Runner scans the cue name for keywords and automatically assigns a type:</p>
+            <table class="help-table">
+              <tr><th>Type</th><th>Recognized keywords</th></tr>
+              <tr><td>💡 Light</td><td>licht, light, dim, wash</td></tr>
+              <tr><td>🔦 Spot</td><td>spot</td></tr>
+              <tr><td>🏗 Crane</td><td>kraan, fly, rigging, aerial</td></tr>
+              <tr><td>💥 Boom</td><td>kaboem, vuurwerk, pyro</td></tr>
+              <tr><td>🔩 Truss</td><td>truss, rigging</td></tr>
+              <tr><td>🎬 Dir</td><td>regie, actor, scene, engel, dame, bruid</td></tr>
+              <tr><td>🔊 Sound</td><td>geluid, sound, audio, music</td></tr>
+              <tr><td>🎥 Video</td><td>video, scherm, screen, project</td></tr>
+            </table>
+            <p>Wrong type, or want to add a second one (e.g. Spot + Crane)? Open the cue from the list → click the desired type chips on/off (multiple at once is fine) → <strong>Save</strong>.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Filtering by cue type</h3>
+            <p>Use the filter chips above the cue list to show only certain types (e.g. only Light + Spot). The cue list, the "Next" counter, and the parts-only view then only count down to cues that match. The <strong>current</strong> cue always stays visible, regardless of the filter. Click <strong>✕ Clear</strong> to instantly turn the filter off again.</p>
+          </div>
+        </div>`,
+fr:`<h2>Workflow Markers &amp; Regions</h2>
+        <p class="help-sub">Comment exporter un fichier de spectacle depuis Reaper et l'importer dans Cue Runner, et comment les noms sont reconnus automatiquement.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Regions = parties, Markers = cues</h3>
+            <ul>
+              <li>Les <strong>Regions</strong> (<code>R*</code> dans le CSV) deviennent des <strong>parties</strong> dans Cue Runner — de grands morceaux du spectacle (ex. "VALSE", "FINALE")</li>
+              <li>Les <strong>Markers</strong> (<code>M*</code> dans le CSV) deviennent des <strong>cues</strong> — des moments isolés que vous cochez pendant le spectacle</li>
+              <li>Chaque cue reçoit automatiquement la partie dans laquelle se situe son horodatage</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Exporter le CSV depuis Reaper</h3>
+            <p>Dans Reaper : <strong>File → Export → Region/Marker Manager → Export CSV</strong></p>
+            <div class="help-note">Vous voulez ajouter des notes par cue ? Mettez-les dans le champ Notes du marker dans Reaper — Cue Runner les extrait automatiquement à l'import (voir étape 4).</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Importer le CSV + format horaire</h3>
+            <p>Ouvrez l'onglet <strong>CSV</strong> → glissez le fichier dans la zone (ou collez le texte) → <strong>Importer</strong>.</p>
+            <p>Reaper exporte les horaires dans différents formats selon vos réglages de projet. Cue Runner les reconnaît automatiquement (mode <strong>Auto</strong>), ou vous choisissez manuellement :</p>
+            <table class="help-table">
+              <tr><th>Format</th><th>Réglage Reaper</th><th>Exemple</th></tr>
+              <tr><td>M:SS.mmm</td><td>Affichage du temps : Minutes:Secondes</td><td>11:59.966</td></tr>
+              <tr><td>SS.B.TT</td><td>Affichage du temps : Mesures+Temps</td><td>248.3.35</td></tr>
+              <tr><td>HH:MM:SS:FF</td><td>Transport : Hours:Minutes:Seconds:Frames</td><td>1:05:23:12</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Notes de cue via "Note:" dans le nom</h3>
+            <p>Si vous ajoutez une note à un marker dans Reaper, Reaper l'ajoute au nom lors de l'export CSV sous la forme <code>... Note: &lt;texte&gt;</code>. Cue Runner le reconnaît automatiquement à l'import :</p>
+            <div class="help-code">START show: intro Note: dimmer à 80%, blanc chaud</div>
+            <p>devient automatiquement :</p>
+            <div class="help-result"><strong>Nom :</strong> START show: intro &nbsp;·&nbsp; <strong>Note :</strong> dimmer à 80%, blanc chaud</div>
+            <p>La note apparaît ensuite intégralement dans "Actif maintenant" et "Suivant" — aussi dans la vue parties uniquement.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Détection automatique du type</h3>
+            <p>À l'import, Cue Runner analyse le nom du cue à la recherche de mots-clés et attribue automatiquement un type :</p>
+            <table class="help-table">
+              <tr><th>Type</th><th>Mots-clés reconnus</th></tr>
+              <tr><td>💡 Lumière</td><td>licht, light, dim, wash</td></tr>
+              <tr><td>🔦 Poursuite</td><td>spot</td></tr>
+              <tr><td>🏗 Grue</td><td>kraan, fly, rigging, aerial</td></tr>
+              <tr><td>💥 Boum</td><td>kaboem, vuurwerk, pyro</td></tr>
+              <tr><td>🔩 Structure</td><td>truss, rigging</td></tr>
+              <tr><td>🎬 Rég.</td><td>regie, actor, scene, engel, dame, bruid</td></tr>
+              <tr><td>🔊 Son</td><td>geluid, sound, audio, music</td></tr>
+              <tr><td>🎥 Vidéo</td><td>video, scherm, screen, project</td></tr>
+            </table>
+            <p>Le type ne convient pas, ou vous en voulez un deuxième (ex. Poursuite + Grue) ? Ouvrez le cue depuis la liste → cliquez sur les puces de type souhaitées pour les activer/désactiver (plusieurs à la fois possible) → <strong>Enregistrer</strong>.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Filtrer par type de cue</h3>
+            <p>Utilisez les puces de filtre au-dessus de la liste des cues pour n'afficher que certains types (ex. uniquement Lumière + Poursuite). La liste des cues, le compteur "Suivant" et la vue parties uniquement ne décomptent alors que vers les cues qui correspondent. Le cue <strong>actuel</strong> reste toujours visible, quel que soit le filtre. Cliquez sur <strong>✕ Effacer</strong> pour désactiver le filtre immédiatement.</p>
+          </div>
+        </div>`,
+es:`<h2>Flujo de trabajo Markers &amp; Regions</h2>
+        <p class="help-sub">Cómo exportar un archivo de espectáculo desde Reaper e importarlo en Cue Runner, y cómo se reconocen automáticamente los nombres.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Regions = partes, Markers = cues</h3>
+            <ul>
+              <li>Las <strong>Regions</strong> (<code>R*</code> en el CSV) se convierten en <strong>partes</strong> en Cue Runner — grandes fragmentos del espectáculo (p. ej. "VALS", "FINAL")</li>
+              <li>Los <strong>Markers</strong> (<code>M*</code> en el CSV) se convierten en <strong>cues</strong> — momentos individuales que marcas durante el espectáculo</li>
+              <li>Cada cue recibe automáticamente la parte en cuyo intervalo de tiempo cae</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Exportar el CSV desde Reaper</h3>
+            <p>En Reaper: <strong>File → Export → Region/Marker Manager → Export CSV</strong></p>
+            <div class="help-note">¿Quieres añadir notas por cue? Ponlas en el campo Notes del marker en Reaper — Cue Runner las extrae automáticamente al importar (ver paso 4).</div>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Importar el CSV + formato de tiempo</h3>
+            <p>Abre la pestaña <strong>CSV</strong> → arrastra el archivo a la casilla (o pega el texto) → <strong>Importar</strong>.</p>
+            <p>Reaper exporta los tiempos en diferentes formatos según los ajustes de tu proyecto. Cue Runner los reconoce automáticamente (modo <strong>Auto</strong>), o puedes elegir manualmente:</p>
+            <table class="help-table">
+              <tr><th>Formato</th><th>Ajuste de Reaper</th><th>Ejemplo</th></tr>
+              <tr><td>M:SS.mmm</td><td>Visualización de tiempo: Minutos:Segundos</td><td>11:59.966</td></tr>
+              <tr><td>SS.B.TT</td><td>Visualización de tiempo: Compases+Beats</td><td>248.3.35</td></tr>
+              <tr><td>HH:MM:SS:FF</td><td>Transport: Hours:Minutes:Seconds:Frames</td><td>1:05:23:12</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Notas de cue mediante "Note:" en el nombre</h3>
+            <p>Si añades una nota a un marker en Reaper, Reaper la agrega al nombre al exportar el CSV como <code>... Note: &lt;texto&gt;</code>. Cue Runner lo reconoce automáticamente al importar:</p>
+            <div class="help-code">START show: intro Note: dimmer al 80%, blanco cálido</div>
+            <p>se convierte automáticamente en:</p>
+            <div class="help-result"><strong>Nombre:</strong> START show: intro &nbsp;·&nbsp; <strong>Nota:</strong> dimmer al 80%, blanco cálido</div>
+            <p>La nota aparece después completa en "Activo ahora" y "Siguiente" — también en la vista de solo partes.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Detección automática de tipo</h3>
+            <p>Al importar, Cue Runner escanea el nombre del cue en busca de palabras clave y asigna automáticamente un tipo:</p>
+            <table class="help-table">
+              <tr><th>Tipo</th><th>Palabras clave reconocidas</th></tr>
+              <tr><td>💡 Luz</td><td>licht, light, dim, wash</td></tr>
+              <tr><td>🔦 Seguidor</td><td>spot</td></tr>
+              <tr><td>🏗 Grúa</td><td>kraan, fly, rigging, aerial</td></tr>
+              <tr><td>💥 Boom</td><td>kaboem, vuurwerk, pyro</td></tr>
+              <tr><td>🔩 Estructura</td><td>truss, rigging</td></tr>
+              <tr><td>🎬 Dir</td><td>regie, actor, scene, engel, dame, bruid</td></tr>
+              <tr><td>🔊 Sonido</td><td>geluid, sound, audio, music</td></tr>
+              <tr><td>🎥 Video</td><td>video, scherm, screen, project</td></tr>
+            </table>
+            <p>¿El tipo no es correcto, o quieres añadir un segundo (p. ej. Seguidor + Grúa)? Abre el cue desde la lista → haz clic en los chips de tipo deseados para activarlos/desactivarlos (varios a la vez es posible) → <strong>Guardar</strong>.</p>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Filtrar por tipo de cue</h3>
+            <p>Usa los chips de filtro encima de la lista de cues para mostrar solo ciertos tipos (p. ej. solo Luz + Seguidor). La lista de cues, el contador "Siguiente" y la vista de solo partes entonces solo cuentan hacia atrás hasta los cues que coinciden. El cue <strong>actual</strong> permanece siempre visible, independientemente del filtro. Haz clic en <strong>✕ Borrar</strong> para desactivar el filtro al instante.</p>
+          </div>
+        </div>`,
+  },
+  help_hosting_body:{
+nl:`<h2>Online viewers instellen</h2>
+        <p class="help-sub">Stap voor stap: van nul naar live meekijken via internet. Andere mensen zien de klok, actieve cue, volgende cue en de cuelijst — ze kunnen niets bedienen.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">📋</div>
+          <div class="help-step-body">
+            <h3>Wat je nodig hebt — 3 bestanden</h3>
+            <ul>
+              <li><strong>server.js</strong> — de relay-server</li>
+              <li><strong>package.json</strong> — zegt Render wat het moet installeren</li>
+              <li><strong>cue-runner-viewer.html</strong> — de viewer-pagina</li>
+            </ul>
+            <p>Bewaar ze samen in één map, bijvoorbeeld <code>cue-runner-server</code>.</p>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Deel 1 — GitHub (eenmalig, ~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Maak een gratis GitHub-account</h3>
+            <p>GitHub is een gratis opslagplaats voor code — Render leest je server-bestanden van daaruit.</p>
+            <ul><li>Ga naar github.com → <strong>Sign up</strong> → bevestig je e-mail</li></ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Maak een nieuwe repository</h3>
+            <ul>
+              <li>Klik rechtsboven op <strong>+</strong> → <strong>New repository</strong></li>
+              <li>Naam: <code>cue-runner-server</code> — zet op <strong>Public</strong></li>
+              <li>Vink <strong>Add a README file</strong> aan → <strong>Create repository</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Upload je 3 bestanden</h3>
+            <ul>
+              <li><strong>Add file → Upload files</strong></li>
+              <li>Sleep <code>server.js</code>, <code>package.json</code> en <code>cue-runner-viewer.html</code> in het vak</li>
+              <li>Scroll naar beneden → <strong>Commit changes</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Deel 2 — Render (~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Maak een gratis Render-account</h3>
+            <ul>
+              <li>Ga naar render.com → <strong>Get Started for Free</strong></li>
+              <li>Kies <strong>Sign up with GitHub</strong> (koppelt automatisch)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Nieuwe Web Service</h3>
+            <ul>
+              <li><strong>New +</strong> → <strong>Web Service</strong> → <strong>Build and deploy from a Git repository</strong></li>
+              <li>Zoek je repository <code>cue-runner-server</code> → <strong>Connect</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Configureer de service</h3>
+            <ul>
+              <li><strong>Name:</strong> <code>cue-runner-server</code> (of eigen naam — komt terug in je URL)</li>
+              <li><strong>Region:</strong> bv. Frankfurt (EU Central) voor lage latency in West-Europa</li>
+              <li><strong>Branch:</strong> <code>main</code> · <strong>Runtime:</strong> Node</li>
+              <li><strong>Build Command:</strong> <code>npm install</code> · <strong>Start Command:</strong> <code>node server.js</code></li>
+              <li><strong>Instance Type:</strong> Free → <strong>Create Web Service</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">7</div>
+          <div class="help-step-body">
+            <h3>Wacht op de deploy (~2 min)</h3>
+            <p>Wacht tot bovenaan <strong style="color:var(--acc)">Live</strong> verschijnt (groen bolletje).</p>
+            <div class="help-result">Je server-URL staat bovenaan, bijv. <code>https://cue-runner-server.onrender.com</code> — noteer 'm.</div>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Deel 3 — Verbinden en uitnodigen</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">8</div>
+          <div class="help-step-body">
+            <h3>Broadcast starten</h3>
+            <ul>
+              <li>Zorg dat de app <strong>bestuurbaar</strong> staat (badge linksboven, niet "Alleen bekijken")</li>
+              <li>Klik op <strong>● Uit</strong> rechtsboven bij het topbar-statusje</li>
+              <li>Vul in: <code>wss://cue-runner-server.onrender.com</code> — let op <strong>wss://</strong> (met s), niet ws://</li>
+              <li><strong>Verbinden</strong> → status wordt <strong style="color:var(--acc)">● LIVE</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">9</div>
+          <div class="help-step-body">
+            <h3>Viewers uitnodigen</h3>
+            <p>Stuur deze link naar iedereen die mee wil kijken:</p>
+            <div class="help-code">https://cue-runner-server.onrender.com/viewer?server=wss://cue-runner-server.onrender.com</div>
+            <p>Werkt op telefoon, tablet en laptop, in elke browser, zonder installatie. Alleen-lezen.</p>
+          </div>
+        </div>
+
+        <div class="help-note">
+          <strong>⚠ Gratis tier slaapt na 15 minuten zonder gebruik.</strong> Open de viewer-link minstens 5 minuten vóór de show — de server ontwaakt dan (~60s) en blijft actief zolang er viewers verbonden zijn of er data binnenkomt.
+        </div>`,
+en:`<h2>Setting up online viewers</h2>
+        <p class="help-sub">Step by step: from zero to live watching over the internet. Other people see the clock, active cue, next cue, and the cue list — they can't control anything.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">📋</div>
+          <div class="help-step-body">
+            <h3>What you need — 3 files</h3>
+            <ul>
+              <li><strong>server.js</strong> — the relay server</li>
+              <li><strong>package.json</strong> — tells Render what to install</li>
+              <li><strong>cue-runner-viewer.html</strong> — the viewer page</li>
+            </ul>
+            <p>Keep them together in one folder, e.g. <code>cue-runner-server</code>.</p>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Part 1 — GitHub (one-time, ~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Create a free GitHub account</h3>
+            <p>GitHub is a free code repository — Render reads your server files from there.</p>
+            <ul><li>Go to github.com → <strong>Sign up</strong> → confirm your email</li></ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Create a new repository</h3>
+            <ul>
+              <li>Click the <strong>+</strong> icon top right → <strong>New repository</strong></li>
+              <li>Name: <code>cue-runner-server</code> — set to <strong>Public</strong></li>
+              <li>Check <strong>Add a README file</strong> → <strong>Create repository</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Upload your 3 files</h3>
+            <ul>
+              <li><strong>Add file → Upload files</strong></li>
+              <li>Drag <code>server.js</code>, <code>package.json</code> and <code>cue-runner-viewer.html</code> into the box</li>
+              <li>Scroll down → <strong>Commit changes</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Part 2 — Render (~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Create a free Render account</h3>
+            <ul>
+              <li>Go to render.com → <strong>Get Started for Free</strong></li>
+              <li>Choose <strong>Sign up with GitHub</strong> (connects automatically)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>New Web Service</h3>
+            <ul>
+              <li><strong>New +</strong> → <strong>Web Service</strong> → <strong>Build and deploy from a Git repository</strong></li>
+              <li>Find your repository <code>cue-runner-server</code> → <strong>Connect</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Configure the service</h3>
+            <ul>
+              <li><strong>Name:</strong> <code>cue-runner-server</code> (or your own name — appears in your URL)</li>
+              <li><strong>Region:</strong> e.g. Frankfurt (EU Central) for low latency in Western Europe</li>
+              <li><strong>Branch:</strong> <code>main</code> · <strong>Runtime:</strong> Node</li>
+              <li><strong>Build Command:</strong> <code>npm install</code> · <strong>Start Command:</strong> <code>node server.js</code></li>
+              <li><strong>Instance Type:</strong> Free → <strong>Create Web Service</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">7</div>
+          <div class="help-step-body">
+            <h3>Wait for the deploy (~2 min)</h3>
+            <p>Wait until <strong style="color:var(--acc)">Live</strong> appears at the top (green dot).</p>
+            <div class="help-result">Your server URL appears at the top, e.g. <code>https://cue-runner-server.onrender.com</code> — write it down.</div>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Part 3 — Connecting and inviting</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">8</div>
+          <div class="help-step-body">
+            <h3>Start broadcasting</h3>
+            <ul>
+              <li>Make sure the app is set to <strong>controllable</strong> (badge top left, not "View only")</li>
+              <li>Click <strong>● Off</strong> at the top right of the status bar</li>
+              <li>Enter: <code>wss://cue-runner-server.onrender.com</code> — note <strong>wss://</strong> (with s), not ws://</li>
+              <li><strong>Connect</strong> → status becomes <strong style="color:var(--acc)">● LIVE</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">9</div>
+          <div class="help-step-body">
+            <h3>Inviting viewers</h3>
+            <p>Send this link to everyone who wants to watch along:</p>
+            <div class="help-code">https://cue-runner-server.onrender.com/viewer?server=wss://cue-runner-server.onrender.com</div>
+            <p>Works on phone, tablet and laptop, in any browser, no installation. Read-only.</p>
+          </div>
+        </div>
+
+        <div class="help-note">
+          <strong>⚠ The free tier sleeps after 15 minutes of no use.</strong> Open the viewer link at least 5 minutes before the show — the server then wakes up (~60s) and stays active as long as viewers are connected or data keeps coming in.
+        </div>`,
+fr:`<h2>Configurer les spectateurs en ligne</h2>
+        <p class="help-sub">Étape par étape : de zéro à suivre en direct via internet. Les autres personnes voient l'horloge, le cue actif, le cue suivant et la liste des cues — elles ne peuvent rien contrôler.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">📋</div>
+          <div class="help-step-body">
+            <h3>Ce dont vous avez besoin — 3 fichiers</h3>
+            <ul>
+              <li><strong>server.js</strong> — le serveur relais</li>
+              <li><strong>package.json</strong> — indique à Render quoi installer</li>
+              <li><strong>cue-runner-viewer.html</strong> — la page spectateur</li>
+            </ul>
+            <p>Gardez-les ensemble dans un dossier, par exemple <code>cue-runner-server</code>.</p>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Partie 1 — GitHub (une fois, ~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Créez un compte GitHub gratuit</h3>
+            <p>GitHub est un dépôt de code gratuit — Render y lit vos fichiers serveur.</p>
+            <ul><li>Allez sur github.com → <strong>Sign up</strong> → confirmez votre e-mail</li></ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Créez un nouveau repository</h3>
+            <ul>
+              <li>Cliquez sur l'icône <strong>+</strong> en haut à droite → <strong>New repository</strong></li>
+              <li>Nom : <code>cue-runner-server</code> — mettez en <strong>Public</strong></li>
+              <li>Cochez <strong>Add a README file</strong> → <strong>Create repository</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Téléversez vos 3 fichiers</h3>
+            <ul>
+              <li><strong>Add file → Upload files</strong></li>
+              <li>Glissez <code>server.js</code>, <code>package.json</code> et <code>cue-runner-viewer.html</code> dans la zone</li>
+              <li>Faites défiler vers le bas → <strong>Commit changes</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Partie 2 — Render (~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Créez un compte Render gratuit</h3>
+            <ul>
+              <li>Allez sur render.com → <strong>Get Started for Free</strong></li>
+              <li>Choisissez <strong>Sign up with GitHub</strong> (connexion automatique)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Nouveau Web Service</h3>
+            <ul>
+              <li><strong>New +</strong> → <strong>Web Service</strong> → <strong>Build and deploy from a Git repository</strong></li>
+              <li>Recherchez votre repository <code>cue-runner-server</code> → <strong>Connect</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Configurez le service</h3>
+            <ul>
+              <li><strong>Name :</strong> <code>cue-runner-server</code> (ou votre propre nom — apparaît dans votre URL)</li>
+              <li><strong>Region :</strong> ex. Frankfurt (EU Central) pour une faible latence en Europe de l'Ouest</li>
+              <li><strong>Branch :</strong> <code>main</code> · <strong>Runtime :</strong> Node</li>
+              <li><strong>Build Command :</strong> <code>npm install</code> · <strong>Start Command :</strong> <code>node server.js</code></li>
+              <li><strong>Instance Type :</strong> Free → <strong>Create Web Service</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">7</div>
+          <div class="help-step-body">
+            <h3>Attendez le déploiement (~2 min)</h3>
+            <p>Attendez que <strong style="color:var(--acc)">Live</strong> apparaisse en haut (point vert).</p>
+            <div class="help-result">L'URL de votre serveur apparaît en haut, par ex. <code>https://cue-runner-server.onrender.com</code> — notez-la.</div>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Partie 3 — Connexion et invitation</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">8</div>
+          <div class="help-step-body">
+            <h3>Démarrer la diffusion</h3>
+            <ul>
+              <li>Assurez-vous que l'application est <strong>contrôlable</strong> (badge en haut à gauche, pas "Lecture seule")</li>
+              <li>Cliquez sur <strong>● Inactif</strong> en haut à droite de la barre de statut</li>
+              <li>Saisissez : <code>wss://cue-runner-server.onrender.com</code> — notez <strong>wss://</strong> (avec s), pas ws://</li>
+              <li><strong>Connecter</strong> → le statut devient <strong style="color:var(--acc)">● EN DIRECT</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">9</div>
+          <div class="help-step-body">
+            <h3>Inviter des spectateurs</h3>
+            <p>Envoyez ce lien à tous ceux qui veulent suivre en direct :</p>
+            <div class="help-code">https://cue-runner-server.onrender.com/viewer?server=wss://cue-runner-server.onrender.com</div>
+            <p>Fonctionne sur téléphone, tablette et ordinateur portable, dans n'importe quel navigateur, sans installation. Lecture seule.</p>
+          </div>
+        </div>
+
+        <div class="help-note">
+          <strong>⚠ Le niveau gratuit s'endort après 15 minutes sans utilisation.</strong> Ouvrez le lien spectateur au moins 5 minutes avant le spectacle — le serveur se réveille alors (~60s) et reste actif tant que des spectateurs sont connectés ou que des données arrivent.
+        </div>`,
+es:`<h2>Configurar espectadores en línea</h2>
+        <p class="help-sub">Paso a paso: de cero a ver en vivo por internet. Otras personas ven el reloj, el cue activo, el siguiente cue y la lista de cues — no pueden controlar nada.</p>
+
+        <div class="help-step">
+          <div class="help-step-num">📋</div>
+          <div class="help-step-body">
+            <h3>Lo que necesitas — 3 archivos</h3>
+            <ul>
+              <li><strong>server.js</strong> — el servidor de retransmisión</li>
+              <li><strong>package.json</strong> — le dice a Render qué instalar</li>
+              <li><strong>cue-runner-viewer.html</strong> — la página del espectador</li>
+            </ul>
+            <p>Guárdalos juntos en una carpeta, por ejemplo <code>cue-runner-server</code>.</p>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Parte 1 — GitHub (una vez, ~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">1</div>
+          <div class="help-step-body">
+            <h3>Crea una cuenta gratuita de GitHub</h3>
+            <p>GitHub es un repositorio de código gratuito — Render lee tus archivos de servidor desde ahí.</p>
+            <ul><li>Ve a github.com → <strong>Sign up</strong> → confirma tu correo</li></ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">2</div>
+          <div class="help-step-body">
+            <h3>Crea un nuevo repository</h3>
+            <ul>
+              <li>Haz clic en el icono <strong>+</strong> arriba a la derecha → <strong>New repository</strong></li>
+              <li>Nombre: <code>cue-runner-server</code> — configúralo como <strong>Public</strong></li>
+              <li>Marca <strong>Add a README file</strong> → <strong>Create repository</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">3</div>
+          <div class="help-step-body">
+            <h3>Sube tus 3 archivos</h3>
+            <ul>
+              <li><strong>Add file → Upload files</strong></li>
+              <li>Arrastra <code>server.js</code>, <code>package.json</code> y <code>cue-runner-viewer.html</code> a la casilla</li>
+              <li>Baja hasta el final → <strong>Commit changes</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Parte 2 — Render (~5 min)</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">4</div>
+          <div class="help-step-body">
+            <h3>Crea una cuenta gratuita de Render</h3>
+            <ul>
+              <li>Ve a render.com → <strong>Get Started for Free</strong></li>
+              <li>Elige <strong>Sign up with GitHub</strong> (se conecta automáticamente)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">5</div>
+          <div class="help-step-body">
+            <h3>Nuevo Web Service</h3>
+            <ul>
+              <li><strong>New +</strong> → <strong>Web Service</strong> → <strong>Build and deploy from a Git repository</strong></li>
+              <li>Busca tu repository <code>cue-runner-server</code> → <strong>Connect</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">6</div>
+          <div class="help-step-body">
+            <h3>Configura el servicio</h3>
+            <ul>
+              <li><strong>Name:</strong> <code>cue-runner-server</code> (o tu propio nombre — aparece en tu URL)</li>
+              <li><strong>Region:</strong> p. ej. Frankfurt (EU Central) para baja latencia en Europa Occidental</li>
+              <li><strong>Branch:</strong> <code>main</code> · <strong>Runtime:</strong> Node</li>
+              <li><strong>Build Command:</strong> <code>npm install</code> · <strong>Start Command:</strong> <code>node server.js</code></li>
+              <li><strong>Instance Type:</strong> Free → <strong>Create Web Service</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">7</div>
+          <div class="help-step-body">
+            <h3>Espera al despliegue (~2 min)</h3>
+            <p>Espera hasta que aparezca <strong style="color:var(--acc)">Live</strong> arriba (punto verde).</p>
+            <div class="help-result">La URL de tu servidor aparece arriba, p. ej. <code>https://cue-runner-server.onrender.com</code> — anótala.</div>
+          </div>
+        </div>
+
+        <div class="help-divider"></div>
+        <p class="help-sub" style="margin-bottom:12px;"><strong>Parte 3 — Conectar e invitar</strong></p>
+
+        <div class="help-step">
+          <div class="help-step-num">8</div>
+          <div class="help-step-body">
+            <h3>Iniciar la transmisión</h3>
+            <ul>
+              <li>Asegúrate de que la app esté en modo <strong>controlable</strong> (badge arriba a la izquierda, no "Solo lectura")</li>
+              <li>Haz clic en <strong>● Apagado</strong> arriba a la derecha, junto al estado</li>
+              <li>Introduce: <code>wss://cue-runner-server.onrender.com</code> — fíjate en <strong>wss://</strong> (con s), no ws://</li>
+              <li><strong>Conectar</strong> → el estado pasa a <strong style="color:var(--acc)">● EN VIVO</strong></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-step">
+          <div class="help-step-num">9</div>
+          <div class="help-step-body">
+            <h3>Invitar espectadores</h3>
+            <p>Envía este enlace a todos los que quieran seguir en vivo:</p>
+            <div class="help-code">https://cue-runner-server.onrender.com/viewer?server=wss://cue-runner-server.onrender.com</div>
+            <p>Funciona en teléfono, tablet y portátil, en cualquier navegador, sin instalación. Solo lectura.</p>
+          </div>
+        </div>
+
+        <div class="help-note">
+          <strong>⚠ El nivel gratuito se duerme tras 15 minutos sin uso.</strong> Abre el enlace del espectador al menos 5 minutos antes del espectáculo — el servidor se despierta entonces (~60s) y permanece activo mientras haya espectadores conectados o sigan llegando datos.
+        </div>`,
+  },
   tt_open_midi:{nl:'Open MIDI-paneel',en:'Open MIDI panel',fr:'Ouvrir le panneau MIDI',es:'Abrir panel MIDI'},
   tt_start_kb:{nl:'Start (spatie)',en:'Start (space)',fr:'Démarrer (espace)',es:'Iniciar (espacio)'},
   tt_pause_kb:{nl:'Pauzeer (spatie)',en:'Pause (space)',fr:'Pause (espace)',es:'Pausar (espacio)'},
@@ -1859,15 +3537,29 @@ function updateRegionDisplay(){
    NEXT STRIP
 ════════════════════════════════════════════ */
 const CIRC=999;
+// "Nu actief" — altijd de echte actieve cue, ongeacht filter (dit is wat er nu gebeurt, niet iets om naar toe te tellen).
+function updateActiveStrip(){
+  const aE=$('asName'),oE=$('asNote'),dE=$('asDot');
+  if(activeCueIndex<0){
+    aE.innerHTML=`<span class="as-empty">${t('as_none')}</span>`;
+    oE.textContent='';dE.style.background='var(--dim)';return;
+  }
+  const c=cues[activeCueIndex];
+  aE.textContent=c.name;
+  oE.textContent=c.note||'';
+  dE.style.background=typeColor(c.types);
+}
 function updateStrip(){
+  updateActiveStrip();
+  renderWatch();
   const ni=nextIdxFiltered();
-  const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),dE=$('nsDot');
+  const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),oE=$('nsNote'),dE=$('nsDot');
   if(ni===-1){
-    nE.textContent=t('ns_end_show');tE.textContent='—';cE.textContent='—';cE.className='ns-countdown';
+    nE.textContent=t('ns_end_show');tE.textContent='—';oE.textContent='';cE.textContent='—';cE.className='ns-countdown';
     fE.style.width='100%';fE.style.background='var(--muted)';dE.style.background='var(--muted)';return;
   }
   const next=cues[ni];
-  nE.textContent=next.name;tE.textContent=fmt(next.time);
+  nE.textContent=next.name;tE.textContent=fmt(next.time);oE.textContent=next.note||'';
   dE.style.background=typeColor(next.types);
   const diff=next.time-elapsed;
   const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
@@ -1877,6 +3569,77 @@ function updateStrip(){
   const pct=Math.min(100,Math.max(0,(elapsed-prev)/(next.time-prev)*100));
   fE.style.width=pct+'%';
   fE.style.background=diff<=10?'var(--danger)':'var(--warn)';
+}
+
+/* ════════════════════════════════════════════
+   WATCH-WEERGAVE — ronde wijzerplaat met de twee aftellingen +
+   filter-cyclusknop. Alleen render-werk als watch-modus actief is.
+════════════════════════════════════════════ */
+function renderWatch(){
+  if(resolveView()!=='watch') return;
+  const dotEl=$('watchDot'),stEl=$('watchStatusText');
+  if(dotEl){
+    dotEl.className='watch-dot'+(_statusState==='live'?' live':_statusState==='pau'?' pau':'');
+    stEl.textContent=_statusState==='live'?t('status_live'):_statusState==='pau'?t('status_paused'):t('status_stopped');
+  }
+  $('watchClock').textContent=fmt(elapsed);
+
+  // Volgend deel — zelfde logica als de delen-view (regions hebben geen type, dus geen filter)
+  const r=activeRegionId?regions.find(x=>x.id===activeRegionId):null;
+  const nextR=r?regions[regions.indexOf(r)+1]:null;
+  const rNameEl=$('watchRegionName'),rCdEl=$('watchRegionCountdown');
+  if(nextR){
+    rNameEl.textContent=nextR.name;
+    const diff=nextR.start-elapsed;
+    if(diff>0){ const mm=Math.floor(diff/60),ss=Math.floor(diff%60); rCdEl.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`; }
+    else rCdEl.textContent=t('countdown_now');
+  } else {
+    rNameEl.textContent=r?t('lbl_last_part'):'—';
+    rCdEl.textContent='—';
+  }
+
+  // Volgende cue — filter-aware, zelfde als de reguliere "Volgend"-strip
+  const ni=nextIdxFiltered();
+  const cNameEl=$('watchCueName'),cCdEl=$('watchCueCountdown');
+  if(ni>=0){
+    const nc=cues[ni];
+    cNameEl.textContent=nc.name;
+    const cdiff=nc.time-elapsed;
+    cCdEl.textContent=cdiff>0?(Math.floor(cdiff/60)>0?`${Math.floor(cdiff/60)}:${pad(Math.floor(cdiff%60))}`:`${Math.ceil(cdiff)}s`):t('countdown_now');
+  } else {
+    cNameEl.textContent=t('ns_end_show');
+    cCdEl.textContent='—';
+  }
+
+  // Filter-status
+  const btn=$('watchFilterBtn'),icoEl=$('watchFilterIcon'),lblEl=$('watchFilterLabel');
+  if(activeFilter.size===0){
+    btn.classList.remove('active');
+    icoEl.style.color='';
+    icoEl.textContent='⬤';
+    lblEl.textContent=t('watch_filter_all');
+  } else {
+    const tp=[...activeFilter][0];
+    btn.classList.add('active');
+    icoEl.style.color=TYPE_COLORS[tp];
+    icoEl.textContent='⬤';
+    lblEl.textContent=t('type_'+tp);
+  }
+}
+// Tik-om-te-cyclen filter: geen chips-menu op een klein rond scherm — één knop
+// doorloopt Alle → Licht → Spot → ... → Video → Alle. Gebruikt dezelfde
+// activeFilter-set als de reguliere filterchips, dus blijft overal in sync.
+function cycleWatchFilter(){
+  if(activeFilter.size===0){
+    activeFilter=new Set([TYPE_ORDER[0]]);
+  } else {
+    const cur=[...activeFilter][0];
+    const idx=TYPE_ORDER.indexOf(cur);
+    activeFilter=(idx<0||idx===TYPE_ORDER.length-1)?new Set():new Set([TYPE_ORDER[idx+1]]);
+  }
+  buildFilterChips();
+  renderCues();
+  renderWatch();
 }
 
 /* ════════════════════════════════════════════
@@ -2315,6 +4078,14 @@ function importCSV(e){if(!requireControl()){e.target.value='';return;}readCSV(e.
 function readCSV(f){const r=new FileReader();r.onload=ev=>parseAndImport(ev.target.result);r.readAsText(f);}
 function importPaste(){if(!requireControl())return;parseAndImport($('csvPaste').value);}
 
+// Reaper zet de notitie van een marker/region achteraan de naam als "... Note: <tekst>".
+// Splitst dat eraf: de naam blijft het stuk vóór "Note:", de rest wordt de cue-notitie.
+function splitNoteFromName(raw){
+  const m=raw.match(/^(.*?)\s*Note:\s*(.*)$/i);
+  if(m) return {name:m[1].trim(), note:m[2].trim()};
+  return {name:raw.trim(), note:''};
+}
+
 function parseAndImport(txt){
   txt=txt.replace(/^\uFEFF/,'');
   const lines=txt.split('\n').map(l=>l.trim()).filter(l=>l);
@@ -2332,7 +4103,8 @@ function parseAndImport(txt){
         const en=parseReaperTime(cols[3]||'');
         newR.push({id,name,start:st,end:en||st,color:cols[5]?'#'+cols[5]:null});
       } else if(id.startsWith('M')){
-        newC.push({time:st,name,types:guessTypes(name),note:'',regionId:null});
+        const {name:cleanName,note}=splitNoteFromName(name);
+        newC.push({time:st,name:cleanName,types:guessTypes(cleanName),note,regionId:null});
       }
     }
     newR.sort((a,b)=>a.start-b.start);
@@ -2347,9 +4119,9 @@ function parseAndImport(txt){
   const out=[];
   for(const line of lines){
     const cols=line.split(/\t/);
-    if(cols.length>=2){const t=parseReaperTime(cols[0]);if(t!==null){out.push({time:t,name:cols[1].trim(),types:[],note:'',regionId:null});continue;}}
+    if(cols.length>=2){const t=parseReaperTime(cols[0]);if(t!==null){const{name:cn,note}=splitNoteFromName(cols[1].trim());out.push({time:t,name:cn,types:guessTypes(cn),note,regionId:null});continue;}}
     const m=line.match(/^(\S+)\s+(.+)$/);
-    if(m){const t=parseReaperTime(m[1]);if(t!==null)out.push({time:t,name:m[2].trim(),types:[],note:'',regionId:null});}
+    if(m){const t=parseReaperTime(m[1]);if(t!==null){const{name:cn,note}=splitNoteFromName(m[2].trim());out.push({time:t,name:cn,types:guessTypes(cn),note,regionId:null});}}
   }
   if(!out.length){alert('Geen cues gevonden.');return;}
   out.sort((a,b)=>a.time-b.time);
@@ -3012,6 +4784,17 @@ function updateRegionView(){
     $('rvNoNext').style.display='none';
   }
 
+  // ── Huidige cue: altijd de echte actieve cue, ongeacht filter ──
+  if(activeCueIndex>=0){
+    const ac=cues[activeCueIndex];
+    $('rvActiveCueName').textContent=ac.name;
+    $('rvActiveCueNote').textContent=ac.note||'';
+    $('rvActiveCueNote').style.display=ac.note?'block':'none';
+  } else {
+    $('rvActiveCueName').innerHTML=`<span class="as-empty">${t('as_none')}</span>`;
+    $('rvActiveCueNote').style.display='none';
+  }
+
   // ── Volgende cue: countdown + notitie + lijst van 3 aankomende (gefilterde) cues ──
   const ni=nextIdxFiltered();
   if(ni>=0){
@@ -3062,6 +4845,27 @@ function closeBroadcast(){
   el.classList.remove('open');
 }
 
+/* ════════════════════════════════════════════
+   HANDLEIDING (taak 10)
+════════════════════════════════════════════ */
+let helpSection='reaper';
+function openHelp(){
+  const el=$('helpOverlay'); if(!el)return;
+  el.classList.add('open');
+  switchHelpSection(helpSection);
+}
+function closeHelp(){
+  const el=$('helpOverlay'); if(!el)return;
+  el.classList.remove('open');
+}
+function switchHelpSection(sec){
+  if(!['reaper','markers','hosting'].includes(sec)) sec='reaper';
+  helpSection=sec;
+  document.querySelectorAll('.help-nav button[data-sec]').forEach(b=>b.classList.toggle('active', b.dataset.sec===sec));
+  document.querySelectorAll('.help-section').forEach(s=>s.classList.toggle('active', s.id==='help-'+sec));
+  const content=document.querySelector('.help-content'); if(content) content.scrollTop=0;
+}
+
 function startBroadcast(){
   if(!requireControl())return;
   const url=$('wsUrlInput').value.trim();
@@ -3071,6 +4875,9 @@ function startBroadcast(){
 
 document.addEventListener('keydown',e=>{
   if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName))return;
+  const helpOpen=$('helpOverlay')&&$('helpOverlay').classList.contains('open');
+  if(e.code==='Escape' && helpOpen){closeHelp();return;}
+  if(helpOpen)return; // handleiding open: sneltoetsen voor de show even niet actief
   if(e.code==='Space'){e.preventDefault();running?pauseTimer():startTimer();}
   if(e.code==='ArrowRight'||e.code==='KeyN')skipToNext();
   if(e.code==='Escape'){
@@ -3107,7 +4914,9 @@ function toggleTheme(){
 let viewMode='auto';
 try{ viewMode=localStorage.getItem('cueRunnerView')||'auto'; }catch(e){}
 function resolveView(){
-  if(viewMode==='desktop'||viewMode==='tablet'||viewMode==='phone') return viewMode;
+  // 'watch' is bewust niet via auto-detectie bereikbaar — een ronde smartwatch-
+  // viewport is niet betrouwbaar te onderscheiden van een kleine telefoon.
+  if(viewMode==='desktop'||viewMode==='tablet'||viewMode==='phone'||viewMode==='watch') return viewMode;
   const w=window.innerWidth;
   return w<=640?'phone':w<=1024?'tablet':'desktop';
 }
@@ -3117,13 +4926,14 @@ function applyView(){
   const root=document.documentElement;
   if(root.getAttribute('data-view')!==v){
     root.setAttribute('data-view', v);
-    // Desktop: grid opnieuw toepassen; mobiel: applyGrid maakt de inline grid leeg (guard).
+    // Desktop: grid opnieuw toepassen; mobiel/watch: applyGrid maakt de inline grid leeg (guard).
     applyGrid();
   }
   refreshMobileNav();
+  renderWatch();
 }
 function setViewMode(mode){
-  viewMode=(['auto','desktop','tablet','phone'].includes(mode))?mode:'auto';
+  viewMode=(['auto','desktop','tablet','phone','watch'].includes(mode))?mode:'auto';
   try{ localStorage.setItem('cueRunnerView', viewMode); }catch(e){}
   const sel=$('viewSelect'); if(sel) sel.value=viewMode;
   applyView();

@@ -96,15 +96,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 .arn-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .arn-next{font-size:11px;color:var(--muted);margin-top:3px;}
 
-/* Volgend-strip */
+/* Nu actief + Volgend-strip — duidelijk visueel onderscheiden (identiek aan desktop-app) */
+.active-strip{display:flex;align-items:flex-start;gap:12px;padding:9px 16px;background:var(--active);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.as-label{font-size:9px;letter-spacing:2px;color:var(--acc);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;padding-top:2px;}
+.as-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.as-info{flex:1;overflow:hidden;min-width:0;}
+.as-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.as-note{font-size:12px;color:var(--text);opacity:.85;margin-top:2px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;}
+.as-empty{font-size:13px;color:var(--dim);font-style:italic;}
+
 .progress-strip{height:2px;background:var(--bdr);flex-shrink:0;}
 .progress-fill{height:100%;background:var(--warn);transition:width .4s linear;}
-.next-strip{display:flex;align-items:center;gap:12px;padding:9px 16px;background:var(--s2);border-bottom:1px solid var(--bdr);flex-shrink:0;}
-.ns-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;}
-.ns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.ns-info{flex:1;overflow:hidden;}
+.next-strip{display:flex;align-items:flex-start;gap:12px;padding:9px 16px;background:var(--s2);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.ns-label{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;width:44px;flex-shrink:0;font-weight:800;padding-top:2px;}
+.ns-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.ns-info{flex:1;overflow:hidden;min-width:0;}
 .ns-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:1.5px;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ns-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-top:1px;}
+.ns-note{font-size:12px;color:var(--text);opacity:.85;margin-top:2px;line-height:1.4;white-space:normal;overflow-wrap:anywhere;}
 .ns-countdown{font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--warn);flex-shrink:0;min-width:80px;text-align:right;}
 .ns-countdown.hot{color:var(--danger);animation:pulse .5s infinite alternate;}
 @keyframes pulse{from{opacity:1}to{opacity:.2}}
@@ -177,8 +186,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 @keyframes rvPulse{from{opacity:1}to{opacity:.25}}
 .rv-no-next{font-size:16px;font-weight:700;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
 .rv-cues-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:36px;}
-.rv-cue-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,28px);letter-spacing:1.5px;color:var(--text);line-height:1;text-align:center;max-width:70vw;}
-.rv-cue-countdown{font-family:'Share Tech Mono',monospace;font-size:clamp(20px,3vw,32px);color:var(--acc);letter-spacing:1px;line-height:1;margin-top:2px;}
+.rv-next-lbl.active-lbl{color:var(--acc);}
+.rv-cue-name{font-family:'Bebas Neue',sans-serif;font-size:clamp(18px,2.5vw,28px);letter-spacing:1.5px;color:var(--warn);line-height:1;text-align:center;max-width:70vw;}
+.rv-cue-name.active{color:var(--acc);}
+.rv-cue-countdown{font-family:'Share Tech Mono',monospace;font-size:clamp(20px,3vw,32px);color:var(--warn);letter-spacing:1px;line-height:1;margin-top:2px;}
 .rv-cue-countdown.hot{color:var(--danger);animation:rvPulse .6s infinite alternate;}
 .rv-cue-note{margin-top:12px;max-width:min(680px,86vw);background:var(--s2);border:1px solid var(--bdr);border-left:3px solid var(--warn);border-radius:8px;padding:10px 14px;font-size:clamp(13px,1.8vw,16px);line-height:1.5;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;}
 .rv-cue-note::before{content:'📝';margin-right:7px;opacity:.7;}
@@ -205,6 +216,41 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
 :root[data-view="phone"] #clock{font-size:clamp(40px,13vw,60px);}
 :root[data-view="phone"] .clock-hero{padding:14px 16px 12px;flex-wrap:wrap;gap:12px;}
 :root[data-view="phone"] .active-region-name{border-left:none;padding-left:0;flex-basis:100%;}
+
+/* ═══════ WATCH-WEERGAVE (identiek concept aan desktop) ═══════ */
+#watchView{ display:none; position:fixed; inset:0; z-index:550; background:var(--bg); align-items:center; justify-content:center; }
+:root[data-view="watch"] #watchView{ display:flex; }
+:root[data-view="watch"] .topbar,
+:root[data-view="watch"] .layout,
+:root[data-view="watch"] .mobile-nav{ display:none !important; }
+
+.watch-face{
+  width:min(300px,92vw,92vh); height:min(300px,92vw,92vh);
+  border-radius:50%; background:var(--s1); border:2px solid var(--bdr);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:15% 17%; text-align:center; overflow:hidden; box-sizing:border-box;
+  box-shadow:0 0 0 6px var(--bg), 0 8px 30px rgba(0,0,0,.4);
+}
+.watch-status{ display:flex; align-items:center; gap:5px; font-size:9px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; font-weight:800; margin-bottom:6px; }
+.watch-dot{ width:6px;height:6px;border-radius:50%; background:var(--dim); flex-shrink:0; }
+.watch-dot.live{ background:var(--acc); box-shadow:0 0 6px var(--acc); animation:blink 1s infinite; }
+.watch-dot.pau{ background:var(--warn); }
+.watch-block{ margin-bottom:7px; max-width:100%; width:100%; }
+.watch-lbl{ font-size:7px; letter-spacing:1.5px; color:var(--muted); text-transform:uppercase; font-weight:800; }
+.watch-name{ font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:.5px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; line-height:1.3; }
+.watch-block-region .watch-name{ color:var(--warn); }
+.watch-block-region .watch-countdown{ font-family:'Share Tech Mono',monospace; font-size:19px; color:var(--warn); line-height:1.1; }
+.watch-block-cue .watch-name{ color:var(--acc); }
+.watch-countdown-sm{ font-family:'Share Tech Mono',monospace; font-size:14px; color:var(--acc); }
+.watch-clock{ font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--dim); margin-top:2px; letter-spacing:1px; }
+.watch-filter-btn{
+  margin-top:7px; background:var(--s2); border:1px solid var(--bdr); border-radius:20px;
+  padding:3px 11px; font-size:8px; letter-spacing:1px; color:var(--muted); cursor:pointer;
+  display:flex; align-items:center; gap:4px; font-family:'DM Sans',sans-serif; font-weight:700;
+  text-transform:uppercase; max-width:90%;
+}
+.watch-filter-btn span:last-child{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.watch-filter-btn.active{ border-color:var(--acc); color:var(--acc); }
 </style>
 <script>
   // Thema + weergavemodus toepassen vóór render (voorkomt flits).
@@ -249,6 +295,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
     <div class="rv-no-next" id="rvNoNext" style="display:none" data-i18n="lbl_last_part">Laatste deel</div>
   </div>
   <div class="rv-cues-wrap">
+    <div class="rv-next-lbl active-lbl" data-i18n="ns_active">Nu actief</div>
+    <div class="rv-cue-name active" id="rvActiveCueName">—</div>
+    <div class="rv-cue-note" id="rvActiveCueNote" style="display:none"></div>
+  </div>
+  <div class="rv-cues-wrap" style="margin-top:20px;">
     <div class="rv-next-lbl" data-i18n="lbl_next_cue">Volgende cue</div>
     <div class="rv-cue-name" id="rvCueName">—</div>
     <div class="rv-cue-countdown" id="rvCueCountdown">—</div>
@@ -273,6 +324,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
       <option value="desktop" data-i18n="view_desktop">🖥 Desktop</option>
       <option value="tablet" data-i18n="view_tablet">📋 Tablet</option>
       <option value="phone" data-i18n="view_phone">📱 Telefoon</option>
+      <option value="watch" data-i18n="view_watch">⌚ Watch</option>
     </select>
     <select class="tb-btn" id="langSelect" onchange="setLang(this.value)" data-i18n-title="tt_lang" title="Taal" style="padding:6px 8px;">
       <option value="nl">NL</option><option value="en">EN</option><option value="fr">FR</option><option value="es">ES</option>
@@ -302,11 +354,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
         <div class="arn-next" id="arnNext"></div>
       </div>
     </div>
+    <div class="active-strip">
+      <div class="as-label" data-i18n="ns_active">Nu actief</div>
+      <div class="as-dot" id="asDot"></div>
+      <div class="as-info"><div class="as-name" id="asName">—</div><div class="as-note" id="asNote"></div></div>
+    </div>
     <div class="progress-strip"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     <div class="next-strip">
       <div class="ns-label" data-i18n="ns_next">Volgend</div>
       <div class="ns-dot" id="nsDot"></div>
-      <div class="ns-info"><div class="ns-name" id="nsName">—</div><div class="ns-time" id="nsTime">—</div></div>
+      <div class="ns-info"><div class="ns-name" id="nsName">—</div><div class="ns-time" id="nsTime">—</div><div class="ns-note" id="nsNote"></div></div>
       <div class="ns-countdown" id="nsCountdown">—</div>
     </div>
     <div class="filter-bar">
@@ -324,6 +381,31 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM San
   <button data-section="show" onclick="setSection('show')"><span class="mn-ic">🎛</span><span data-i18n="nav_show">Show</span></button>
   <button data-section="delen" onclick="setSection('delen')"><span class="mn-ic">🗂</span><span data-i18n="nav_parts">Delen</span></button>
 </nav>
+
+<!-- WATCH-WEERGAVE (5e modus, rond scherm) -->
+<div id="watchView">
+  <div class="watch-face">
+    <div class="watch-status">
+      <span class="watch-dot" id="watchDot"></span>
+      <span id="watchStatusText">GESTOPT</span>
+    </div>
+    <div class="watch-block watch-block-region">
+      <div class="watch-lbl" data-i18n="watch_next_part">Volgend deel</div>
+      <div class="watch-name" id="watchRegionName">—</div>
+      <div class="watch-countdown" id="watchRegionCountdown">—</div>
+    </div>
+    <div class="watch-block watch-block-cue">
+      <div class="watch-lbl" data-i18n="watch_next_cue">Volgende cue</div>
+      <div class="watch-name" id="watchCueName">—</div>
+      <div class="watch-countdown-sm" id="watchCueCountdown">—</div>
+    </div>
+    <div class="watch-clock" id="watchClock">00:00:00</div>
+    <button class="watch-filter-btn" id="watchFilterBtn" onclick="cycleWatchFilter()" data-i18n-title="tt_watch_filter" title="Tik om te filteren op type">
+      <span id="watchFilterIcon">⬤</span>
+      <span id="watchFilterLabel" data-i18n="watch_filter_all">Alle</span>
+    </button>
+  </div>
+</div>
 
 <script>
 /* ══════ I18N ══════ */
@@ -358,11 +440,18 @@ const T={
   lbl_next_part:{nl:'Volgend deel',en:'Next part',fr:'Partie suivante',es:'Parte siguiente'},
   lbl_next_cue:{nl:'Volgende cue',en:'Next cue',fr:'Cue suivant',es:'Cue siguiente'},
   lbl_last_part:{nl:'Laatste deel',en:'Last part',fr:'Dernière partie',es:'Última parte'},
+  view_watch:{nl:'⌚ Watch',en:'⌚ Watch',fr:'⌚ Montre',es:'⌚ Reloj'},
+  watch_next_part:{nl:'Volgend deel',en:'Next part',fr:'Partie suivante',es:'Parte siguiente'},
+  watch_next_cue:{nl:'Volgende cue',en:'Next cue',fr:'Cue suivant',es:'Cue siguiente'},
+  watch_filter_all:{nl:'Alle',en:'All',fr:'Tous',es:'Todos'},
+  tt_watch_filter:{nl:'Tik om te filteren op type',en:'Tap to filter by type',fr:'Toucher pour filtrer par type',es:'Toca para filtrar por tipo'},
   rv_close:{nl:'✕ Sluit  <span style="opacity:.4;font-size:10px">ESC</span>',en:'✕ Close  <span style="opacity:.4;font-size:10px">ESC</span>',fr:'✕ Fermer  <span style="opacity:.4;font-size:10px">ÉCHAP</span>',es:'✕ Cerrar  <span style="opacity:.4;font-size:10px">ESC</span>'},
   rv_hint:{nl:'Druk ESC om terug te keren · R om te wisselen',en:'Press ESC to return · R to toggle',fr:'Appuyez sur ÉCHAP pour revenir · R pour basculer',es:'Pulsa ESC para volver · R para alternar'},
   rv_in_part:{nl:'in dit deel',en:'in this part',fr:'dans cette partie',es:'en esta parte'},
   countdown_now:{nl:'NU',en:'NOW',fr:'MAINT.',es:'AHORA'},
   ns_next:{nl:'Volgend',en:'Next',fr:'Suivant',es:'Siguiente'},
+  ns_active:{nl:'Nu actief',en:'Now active',fr:'Actif maintenant',es:'Activo ahora'},
+  as_none:{nl:'Nog geen cue actief',en:'No cue active yet',fr:'Aucun cue actif',es:'Ningún cue activo aún'},
   ns_end_show:{nl:'Einde show',en:'End of show',fr:'Fin du spectacle',es:'Fin del espectáculo'},
   list_cue:{nl:'Cue',en:'Cue',fr:'Cue',es:'Cue'},
   list_time:{nl:'Tijd',en:'Time',fr:'Temps',es:'Tiempo'},
@@ -406,9 +495,9 @@ function toggleTheme(){ const n=currentTheme()==='light'?'dark':'light'; if(n===
 /* ══════ WEERGAVEMODUS ══════ */
 let viewMode='auto';
 try{ viewMode=localStorage.getItem('cueRunnerView')||'auto'; }catch(e){}
-function resolveView(){ if(viewMode==='desktop'||viewMode==='tablet'||viewMode==='phone') return viewMode; const w=window.innerWidth; return w<=640?'phone':w<=1024?'tablet':'desktop'; }
-function applyView(){ document.documentElement.setAttribute('data-view', resolveView()); refreshMobileNav(); }
-function setViewMode(m){ viewMode=(['auto','desktop','tablet','phone'].includes(m))?m:'auto'; try{ localStorage.setItem('cueRunnerView',viewMode); }catch(e){} const s=$('viewSelect'); if(s) s.value=viewMode; applyView(); }
+function resolveView(){ if(viewMode==='desktop'||viewMode==='tablet'||viewMode==='phone'||viewMode==='watch') return viewMode; const w=window.innerWidth; return w<=640?'phone':w<=1024?'tablet':'desktop'; }
+function applyView(){ document.documentElement.setAttribute('data-view', resolveView()); refreshMobileNav(); renderWatch(localElapsed); }
+function setViewMode(m){ viewMode=(['auto','desktop','tablet','phone','watch'].includes(m))?m:'auto'; try{ localStorage.setItem('cueRunnerView',viewMode); }catch(e){} const s=$('viewSelect'); if(s) s.value=viewMode; applyView(); }
 function setSection(sec){ if(!['show','delen'].includes(sec)) sec='show'; document.documentElement.setAttribute('data-section',sec); refreshMobileNav(); }
 function currentSection(){ return document.documentElement.getAttribute('data-section')||'show'; }
 function refreshMobileNav(){ const cur=currentSection(); document.querySelectorAll('#mobileNav button').forEach(b=>b.classList.toggle('active', b.getAttribute('data-section')===cur)); }
@@ -499,6 +588,7 @@ function applyServerState(s){
   if(localRunning && localStartedAt!==null){ tm=(performance.now()-localStartedAt)/1000; localElapsed=tm; }
   $('clock').innerHTML=fmtFrames(tm);
   updateNextStrip(tm);
+  renderWatch(tm);
   if(regionViewActive) updateRegionView(tm);
   requestAnimationFrame(loop);
 })();
@@ -517,25 +607,94 @@ function renderFull(s, tm){
     if(nxt){ const diff=nxt.start-tm; const mm=Math.floor(diff/60),ss=Math.floor(diff%60); $('arnNext').textContent=`→ ${nxt.name}  ${mm}:${pad(ss)}`; }
     else $('arnNext').textContent=t('lbl_last_part');
   } else { $('arnName').textContent='—'; $('arnNext').textContent=''; }
+  updateActiveStrip();
   updateNextStrip(tm);
   renderRegions(s,tm);
   renderCues(s,tm);
+  renderWatch(tm);
+}
+
+// "Nu actief" — altijd de echte actieve cue van de master, ongeacht filter.
+function updateActiveStrip(){
+  const aE=$('asName'),oE=$('asNote'),dE=$('asDot');
+  const ac=lastState&&lastState.activeCue;
+  if(!ac){ aE.innerHTML=`<span class="as-empty">${t('as_none')}</span>`; oE.textContent=''; dE.style.background='var(--dim)'; return; }
+  aE.textContent=ac.name; oE.textContent=ac.note||''; dE.style.background=typeColor(ac.types);
 }
 
 // Volgend-strip — filter-aware: telt af naar de volgende cue die matcht.
 function updateNextStrip(tm){
   if(!lastState){ return; }
   const cs=lastState.cues||[];
-  const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),dE=$('nsDot');
+  const cE=$('nsCountdown'),fE=$('progressFill'),nE=$('nsName'),tE=$('nsTime'),oE=$('nsNote'),dE=$('nsDot');
   const ni=nextIdxFiltered(tm);
-  if(ni===-1){ nE.textContent=t('ns_end_show'); tE.textContent='—'; cE.textContent='—'; cE.className='ns-countdown'; fE.style.width='100%'; fE.style.background='var(--muted)'; dE.style.background='var(--muted)'; return; }
+  if(ni===-1){ nE.textContent=t('ns_end_show'); tE.textContent='—'; oE.textContent=''; cE.textContent='—'; cE.className='ns-countdown'; fE.style.width='100%'; fE.style.background='var(--muted)'; dE.style.background='var(--muted)'; return; }
   const next=cs[ni];
-  nE.textContent=next.name; tE.textContent=fmt(next.time); dE.style.background=typeColor(next.types);
+  nE.textContent=next.name; tE.textContent=fmt(next.time); oE.textContent=next.note||''; dE.style.background=typeColor(next.types);
   const diff=next.time-tm; const mm=Math.floor(diff/60),ss=Math.floor(diff%60);
   cE.textContent=diff>0?(mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`):t('countdown_now');
   cE.className='ns-countdown'+(diff<=5?' hot':'');
   const prev=ni>0?cs[ni-1].time:0; const pct=Math.min(100,Math.max(0,(tm-prev)/(next.time-prev)*100));
   fE.style.width=pct+'%'; fE.style.background=diff<=10?'var(--danger)':'var(--warn)';
+}
+
+/* ══════ WATCH-WEERGAVE — ronde wijzerplaat, spiegelt desktop.html ══════ */
+function renderWatch(tm){
+  if(resolveView()!=='watch'||!lastState) return;
+  const s=lastState;
+  const dotEl=$('watchDot'),stEl=$('watchStatusText');
+  const state=s.running?'live':(tm>0||s.activeCue)?'pau':'stop';
+  if(dotEl){
+    dotEl.className='watch-dot'+(state==='live'?' live':state==='pau'?' pau':'');
+    stEl.textContent=state==='live'?t('status_live'):state==='pau'?t('status_paused'):t('status_stopped');
+  }
+  $('watchClock').textContent=fmt(tm);
+
+  const regs=s.regions||[];
+  const r=s.region?regs.find(x=>x.id===s.region.id):null;
+  const nextR=r?regs[regs.indexOf(r)+1]:null;
+  const rNameEl=$('watchRegionName'),rCdEl=$('watchRegionCountdown');
+  if(nextR){
+    rNameEl.textContent=nextR.name;
+    const diff=nextR.start-tm;
+    if(diff>0){ const mm=Math.floor(diff/60),ss=Math.floor(diff%60); rCdEl.textContent=mm>0?`${mm}:${pad(ss)}`:`${Math.ceil(diff)}s`; }
+    else rCdEl.textContent=t('countdown_now');
+  } else {
+    rNameEl.textContent=r?t('lbl_last_part'):'—';
+    rCdEl.textContent='—';
+  }
+
+  const cs=s.cues||[];
+  const ni=nextIdxFiltered(tm);
+  const cNameEl=$('watchCueName'),cCdEl=$('watchCueCountdown');
+  if(ni>=0){
+    const nc=cs[ni];
+    cNameEl.textContent=nc.name;
+    const cdiff=nc.time-tm;
+    cCdEl.textContent=cdiff>0?(Math.floor(cdiff/60)>0?`${Math.floor(cdiff/60)}:${pad(Math.floor(cdiff%60))}`:`${Math.ceil(cdiff)}s`):t('countdown_now');
+  } else {
+    cNameEl.textContent=t('ns_end_show');
+    cCdEl.textContent='—';
+  }
+
+  const btn=$('watchFilterBtn'),icoEl=$('watchFilterIcon'),lblEl=$('watchFilterLabel');
+  if(activeFilter.size===0){
+    btn.classList.remove('active'); icoEl.style.color=''; icoEl.textContent='⬤'; lblEl.textContent=t('watch_filter_all');
+  } else {
+    const tp=[...activeFilter][0];
+    btn.classList.add('active'); icoEl.style.color=TYPE_COLORS[tp]; icoEl.textContent='⬤'; lblEl.textContent=t('type_'+tp);
+  }
+}
+function cycleWatchFilter(){
+  if(activeFilter.size===0){
+    activeFilter=new Set([TYPE_ORDER[0]]);
+  } else {
+    const cur=[...activeFilter][0];
+    const idx=TYPE_ORDER.indexOf(cur);
+    activeFilter=(idx<0||idx===TYPE_ORDER.length-1)?new Set():new Set([TYPE_ORDER[idx+1]]);
+  }
+  buildFilterChips();
+  if(lastState) renderFull(lastState, localElapsed);
 }
 
 function renderRegions(s,tm){
@@ -602,6 +761,11 @@ function updateRegionView(tm){
     else { $('rvCountdown').textContent=t('countdown_now'); $('rvCountdown').className='rv-countdown hot'; }
   } else if(r){ $('rvNextName').textContent=''; $('rvCountdown').style.display='none'; $('rvNoNext').style.display='block'; }
   else { $('rvNextName').textContent='—'; $('rvCountdown').textContent='—'; $('rvCountdown').style.display='block'; $('rvNoNext').style.display='none'; }
+  // Huidige cue: altijd de echte actieve cue van de master, ongeacht filter
+  const ac=s.activeCue;
+  if(ac){ $('rvActiveCueName').textContent=ac.name; $('rvActiveCueNote').textContent=ac.note||''; $('rvActiveCueNote').style.display=ac.note?'block':'none'; }
+  else { $('rvActiveCueName').innerHTML=`<span class="as-empty">${t('as_none')}</span>`; $('rvActiveCueNote').style.display='none'; }
+
   // Volgende cue (filter-aware) + notitie + lijst van 3 gefilterde cues
   const ni=nextIdxFiltered(tm);
   if(ni>=0){ const nc=cues[ni]; $('rvCueName').textContent=nc.name;

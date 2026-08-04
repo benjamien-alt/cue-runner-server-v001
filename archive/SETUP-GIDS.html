@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CUE RUNNER — Online Setup Gids</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 760px; margin: 0 auto; padding: 24px 20px 60px; background: #f8f8f8; color: #1a1a1a; line-height: 1.6; }
+  h1 { font-size: 26px; color: #0a0a0a; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 15px; margin-bottom: 32px; }
+  h2 { font-size: 18px; margin: 0; }
+  .step { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; display: flex; gap: 18px; align-items: flex-start; }
+  .step-num { background: #c8f53a; color: #0a0a0a; font-weight: 800; font-size: 15px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .step-body { flex: 1; }
+  .step-body p { margin: 6px 0 0; color: #444; font-size: 14px; }
+  .step-body ul { margin: 8px 0 0 0; padding-left: 18px; color: #444; font-size: 14px; }
+  .step-body li { margin-bottom: 4px; }
+  a { color: #0066cc; }
+  a:hover { text-decoration: underline; }
+  .code { background: #1e1e1e; color: #c8f53a; font-family: monospace; font-size: 13px; padding: 12px 16px; border-radius: 8px; margin: 10px 0; white-space: pre-wrap; word-break: break-all; }
+  .highlight { background: #fffbea; border: 1px solid #f0d060; border-radius: 6px; padding: 12px 16px; font-size: 13px; margin: 10px 0; }
+  .highlight strong { color: #b07000; }
+  .img-placeholder { background: #f0f0f0; border: 2px dashed #ccc; border-radius: 8px; padding: 16px; font-size: 13px; color: #888; text-align: center; margin: 10px 0; }
+  .result { background: #eafff0; border: 1px solid #80d090; border-radius: 8px; padding: 14px 18px; margin: 10px 0; font-size: 14px; }
+  .result strong { color: #2a7a3a; }
+  .divider { border: none; border-top: 2px solid #eee; margin: 28px 0; }
+  .section-title { font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 12px; margin-top: 28px; }
+  .badge { display: inline-block; background: #c8f53a; color: #0a0a0a; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+  .badge.orange { background: #f5a623; }
+  .badge.blue { background: #38bdf8; color: #fff; }
+  kbd { background: #eee; border: 1px solid #ccc; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>🎭 CUE RUNNER — Online viewers instellen</h1>
+<p class="subtitle">Stap-voor-stap: van nul naar live viewers via internet. Geen technische kennis vereist.</p>
+
+<div class="highlight">
+  <strong>Wat je gaat bereiken:</strong> Andere mensen kunnen via een weblink live meekijken met jouw CUE RUNNER — ze zien de klok, actieve cue, volgende cue en de cuelijst. Ze kunnen niets bedienen.
+</div>
+
+<div class="section-title">Wat je nodig hebt</div>
+
+<div class="step">
+  <div class="step-num">📋</div>
+  <div class="step-body">
+    <h2>Voorbereiding — 3 bestanden</h2>
+    <p>Je hebt deze 3 bestanden nodig (staan allemaal in de zip die je hebt gedownload):</p>
+    <ul>
+      <li><strong>server.js</strong> — de relay server</li>
+      <li><strong>package.json</strong> — zegt Render wat het moet installeren</li>
+      <li><strong>cue-runner-viewer.html</strong> — de viewer pagina</li>
+    </ul>
+    <p>Bewaar ze samen in één map op je computer, bijv. <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">cue-runner-server</code></p>
+  </div>
+</div>
+
+<hr class="divider">
+<div class="section-title">Deel 1 — GitHub account aanmaken (5 min, eenmalig)</div>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <h2>Maak een gratis GitHub account aan</h2>
+    <p>GitHub is een gratis opslagplaats voor code. Render leest je code van daaruit.</p>
+    <ul>
+      <li>Ga naar <a href="https://github.com" target="_blank">github.com</a></li>
+      <li>Klik <strong>Sign up</strong></li>
+      <li>Kies een gebruikersnaam, e-mail en wachtwoord</li>
+      <li>Bevestig je e-mail</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <h2>Maak een nieuwe repository aan</h2>
+    <p>Een "repository" is gewoon een map op GitHub.</p>
+    <ul>
+      <li>Klik rechtsboven op het <strong>+</strong> icoontje → <strong>New repository</strong></li>
+      <li>Naam: <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">cue-runner-server</code></li>
+      <li>Zet op <strong>Public</strong></li>
+      <li>Vink aan: <strong>Add a README file</strong></li>
+      <li>Klik <strong>Create repository</strong></li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <h2>Upload je 3 bestanden naar GitHub</h2>
+    <p>Je bent nu op de pagina van je nieuwe repository.</p>
+    <ul>
+      <li>Klik op <strong>Add file</strong> → <strong>Upload files</strong></li>
+      <li>Sleep de 3 bestanden (<code>server.js</code>, <code>package.json</code>, <code>cue-runner-viewer.html</code>) in het vak</li>
+      <li>Scroll naar beneden → klik <strong>Commit changes</strong></li>
+    </ul>
+    <div class="result">✅ Je ziet nu de 3 bestanden in je GitHub repository</div>
+  </div>
+</div>
+
+<hr class="divider">
+<div class="section-title">Deel 2 — Server deployen op Render (5 min)</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <h2>Maak een gratis Render account aan</h2>
+    <ul>
+      <li>Ga naar <a href="https://render.com" target="_blank">render.com</a></li>
+      <li>Klik <strong>Get Started for Free</strong></li>
+      <li>Kies <strong>Sign up with GitHub</strong> (makkelijkst — koppelt automatisch)</li>
+      <li>Geef Render toestemming tot je GitHub account</li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <h2>Maak een nieuwe Web Service aan</h2>
+    <ul>
+      <li>Klik in het Render dashboard op <strong>New +</strong> → <strong>Web Service</strong></li>
+      <li>Kies <strong>Build and deploy from a Git repository</strong></li>
+      <li>Klik <strong>Next</strong></li>
+      <li>Zoek je repository <code>cue-runner-server</code> op → klik <strong>Connect</strong></li>
+    </ul>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">6</div>
+  <div class="step-body">
+    <h2>Configureer de service</h2>
+    <p>Vul deze gegevens in (de rest laat je staan):</p>
+    <ul>
+      <li><strong>Name:</strong> <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">cue-runner-server</code></li>
+      <li><strong>Region:</strong> Frankfurt (EU Central) — voor lage latency in België</li>
+      <li><strong>Branch:</strong> <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">main</code></li>
+      <li><strong>Runtime:</strong> Node</li>
+      <li><strong>Build Command:</strong> <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">npm install</code></li>
+      <li><strong>Start Command:</strong> <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">node server.js</code></li>
+      <li><strong>Instance Type:</strong> <strong>Free</strong></li>
+    </ul>
+    <p>Klik onderaan op <strong>Create Web Service</strong></p>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">7</div>
+  <div class="step-body">
+    <h2>Wacht op de deploy (~2 minuten)</h2>
+    <p>Render installeert nu alles automatisch. Je ziet logs stromen. Wacht tot je bovenaan <strong style="color:#2a7a3a">Live</strong> ziet staan (groen bolletje).</p>
+    <div class="result">
+      <strong>✅ Je server URL verschijnt bovenaan, bijv.:</strong><br>
+      <code>https://cue-runner-server.onrender.com</code>
+    </div>
+    <p>Dit is jouw permanente server URL. Noteer hem!</p>
+  </div>
+</div>
+
+<hr class="divider">
+<div class="section-title">Deel 3 — Verbinden en viewers uitnodigen</div>
+
+<div class="step">
+  <div class="step-num">8</div>
+  <div class="step-body">
+    <h2>Broadcast starten vanuit Cue Runner</h2>
+    <p>Open je <strong>cue-runner-desktop.html</strong> in Chrome/Edge.</p>
+    <ul>
+      <li>Klik op <strong>● Uit</strong> rechtsboven</li>
+      <li>Vul in: <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;">wss://cue-runner-server.onrender.com</code></li>
+      <li>⚠️ Let op: gebruik <strong>wss://</strong> (met extra s), niet ws://</li>
+      <li>Klik <strong>Verbinden</strong></li>
+    </ul>
+    <div class="result"><strong>✅ Status wordt groen: ● LIVE</strong></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">9</div>
+  <div class="step-body">
+    <h2>Viewers uitnodigen</h2>
+    <p>Stuur deze link naar iedereen die mee wil kijken (backstage, techniek, regie, ...):</p>
+    <div class="code">https://cue-runner-server.onrender.com/viewer?server=wss://cue-runner-server.onrender.com</div>
+    <p>Vervang <code>cue-runner-server</code> door jouw eigen naam als je die anders hebt ingesteld.</p>
+    <ul>
+      <li>Werkt op telefoon, tablet, laptop</li>
+      <li>Werkt in elke browser (Chrome, Safari, Firefox)</li>
+      <li>Geen app installeren</li>
+      <li>Alleen-lezen — niemand kan iets bedienen</li>
+    </ul>
+  </div>
+</div>
+
+<hr class="divider">
+<div class="section-title">⚠️ Gratis tier — belangrijk voor voorstellingen</div>
+
+<div class="highlight">
+  <strong>De gratis server slaapt na 15 minuten zonder gebruik.</strong><br><br>
+  Oplossing: open de viewer URL minimaal <strong>5 minuten voor de show</strong>. De server wordt dan wakker (duurt ~60 seconden) en blijft actief zolang er viewers verbonden zijn of de Cue Runner data stuurt.
+</div>
+
+<hr class="divider">
+<div class="section-title">Jouw gegevens (invullen na stap 7)</div>
+
+<div style="background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:20px 24px;">
+  <p><strong>Server naam op Render:</strong> ______________________________</p>
+  <p><strong>Server URL:</strong> https://_______________________________.onrender.com</p>
+  <p style="margin-top:12px;"><strong>Broadcast verbinden (in Cue Runner):</strong></p>
+  <div class="code">wss://_______________________________.onrender.com</div>
+  <p><strong>Viewer link (sturen naar medewerkers):</strong></p>
+  <div class="code">https://_______________________________.onrender.com/viewer?server=wss://_______________________________.onrender.com</div>
+</div>
+
+<hr class="divider">
+<div class="section-title">Problemen?</div>
+
+<div class="step">
+  <div class="step-num">❓</div>
+  <div class="step-body">
+    <h2>Server werkt niet / viewers zien niets</h2>
+    <ul>
+      <li>Check of Render de service op <strong>Live</strong> staat (groen bolletje in dashboard)</li>
+      <li>Controleer dat je <strong>wss://</strong> gebruikt (met s) en niet ws://</li>
+      <li>Open <code>https://jouw-naam.onrender.com/health</code> — je moet JSON zien</li>
+      <li>De server was mogelijk in slaap — wacht 60 seconden en probeer opnieuw</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
